@@ -1,0 +1,1262 @@
+(* these need updation to OCAML Layout and TyDesc*)
+module L = Layout (* define Layout *) 
+module Ty = Types (* link to the Types*)
+
+let ($) (f, arg) =  f arg
+let (<<) f g x = f (g x)
+(* td :: define Control *)
+let  localAssert = fun x -> true (* define  Control.assert*)
+(* Check if the Var is the Var from the SpecLan , if from the SML, look for the front end in the OCAML*)
+let varStrEq (v1, v2) = (Ident.name v1 = Ident.name v2)
+let varSubs  (n, o) v = if (varStrEq (v, o)) 
+  then n else v
+let vecToStr f vec = match Vector.length vec with 
+    0 -> "" 
+  | _ -> " "^(Vector.toString f vec)
+
+let empty = fun () -> Vector.new0 ()
+
+(* See the use of this function and then define *) 
+(*let mkMapper eqns cmp restore = fun t' ->
+  	match ( List.peekMap 
+       Define List.keepMap in Types_helper module
+  	*) 
+let mkMapper eqns cmp restore = 
+  fun t' -> match (Vector.peekMap (eqns, (fun (t, ts) -> if t = t' then Some ts else None ))) with
+      Some ts -> ts 
+    |None -> restore t'
+
+module Con = struct
+  open Types
+  open Asttypes
+  type t = 
+        Cons  
+      | Nil 
+      | Const of Asttypes.constant
+
+let constant_to_string t = match t with 
+      Const_int i -> string_of_int i 
+    | Const_char c -> Char.escaped c
+    | Const_string  (s1, s2) -> "s1"^"::"^"s2"
+    | Const_float fl -> fl
+    | Const_int32 i -> Int32.to_string i
+    | Const_int64 i -> Int64.to_string i  
+    | Const_nativeint n -> Nativeint.to_string n
+
+
+  let toString t = match t with 
+      Cons -> "Cons"
+      | Nil -> "Nil"
+      | Const t' ->  constant_to_string t'
+
+  let default = Cons  
+  let truee = Const (Asttypes.Const_string ("__TRUE__", None))
+  let falsee = Const (Asttypes.Const_string ("__FALSE__", None))
+
+  let fromString s = match s ="cons" with
+    | true -> Cons 
+    | false -> match s = "nil" with
+        | true -> Nil
+        | false -> Const (Const_int (int_of_string s))
+
+
+
+end                    
+
+module Tyvar = 
+struct
+  open Types
+  type t = Types.type_desc(* //{name:string} *)
+  (* use the definition of Tyvar in type_desc and define the equality of Tvars *)
+  (* Equaility checking Logic*)
+  let toString t = match  t with
+    | Tvar s -> match s with 
+      | Some s' -> s'
+      | None -> "Unknown"
+      | _ -> "UnKnown"
+
+
+
+  let equal = fun tvar1 tvar2 -> if (toString tvar1) = (toString tvar2) then true else false
+
+  let eq = equal
+  (*let toString tds = match tds with 
+      | Tvar str -> match str with 
+                      | Some s -> s
+                      | None -> ""
+      | _ -> ""*)
+
+  let makeTvar t = Tvar (Some (toString t))
+
+  let newNoname () = Tvar None
+
+
+end 
+
+module Var = struct
+  open Ident
+  type t = Ident.t
+  let toString = Ident.name
+  let fromString s = create s
+
+
+end
+
+module RelId =
+struct 
+  open Ident
+  type t = Ident.t
+  let equal (t1,t2) = Ident.equal t1 t2
+  let toString = Ident.name
+  let fromString s = create s
+end
+
+
+module SVar = 
+struct 
+  type t = Ident.t
+
+  let symbase = "'t"
+  let  count = ref 0
+
+  let newSVar = fun _ ->
+    let id = symbase ^ string_of_int !count in 
+    let _ = count := !count + 1
+    in 
+    Ident.create_persistent id
+
+  let eq v1 v2 = Ident.equal v1 v2  
+  let toString  = Ident.name  
+
+end
+(* define a module for the Type_desc and define helper functions on them
+        * It will be easier to move this module to types module*)
+module TyD = 
+struct
+  open Types
+  include Types
+  type t =Types.type_desc
+          
+  let idCount = ref 0
+  let getNewCount = fun _ ->
+    let id = !idCount in 
+    let _ = idCount := !idCount + 1 in id
+  let toString t  =
+    match t with 
+    | Tvar s -> (match s with Some s -> s | None -> "")
+    | Tarrow (_, e1, e2, _) -> "[e1 -> e2]"
+    | Ttuple listexp -> (let rec print_list = function 
+          [] -> " "
+        | e::l -> print_string (string_of_int e.id) ; print_string " " ; print_list l
+       in 
+       print_list listexp)
+    | Tbool -> "boolean"
+    | Tint -> "integer"
+    | _ -> "unKnown"
+
+  let makeExpFromDesc td = let c = getNewCount () in 
+    {desc=td;level= c ;id=c}
+
+
+  let sameTypeListFormat td1  td2 = toString td1 = toString td2           
+  
+  let sameType (td1, td2) = toString td1 = toString td2           
+  let makeTvar s = Tvar s
+  let makeTconstr (p, telist) = Types.Tconstr (p, List.map (fun td -> makeExpFromDesc td) telist, ref Types.Mnil)
+  let makeTarrow td1 td2 = Types.Tarrow ( Asttypes.Nolabel, makeExpFromDesc td1, makeExpFromDesc td2, Types.Cok)
+  let makeTtuple tl = 
+          let texp_list = List.map makeExpFromDesc tl in 
+      Types.Ttuple texp_list  
+
+
+  (*In Ocaml all types are unifiable*)
+  let unifiable (t1,t2) = 
+    true
+   let makeTnil () = Types.Tnil 
+
+
+end 
+
+module TupSort = 
+struct
+  type tT = T of Ty.type_desc | S of SVar.t
+  type t = Tuple of tT list
+  type cs = Eq of t*t
+
+  let tTToString tT = match tT with 
+      T tyd -> Types_helper.toString tyd
+    | S svar -> SVar.toString svar
+
+
+  let toString (Tuple tts) = List.fold_left (fun parsedStr tT ->  parsedStr ^(tTToString tT)) "Tuple " tts
+
+  let toString = fun t -> "{"^(toString t)^"}" 
+
+
+
+  let fromSVar = fun t ->  Tuple [S t]
+
+  let filter_map  f l =
+    let rec aux accu = function
+      | [] -> List.rev accu
+      | x :: l1 ->
+          match f x with
+          | None -> aux accu l1
+          | Some v -> aux (v :: accu) l1
+    in
+    aux []
+
+
+  let getSVars (Tuple ts) = 
+    filter_map (fun tT -> match tT with S t -> Some t | _ -> None) ts
+
+  let tTeq t1 t2 = match (t1, t2) with 
+    |(T tyd1, T tyd2) ->Types_helper.equal tyd1 tyd2
+    |(S v1, S v2) -> SVar.eq v1 v2
+    | (_, _) -> false
+
+  let equal (Tuple tydv1) (Tuple tydv2) =
+    (List.length tydv1 = List.length tydv2) && 
+    (List.for_all2 tTeq tydv1 tydv2)
+
+  let unionType ((Tuple tydv1) as t1, (Tuple tydv2) as t2) = 
+    match (List.length tydv1, List.length tydv2) with
+    |(0, _) -> ([], Tuple tydv1)
+    |(_, 0) -> ([], Tuple tydv2)
+    |(n1, n2) -> if (equal (Tuple tydv1) (Tuple tydv2)) then ([], Tuple tydv1)
+        else ([Eq (Tuple tydv1  ,Tuple tydv2)], Tuple tydv1)
+
+  let crossPrdType (Tuple tyds1 as t1, Tuple tyds2 as t2) = 
+    match (List.length tyds1, List.length tyds2) with
+      (0,_) -> ([], Tuple tyds1)
+    | (_,0) -> ([], Tuple tyds2)
+    | _ -> ([], Tuple (List.concat [tyds1; tyds2]))
+
+  let instSVars (Tuple ttl) mapSVar = Tuple (List.concat  
+                                               (List.map(fun tt -> match tt with 
+                                                      T _ -> [tt] 
+                                                    | S t -> (fun (Tuple ttl') -> ttl') (mapSVar t)) ttl) )  
+
+
+
+
+  let mapTyD (Tuple ttl) f = Tuple (List.map (fun tt -> match tt with 
+        T tyd -> T (f tyd)
+      | _ -> tt) ttl )
+
+  (* Tuple Sort Constraint Solving *)
+
+  let eq = fun (Eq (x,y)) -> (x, y) 
+
+  type sol = (SVar.t * t)
+  (* Understanding - Example of a function within a function *)
+
+  let trySolveConstraint c  =
+    let len = List.length in   
+
+    let assertNotCirc (v, rt) = assert true in 
+    (* let rhsvs = getSVars rt in 
+       let cStr = fun _ -> (SVar.toString v) ^ " =" ^ (toString rt) in
+       let () = assert (List.for_all (fun rhsv ->
+                     not (SVar.eq v rhsv)) rhsvs) in () in    *)
+    match (eq c) with
+    |(Tuple [S v1], Tuple []) -> None
+    | (Tuple [], Tuple [S v2]) -> None
+    | (Tuple [S v1], rty2) -> assertNotCirc (v1, rty2); Some (v1, rty2)
+    |(rty1, Tuple [S v2]) -> assertNotCirc (v2, rty1); Some (v2, rty1)
+    | _ -> None 
+
+
+
+  let clearTautologies cs =
+    let taut = fun (tt1, tt2) ->
+      match (tt1, tt2) with
+      |(T tyd1, T tyd2) -> (assert ( Types_helper.sameType tyd1 tyd2); true)
+      |(S v1, S v2) -> SVar.eq v1 v2
+      | _ -> false
+    in 
+    Types_helper.keepAll (fun (Eq (Tuple ts1, Tuple ts2)) -> 
+        match (ts1, ts2) with
+        | ([tt1], [tt2]) -> not (taut (tt1, tt2))
+        | (_, _) ->  true) cs
+
+  (* Applies reltyvar eqn( v=rt) iin cs.
+   * Post condition : v does not occur in cs 
+  *)
+  let applyRelTyVarEqn eqn cs     =
+    List.map (fun (Eq (rt1, rt2)) -> 
+        let mapSVar = mkMapper [eqn] SVar.eq fromSVar in 
+        let rt1' = instSVars rt1 mapSVar in 
+        let rt2' = instSVars rt2 mapSVar in 
+        Eq (rt1', rt2')) cs
+
+
+  let elabcs cs  = 
+    let len = List.length in 
+    let (no, yes) = List.partition (fun (Eq (Tuple ts1, Tuple ts2)) ->  
+        if (len ts1 = len ts2) then true else false) cs in
+    let yes' = match yes with 
+        [] -> failwith "Unsolvable TupSort Constraint"
+      | Eq  (Tuple ts1, Tuple ts2) ::  yes' -> 
+          List.concat [List.map2 (fun t1 t2 -> Eq (Tuple [t1], Tuple [t2] )) ts1 ts2; yes'] 
+    in List.concat[yes';no]         
+
+  (* Solve a constraint, applies the solution to the rest, and 
+   * clears any new tautologoes. Repeats this process until threre are no more constraints, or the residue os 
+   * unsolvable.
+   * Invariant : 
+           * sol :....
+  *)
+  exception Return of (sol list)
+
+  let rec relTyVarEqns cs  =
+    try
+      let cs = clearTautologies cs in 
+      let _ = match cs with
+          [] -> (raise (Return []))
+        | _ -> () 
+      in (*This is a simplification, implement the correct semantics of Vector.loop this must return a pair*)
+      let solEqnOp = Vector.loop(cs, (fun c -> match (trySolveConstraint c) with 
+            Some sol -> Some (Some sol)
+          | _ -> None), (fun () -> None) ) in
+
+      (*The issue is that solEqnOp is returning a wrong type*)
+      let (eqns, residue) = match solEqnOp with
+          None -> ([], elabcs cs)
+        | Some ((t, ts) as solEqn) -> 
+            let newcs = applyRelTyVarEqn (t, ts) cs in 
+            let moreEqns = relTyVarEqns newcs in 
+            let moreEqnFn = mkMapper moreEqns SVar.eq fromSVar in 
+            let solEqn' = match moreEqns with 
+                [] -> solEqn
+              |_ ->  (t, instSVars ts moreEqnFn)  in 
+            (solEqn'::moreEqns, []) in 
+      let newEqns = relTyVarEqns residue in                    
+      let newEqFn = mkMapper newEqns SVar.eq fromSVar in 
+      let eqns' = match newEqns with 
+          [] -> eqns
+        | _ -> List.map (fun (t, ts) -> (t, (instSVars ts newEqFn))) eqns in 
+
+      List.concat [eqns'; newEqns]
+
+    with
+      Return l -> l
+
+  (* Solve constraints and return solutions *)
+  let solvecs cs = mkMapper (relTyVarEqns cs) SVar.eq fromSVar
+
+
+
+end
+
+module TS = TupSort
+module SimpleProjSort = struct
+  type t = ColonArrow of (Types.type_desc * TupSort.t)
+
+  let toString (ColonArrow (tyD, tupsort)) = 
+    (Types_helper.toString tyD)^ " :-> "^(TupSort.toString tupsort)
+  (* The pretty-printing will be added later*)
+  (*let layout t = Layout.str $ toString t*)
+
+  let newSPSort tyd rt  = ColonArrow (tyd, rt)
+
+  let domain (ColonArrow (d, _)) = d
+
+  let range (ColonArrow (_,r)) = r
+
+  let mapTyD (ColonArrow (tyd, ts)) f =
+    ColonArrow (f tyd, TS.mapTyD ts f)
+end
+
+module SPS = SimpleProjSort 
+
+module ProjSort = struct
+  type t = T of {paramsorts : SimpleProjSort.t list;
+                 sort : SimpleProjSort.t}
+
+  let toString (T {paramsorts; sort}) =
+    match List.length paramsorts with
+      0 -> SimpleProjSort.toString sort
+    |_ -> (Vector.toString (SimpleProjSort.toString) paramsorts)
+          ^ " :-> "^ (SimpleProjSort.toString sort)
+
+  let newProjSort paramsorts sort =  T {paramsorts = paramsorts; sort = sort}                
+  (* The Vector datatype is defined in the mlton compiler, we need to define a corresponding data type in ocaml*)
+  let simple sps = T {paramsorts = Vector.new0 (); sort = sps}
+
+  let domain (T {sort; _}) = SimpleProjSort.domain sort
+
+  let range (T {sort; _}) = SimpleProjSort.range sort
+
+
+end 
+
+module PS = ProjSort 
+
+module ProjSortScheme = struct 
+  exception PSSInst of string 
+
+  type t = T of {svars : SVar.t list; 
+                 sort : ProjSort.t}
+
+  let toString (T{svars;sort})= (Vector.toString (SVar.toString) svars)^". "^
+                                (ProjSort.toString sort)
+
+  let simple sps = T {svars = Vector.new0 (); sort = ProjSort.simple sps}
+
+
+  let generalize (sv, s) = T {svars = sv; sort = s}
+
+  let instantiate (T{svars;sort}, tsv) = 
+    let svarMap = try 
+        Vector.zip svars tsv with 
+      _ -> raise (PSSInst "PSS inst error1") in
+    let mapsSVar = fun t -> 
+      match (Vector.peekMap (svarMap, fun (t', ts) -> if (SVar.eq t t') then Some ts else None ) )
+      with 
+        Some ts -> ts 
+      |None -> raise (PSSInst "PSS inst error2") in 
+
+    let PS.T {paramsorts;sort = (SPS.ColonArrow (tyd, ts)) } = sort in 
+    let sort' = SPS.ColonArrow (tyd, TS.instSVars ts mapsSVar) in 
+    let ps' = Vector.map (paramsorts, fun (SPS.ColonArrow (tyd,ts)) -> SPS.ColonArrow (tyd, TS.instSVars ts mapsSVar))  in 
+    PS.T {paramsorts = ps'; sort = sort'}  
+
+end
+
+module PSS = ProjSortScheme
+
+module ProjTypeScheme = struct 
+  exception PTSInst of string
+  type t = T of {tyvars : Tyvar.t list; sortscheme : ProjSortScheme.t}
+
+  let toString (T {tyvars; sortscheme}) = (Vector.toString (Tyvar.toString) tyvars) 
+                                          ^ ". " ^ (ProjSortScheme.toString sortscheme)
+
+  let paramSorts ( T {sortscheme = PSS.T {sort = ProjSort.T {paramsorts; _}; _}; _} ) = paramsorts
+
+  let groundSort (T {sortscheme = PSS.T {sort = ProjSort.T{sort;_}; _};_}) = sort
+
+  let simple (tyvars, sps) = T {tyvars = tyvars; sortscheme = PSS.simple sps}
+
+  let generalize (tyvars, ss) = T {tyvars=tyvars; sortscheme = ss}
+
+  let instantiate (T {tyvars;sortscheme=ss}, tydv) = 
+    let tyvmap = try (Vector.zip tydv tyvars) with 
+        _ -> raise (PTSInst "PTS : insufficient or more type args") in
+    let f = Types_helper.instantiateTyvars tyvmap in 
+    let PSS.T{sort = PS.T{paramsorts; sort = (SPS.ColonArrow (tyd, ts))}; svars} = ss in 
+    let sort' = SPS.ColonArrow (f tyd, TS.mapTyD ts f) in 
+    let ps' = List.map (fun (SPS.ColonArrow (tyd, ts)) -> SPS.ColonArrow (f tyd, ts)) paramsorts in 
+    let s' = PS.T {paramsorts = ps'; sort = sort'} in 
+    let ss' = PSS.T {svars = svars; sort = s'} in 
+    ss'
+  let domain (T {sortscheme = PSS.T { sort = ProjSort.T{sort = SPS.ColonArrow (tyd,_);_}; _};_ }) = tyd
+
+
+
+
+
+end 
+module PTS = ProjTypeScheme 
+module RelLang = 
+struct 
+  type elem = Int of int 
+            | Bool of bool
+            | Var of Ident.t
+
+  type instexpr = RInst of {targs: Types.type_desc list;
+                            sargs : TupSort.t list;
+                            args : instexpr list;
+                            rel : RelId.t       }
+
+  type expr = T of elem list 
+            | X of expr * expr 
+            | U of expr * expr 
+            | D of expr * expr 
+            | R of instexpr * Ident.t
+
+  type term = Expr of expr
+            |Star of instexpr
+
+  let rId = fun c -> T  (Vector.new1 (Var c)) (* define Vector.new0 similar to the mlton basic type of vector*)
+
+  let rNull = fun _ -> T ( empty ())
+
+  let instOfRel = fun rel ->
+    let empty = fun _ -> Vector.new0 () in 
+    RInst {targs= empty (); sargs = empty (); args = empty (); rel= rel}
+
+  let instOfPolyRel = fun rel -> 
+    (fun targs -> let empty = fun _ -> Vector.new0 () in 
+      RInst {targs=targs; sargs=empty (); args= empty (); rel= rel} )
+
+  let appR = fun (rid, targs, x) -> R (instOfPolyRel rid targs, x)
+
+  let elemToString = fun el -> 
+    match el with 
+      Int i -> string_of_int i
+    | Bool b -> string_of_bool b
+    | Var v -> v.name (* define the Var moudle*)
+
+  let rec ieToString (RInst {targs; sargs; args; rel}) = 
+    let tstr = vecToStr Types_helper.toString targs in 
+    let sstr = vecToStr TupSort.toString sargs in 
+    let rstr = vecToStr ieToString args in 
+    "(" ^ (RelId.toString rel)^tstr^sstr^rstr ^ ")"
+
+  let rec exprToString exp = match exp with 
+      T elevc -> "{(" ^ (List.fold_left (fun acc e -> 
+        (elemToString e)^acc) "" elevc) ^ ")}"
+    | X (e1, e2) -> "(" ^ (exprToString e1) ^ " X " ^ (exprToString e2) ^ ")"         
+
+    | U (e1, e2) -> "(" ^ (exprToString e1) ^ " U " ^ (exprToString e2) ^ ")"  
+
+    | D (e1, e2) -> "(" ^ (exprToString e1) ^ " - " ^ (exprToString e2) ^ ")"      
+
+
+    | R (ie, arg) ->  
+        (ieToString ie) ^ "(" ^ (arg.name) ^ ")"
+
+  let exprToString = exprToString
+
+
+  let termToString = fun trm -> match trm with 
+      Expr e -> exprToString e
+    | Star ie -> (ieToString ie) ^ "*"
+
+  (*fun app (relId,var) = R(relId,var)*)
+  let union (e1, e2) = U (e1,e2)
+  let crossprd (e1,e2) = X (e1,e2)
+  let diff (e1,e2) = D (e1,e2)
+  let rNull _ = T []
+
+
+  let (%) = fun f g x  -> f (g x)  
+
+  let rec ieApplySubsts substs (RInst {rel;args;targs;sargs}) = 
+    let doIt = ieApplySubsts substs in 
+    let vtor = ((RelId.fromString) % (SVar.toString)) in 
+    let subst v = List.fold_left (fun r (n,o) -> if ( Ident.name o = RelId.toString r) then 
+                                     (vtor n) else r) v substs in 
+    RInst {rel=subst rel; args=List.map doIt args;targs=targs; sargs=sargs } 
+
+  let rec applySubsts substs rexpr = 
+    let doIt = applySubsts substs  in 
+    let subst v = List.fold_left (fun v (newEl, oldEl) -> 
+        if (Ident.name oldEl = Ident.name newEl) then newEl else v) v substs in 
+    let elemSubst elem = match elem with 
+        Var v -> Var (subst v)
+      | c -> c in
+    match rexpr with 
+      T elem -> T (List.map elemSubst elem)
+    | X (e1, e2) -> X (doIt e1, doIt e2)
+    | U (e1, e2) -> U (doIt e1, doIt e2)
+    | D (e1, e2) -> D (doIt e1, doIt e2)
+    | R (ie, argvar) -> R (ieApplySubsts substs ie, subst argvar)
+
+  let rec mapInstExpr t f = 
+    let g = fun x -> mapInstExpr x f in 
+    let doIt = fun cons -> fun (x1, x2) -> cons (g x1 , g x2) in  
+
+    match t with 
+      X (x, y) ->  X ( g x, g y) 
+    | U (x, y) -> U (g x, g y)
+    | D (x, y) -> D (g x, g y)
+    | T _ -> t
+    | R (ie, x) -> R (f ie, x) 
+
+
+  let mapTyD t f = 
+    let rec doItIE (RInst{targs;sargs;args;rel}) = 
+      let targs' = List.map f targs in
+      let sargs' = List.map (fun ts -> TS.mapTyD ts f) sargs in 
+      let args' =  List.map doItIE args in 
+      RInst {targs=targs'; sargs=sargs'; args=args';rel=rel}
+
+    in 
+    mapInstExpr t doItIE
+
+  let mapSVar t f =
+    let rec doItIE (RInst {targs;sargs;args;rel}) = 
+      let sargs' = List.map  (fun ts -> TS.instSVars ts f ) sargs in 
+      let args' = List.map doItIE args in 
+      RInst {targs=targs; sargs=sargs'; args=args';rel=rel}
+
+    in
+    mapInstExpr t doItIE
+
+  let mapRel t f =
+    let rec doItIE (RInst {targs;sargs;args;rel}) = 
+      let rel' = f rel in 
+      let args' = List.map doItIE args in 
+      RInst {targs=targs; sargs=sargs;args=args';rel=rel'}
+
+    in
+    mapInstExpr t doItIE
+end       
+(*The Con.t must be replaced with the exact constructor*)
+module StructuralRelation = struct (*<R, Tr m Const x , y -> r | Nil -> r ->*)
+  type t = T of {id:RelId.t ; params : RelId.t list; mapp: ( Con.t * Ident.t list option * RelLang.term) list}
+  (* Not allowed in Ocaml, this can always be replaces by application of T*)
+  (*let newSR data = T data*)
+
+  let conMapToString mapp =
+    let conmap = "{" ^ (Vector.toString (fun (c,vlo,trm) ->
+        let cstr = Con.toString c in 
+        let vseq = match vlo with 
+            None -> ""
+          | Some vl -> Vector.toString Ident.name vl in 
+        let trmstr = RelLang.termToString trm
+        in
+        cstr ^ vseq ^ " => " ^ trmstr
+      ) mapp) ^ "}\n"
+    in
+    conmap
+
+  let toString = fun (T{id;params;mapp}) -> 
+    let relid = RelId.toString id in 
+    let relstr = match List.length params with
+        0 -> relid
+      | _ -> relid ^ (List.fold_right (fun rid acc -> acc ^ " " ^ (RelId.toString rid)) params "" ) 
+    in 
+
+    let conmap = conMapToString mapp in 
+
+    "relation (" ^ relstr ^ ") = " ^ conmap
+end
+
+module PrimitiveRelation = struct
+  type def = Nullary of RelLang.expr
+           | Nary of Ident.t * def 
+
+  type t = T of {id: RelId.t; def:def}
+
+  let rec defToString def = match def with 
+      (Nullary rexpr) -> RelLang.exprToString rexpr
+    |(Nary (v,def)) -> "\\"^(Ident.name v)^"."^(defToString def)
+
+  let toString = fun (T {id;def}) -> "primitive relation "
+                                     ^(RelId.toString id)^" = "^(defToString def)
+
+  let rec applySubsts def substs = match def with 
+      (Nary (v,def))  ->  Nary (v, applySubsts def substs)
+    |(Nullary rexpr) ->  Nullary (RelLang.applySubsts substs rexpr)
+
+  let rec instantiate def substs = 
+      match def with  
+    	| (Nary (v, def), arg :: args) ->  instantiate (def,args) ((arg,v)::substs)
+    	| (def, [])  -> applySubsts def  substs
+    	| _  -> failwith "Invalid primitive relation instantiation"
+
+    	(* 		let instantiate = fun (def, args) -> instantiate (def, Vector.toList args) []
+ *)
+  let symbase = "pv_" 
+
+  let count = ref 0 
+
+  let genVar = fun _ ->
+    let id = symbase ^ (string_of_int (!count)) in 
+    let _ = count := !count + 1 in 
+    Var.fromString id
+
+  let rec alphaRename x y = match (x,y) with 
+      ((Nary (v,def)), substs) -> 
+        let newV = genVar () in 
+        Nary (newV, alphaRename def ((newV,v)::substs))
+    | ((Nullary rexpr), substs) ->	Nullary (RelLang.applySubsts
+                                              (substs) rexpr)
+
+  let alphaRename =fun def -> alphaRename def []
+
+end
+(*Checked till this point *)
+module TyDBinds = struct
+  module Key = struct
+    type t = Var.t
+    let layout = L.str <<  Var.toString (*Create a Layout Module*)
+    let equal (v1, v2) = (Var.toString v1) = (Var.toString v2)
+  end
+
+  module Value = struct 
+    type t =Types.type_desc
+    let layout = fun x -> x 
+
+  end 
+  
+  module TydMap = Applicativemap.ApplicativeMap (Key) (Value)
+  type t = TydMap.t
+  let mem = TydMap.mem 
+  let find = TydMap.find
+  let add = TydMap.add
+  let empty = TydMap.empty
+
+  exception KeyNotFound = TydMap.KeyNotFound
+
+end
+
+module TyDB = TyDBinds
+
+module Predicate = 
+struct
+  exception RelPredicateException of string
+
+
+  (*submodule *)
+  module BasePredicate = struct
+    type expr = Int of int
+              | Bool of bool
+              | Var of Var.t
+    type t =  Iff of t * t
+           | Eq of expr * expr
+
+    let rec toString bp = match bp with
+        Eq (Int i1,Int i2) -> (string_of_int i1) ^ " = " 
+                              ^ (string_of_int i2)
+      | Eq (Bool b1,Bool b2) -> (string_of_bool b1) ^ " = " 
+                                ^ (string_of_bool b2)
+      | Eq (Var v1, Var v2) -> (Var.toString v1) ^ " = " 
+                               ^ (Var.toString v2)
+      | Eq (Var v, Bool b) -> (Var.toString v) ^ " = " 
+                              ^ (string_of_bool b)
+      | Iff (t1,t2) -> (toString t1) ^ " <=> " ^ (toString t2) 
+
+    let varEq (v1, v2) = Eq (Var v1, Var v2)
+    let varBoolEq (v,b) = Eq (Var v, Bool b)
+
+    (* Talk about this with Gowtham currenly identity*)
+    let  applySubst subst t = 
+      let varSubst = varSubs subst in 
+      match t with 
+      |Eq (Var v1, Var v2) -> Eq (Var v1, Var v2)
+      | Eq (Var v, e) -> Eq (Var v, e)
+      | Eq (e, Var v) -> Eq (e, Var v)
+      | Iff (t1,t2) -> Iff (t1, t2)
+
+
+  end
+
+  module RelPredicate = struct
+
+    type expr = RelLang.expr
+    type t = Eq of expr * expr
+           | Sub of expr * expr
+           | SubEq of expr * expr
+
+    let toString rp = match rp with
+        Eq (e1,e2) -> (RelLang.exprToString e1) ^ " = "
+                      ^ (RelLang.exprToString e2)
+      | Sub (e1,e2) -> (RelLang.exprToString e1) ^ " C "
+                       ^ (RelLang.exprToString e2)
+      | SubEq (e1,e2) -> (RelLang.exprToString e1) ^ " C= "
+                         ^ (RelLang.exprToString e2)
+
+    let exprMap rp f = match rp with 
+        Eq (e1,e2) -> Eq (f e1, f e2)
+      | Sub (e1,e2) -> Sub (f e1, f e2)
+      | SubEq (e1,e2) -> SubEq (f e1, f e2)
+
+    let applySubst subst t = exprMap t (RelLang.applySubsts ( Vector.new1 subst))
+
+    let mapTyD t f = 
+      let g = RelLang.mapTyD in 
+      let doIt = fun (x1,x2)  -> ((g x1 f), (g x2 f)) in
+
+      match t with 
+        Eq (x,y) -> let (x1, y1) = doIt (x, y) in  
+          Eq (x1, y1)
+      | Sub (x,y) -> 
+          let (x1, y1) = doIt (x, y) in   
+          Sub  (x1,y1)
+      | SubEq (x,y) -> 
+          let (x1, y1) = doIt (x, y) in   
+          SubEq (x1,y1)
+
+    let mapSVar t f = 
+      let  g = RelLang.mapSVar in 
+      let doIt = fun (x1,x2) -> (g x1 f, g x2 f) in 
+      match t with 
+        Eq (x,y) -> let (x1, y1) = doIt (x, y) in  
+          Eq (x1, y1)
+      | Sub (x,y) -> 
+          let (x1, y1) = doIt (x, y) in   
+          Sub  (x1,y1)
+      | SubEq (x,y) -> 
+          let (x1, y1) = doIt (x, y) in   
+          SubEq (x1,y1)
+  end 
+
+  type t = True 
+         |  False
+         |  Base of BasePredicate.t 
+         |  Rel of RelPredicate.t
+         |  Exists of TyDBinds.t * t
+         |  Not of t
+         |  Conj of t * t
+         |  If of t * t
+         |  Iff of t * t
+         |  Disj of t * t
+         |  Dot of t * t
+  (*needs to be rewritten when layout is defined *)          
+  let rec layout t = match t with 
+      True -> L.str "true" 
+    | False -> L.str "false" 
+    | Base bp -> L.str  (BasePredicate.toString bp)
+    | Rel rp -> L.str  (RelPredicate.toString rp )
+    | Exists (binds,t) ->  L.str "exist"
+    | Not t -> L.str "not" 
+    | Conj (e1,e2) -> L.str "Conj"  
+    | Disj (e1,e2) -> L.str "Disj"  
+    | If (e1,e2) -> L.str "If"
+    | Iff (e1,e2) -> L.str "Iff"
+    | Dot (e1,e2) -> L.str "Dot"
+
+
+  let truee  _ = True
+  let falsee _ = False 
+  let isFalse e = match e with 
+      False -> true | _ -> false
+  let baseP p = Base p 
+  let conj (t1, t2) = Conj (t1, t2)
+  let conjR (t, r) = Conj (t, Rel r)
+  let conJP (t,p) = Conj (t, Base p)
+
+  let rec applySubst ((nw, ol) as subst) t = 
+    match t with 
+      True -> True
+    | False -> False
+    | Base bp -> Base (BasePredicate.applySubst subst bp)
+    | Rel rp -> Rel (RelPredicate.applySubst subst rp)
+    | Exists (tyDB,t) -> if (TyDBinds.mem tyDB ol)
+        then raise (RelPredicateException "Attempted substitution on existentially \
+                                           				              \ quantified variable")
+        else Exists (tyDB,applySubst subst t)
+    | Not t -> Not (applySubst subst t )
+    | Conj (t1,t2) -> Conj (applySubst subst t1, applySubst subst t2)
+    | Disj (t1,t2) -> Disj (applySubst subst t1, applySubst subst t2)
+    | If (t1,t2) -> If (applySubst subst t1, applySubst subst t2)
+    | Iff (t1,t2) -> Iff (applySubst subst t1, applySubst subst t2)
+    | Dot (t1,t2) -> Dot (applySubst subst t1, applySubst subst t2)
+
+  (* telescoped substitutions *)
+  let rec applySubsts substs t = 
+    List.fold_right (fun subst t ->
+        applySubst subst t) substs t 
+
+  let exists (tyb,t) = Exists (tyb,t)
+
+  let dot (t1,t2) = Dot (t1,t2)
+
+
+  let rec mapRP t f = match t with  
+      Rel rp -> Rel (f rp)
+    | Exists (tyDB,t) -> Exists (tyDB, mapRP t f)
+    | Not t -> Not (mapRP t f)
+    | Conj (t1,t2) -> Conj (mapRP t1 f, mapRP t2 f)
+    | Disj (t1,t2) -> Disj (mapRP t1 f, mapRP t2 f)
+    | If (t1,t2) -> If (mapRP t1 f, mapRP t2 f)
+    | Iff (t1,t2) -> Iff (mapRP t1 f, mapRP t2 f)
+    | Dot (t1,t2) -> Dot (mapRP t1 f, mapRP t2 f)
+    | _ -> t 
+
+  let rec mapTyD t f = match t with 
+      Rel rp -> Rel (RelPredicate.mapTyD rp f)
+    | Exists (tyDB,t) -> Exists (TyDBinds.TydMap.map  
+                                   (fun (v,tyd) -> (v,f tyd)) tyDB, mapTyD t f)
+    | Not t -> Not (mapTyD t f)
+    | Conj (t1,t2) -> Conj (mapTyD t1 f, mapTyD t2 f)
+    | Disj (t1,t2) -> Disj (mapTyD t1 f, mapTyD t2 f)
+    | If (t1,t2) -> If (mapTyD t1 f, mapTyD t2 f)
+    | Iff (t1,t2) -> Iff (mapTyD t1 f, mapTyD t2 f)
+    | Dot (t1,t2) -> Dot (mapTyD t1 f, mapTyD t2 f)
+    | _ -> t
+
+  let mapsSVar t f = mapRP t (fun rp  -> RelPredicate.mapSVar rp f)
+
+end
+
+module P = Predicate
+(*A module defining the refinement types *)
+module RefinementType = 
+struct 
+  exception RefTyEx of string 
+  type t = 
+      Base of Var.t * Types.type_desc * Predicate.t 
+    | Tuple of (Var.t * t) list
+    | Arrow of (Var.t * t) * t
+    (* Records are tuples with fixed bound var *)
+  (* Needs extension for {'a | r} list *)
+
+
+  let symbase = "v_" 
+  let count = ref 0
+  let genVar = fun _ ->
+    let id = symbase ^ (string_of_int !count) in 
+    let _  = count := !count + 1 in 
+    Var.fromString id	
+
+  let rec fromTyD tyD = 
+    match tyD with 
+      Types.Tarrow (_,te1,te2,_) -> 
+        let td1 = te1.desc in 
+        let td2 = te2.desc in   
+        Arrow ((genVar (), fromTyD td1),
+               fromTyD td2)
+    | Types.Tvar s ->  
+        let s' =  TyD.toString (Types.Tvar s) in 
+        Base (Var.fromString s', Types.Tvar s, True)
+    |Types.Ttuple ls  -> 
+     let recRefTy = List.map (fun (te : Types.type_expr)->
+        let desc = te.desc  in 
+        (genVar (), (fromTyD desc))) ls in 
+        Tuple recRefTy  
+    |  tyD -> Base (genVar(), tyD, Predicate.truee())
+   
+   let rec toTyD t = match t with
+        Base (v,tdes,p) -> tdes
+      | Tuple tv -> TyD.makeTtuple (List.map (fun (v,t) ->  
+              let ty_desc_for_t = toTyD t in 
+              ty_desc_for_t)  tv)
+      | Arrow ((v1,t1),t2) -> TyD.makeTarrow (toTyD t1) (toTyD t2)
+     
+
+
+
+
+  let layout rty = match  rty with
+      Base(var,td,pred) ->L.str "Base"
+    | Tuple tv -> L.str "Tuple"
+    | Arrow ((  v1, Arrow _ as t1),t2) -> L.str "Arrow"
+    | Arrow ((v1,t1),t2) -> L.str "Arrow"
+
+  let  rec mapBaseTy t f = match t with
+      Base (v,t,p) -> 
+        let (x,y,z) = f (v,t,p) in 
+        Base (x,y,z)
+    | Tuple tv -> Tuple (List.map (fun (v,t) -> 
+        (v,mapBaseTy t f)) tv)
+    | Arrow ((v1,t1),t2) -> Arrow ((v1,mapBaseTy t1 f), 
+                                   mapBaseTy t2 f)
+
+  let mapTyD t f = mapBaseTy t (fun (v,t,p) -> 
+      (v,f t, P.mapTyD p f)) 
+
+  
+  let rec applySubsts substs refty = 
+	   mapBaseTy refty (fun (bv,t,pred) ->
+	   if List.exists (fun(n,ol) -> varStrEq (ol,bv)) substs 
+				then  raise (RefTyEx "Attempted substitution of bound var")
+				else (bv,t,Predicate.applySubsts substs pred))
+
+  let  alphaRenameToVar refty newbv = match refty with
+      Base (bv,t,p) -> Base (newbv,t,
+                             (Predicate.applySubst (newbv,bv) p))
+    | _ -> raise (RefTyEx "alphaRename attempted on non-base type")
+
+  let alphaRename refty = alphaRenameToVar refty (genVar())
+
+
+  let exnTyp = fun _ -> Base (genVar(),Types.Tnil,
+                              Predicate.falsee())
+
+  let mapSVar t f = mapBaseTy t (fun (v,t,p) ->
+     							(v,t, (Predicate.mapsSVar p f)))
+
+     				
+  let newLongVar = fun (var,fld) -> Var.fromString( 
+        (Var.toString var)^"."^(Var.toString fld))
+    
+           (*
+				     * Decomposes single tuple bind of form v ↦ {x0:T0,x1:T1} to
+				     * multiple binds : [v.x0 ↦ T0, v.x1 ↦ T1]
+				     *)
+  
+  let rec decomposeTupleBind (tvar , (Tuple refTyBinds) as tty) =
+     					
+              let  bindss = List.map (fun ((_,refTy) as refTyBind) -> 
+      										match refTy with 
+        											Tuple _ -> decomposeTupleBind refTyBind
+      											| _ -> Vector.new1 refTyBind) 
+     												refTyBinds in 
+     				let binds = List.map (fun (v,ty) -> (newLongVar (tvar,v), ty)) (List.concat bindss) in 
+     		     			binds
+ 
+
+end
+
+module RefTy = RefinementType 
+
+
+module ParamRefType =  struct
+  type t = T of {params : (RelId.t * SimpleProjSort.t) list; refty : RefinementType.t}
+
+  let layout (T {params; refty}) = 
+    let typedParamLyt (r,sprojty) = L.str  
+        ((RelId.toString r) ^ " :: " ^
+         (SPS.toString sprojty)) in 
+    let paramslyt = 
+      let consFun = fun x xs -> x :: xs in 
+      List.fold_right (consFun) [] (List.map typedParamLyt params) in 
+    let reftylyt = RefinementType.layout refty in 
+    L.seq [(L.seq paramslyt); L.str ". "; reftylyt]
+
+  let parametrize (sortedParams,refTy) = T {params=sortedParams; refty=refTy}
+
+  let mapTyD (T {params;refty}) f = 
+    let params' = List.map (fun (r,sps) -> (r, SPS.mapTyD sps f)) params  in 
+    let refty' = RefTy.mapTyD refty f in
+    T {params=params'; refty=refty'}
+
+end
+
+module PRf = ParamRefType
+
+module RefinementSortScheme = struct
+  type t = T of {svars: SVar.t list; prefty : ParamRefType.t }
+
+  let layout (T {svars; prefty}) =  
+    let svlyt = 
+      let consFun  = fun x xs -> x :: xs in 
+      List.fold_right (consFun) [] (List.map (fun sv -> L.str (SVar.toString sv)) svars) in 
+    let prflyt = ParamRefType.layout prefty in 
+    L.seq [(L.seq svlyt); L.str ". "; prflyt]
+
+  let fromRefTy = fun refTy -> T {svars = empty(); prefty = ParamRefType.T {params=empty(); refty=refTy}}
+
+  let toRefTy = fun (T {prefty = ParamRefType.T {refty;_} ;_}) -> refty
+
+  let generalize = fun (svars,prefty) -> T {svars=svars; prefty=prefty}
+
+  let mapTyD (T {svars;prefty}) f = T {svars=svars;prefty=PRf.mapTyD prefty f}
+
+end
+
+module RefSS = RefinementSortScheme
+
+module RefinementTypeScheme =
+struct
+  type t = T of {tyvars : Tyvar.t list;
+                 refss : RefinementSortScheme.t;
+                 (* ICFP taking its toll What does this signify *)
+                 isAssume : bool}
+
+  let generalizeRefTy = fun (tyvars, refTy) ->
+    T {tyvars = tyvars; refss = RefSS.fromRefTy refTy; 
+       isAssume = false}
+
+  let generalize = fun (tyvars, refss) ->
+    T {tyvars = tyvars; refss = refss; isAssume = false}
+
+  let generalizeAssump = fun (tyvars, refss, isAssume) ->
+    T {tyvars = tyvars; refss = refss; isAssume = isAssume}
+
+  let isAssumption = fun(T {isAssume;_}) -> isAssume
+
+  let specialize = fun (T {tyvars;refss;_}) ->
+    refss
+
+  let specializeRefTy = fun (T {tyvars;refss;_}) ->
+    RefSS.toRefTy refss
+
+  let layout (T {tyvars;refss;isAssume}) =
+    let flaglyt = (if isAssume then L.str "Assumption: " else
+                     L.empty) in 
+    let tyvlyt =
+      let consFun = fun x xs -> x :: xs in  
+      List.fold_right (consFun) [] (List.map (fun tyv ->
+          L.str (Tyvar.toString tyv)) tyvars) in 
+    let refsslyt = RefinementSortScheme.layout refss in 
+    L.seq [flaglyt;( L.seq tyvlyt);refsslyt]
+
+
+  let instantiate (T{tyvars;refss;_},tydvec) =
+    let len = List.length in 
+    let _ = assert (len tyvars = len tydvec) in 
+    let tyvmap = Vector.zip tydvec tyvars
+            (*
+		           * It is possible that we encounter a tyvar
+		           * that is not generalized in this RefTyS.
+		           * We do not panic.
+		           *)
+    in
+    RefSS.mapTyD refss (Types_helper.instantiateTyvars tyvmap)
+end
+
+module  RefTyS = RefinementTypeScheme
+
+module RelSpec = struct 
+  module TypeSpec =
+    struct
+      type t = T of {isAssume : bool;
+                   name:Var.t;
+                   params: RelId.t list;
+                   refty : RefinementType.t}
+      let layout = fun (T {name=var;params;refty;_}) -> 
+                      L.seq [
+       				        	L.str ((Var.toString var) ^ " : ");
+       				        	L.str (Vector.toString RelId.toString params);
+       				        	RefinementType.layout refty]
+       let toString t = L.toString (layout t)                 
+    end
+  
+  type t = T of {reldecs : StructuralRelation.t list;
+                 primdecs : PrimitiveRelation.t list;
+                 typespecs : TypeSpec.t list}
+   let layout = fun (T {reldecs;primdecs;typespecs;_}) ->
+      				      let srs = Vector.toString (StructuralRelation.toString) (reldecs) in 
+      				      let prs = Vector.toString (PrimitiveRelation.toString) (primdecs) in 
+      				      let tslyt = L.align (Vector.toListMap (typespecs,
+      				          TypeSpec.layout))
+      				      in
+      				        L.align [L.str srs; L.str prs; tslyt]
+
+   let toString t = L.toString (layout t)   
+
+   let mk_empty_relspec () = T {reldecs= [];
+                 primdecs = [];
+                 typespecs =[]}                
+end
+
+module Bind = struct
+  exception BindException of string 
+
+  type transformer = Fr of Var.t list * RelLang.expr 
+  type expr = Expr of {ground : RelId.t * Types.type_desc list * Var.t;
+                       fr : transformer}
+
+  type abs = Abs of Var.t * expr
+
+  type def = 
+      Def of  {tyvars : Tyvar.t list; params : RelId.t list; abs : abs}
+    | BogusDef
+
+  let symbase = "v_"
+
+  let count = ref 0
+
+  let genVar = fun _ -> 
+    let id = symbase ^ (string_of_int (!count)) in 
+    let _ = count := !count + 1
+    in
+    Var.fromString id 
+
+  let frToString (Fr (vs,rexpr)) =
+    let vsStr = Vector.toString Var.toString vs in 
+    let reStr = RelLang.exprToString rexpr
+    in
+    "\\"^vsStr^". "^reStr
+
+  let bindExprToString (Expr {ground = (r,tydv,x);fr}) =
+    let tydStr = Vector.toString TyD.toString tydv in 
+    let vStr = Var.toString x in 
+    let gStr = (RelId.toString r)^" "^tydStr^" ("^vStr^")" in 
+    let frStr = frToString fr in
+
+    "bind ("^gStr^","^frStr^")"
+
+  let absToString (Abs (v,bindex)) = 
+    let bStr = bindExprToString bindex in
+    "\\"^(Var.toString v)^". "^bStr
+
+  let defToString definition = 
+      match definition with  
+     | (Def {tyvars;params=rs;abs}) ->
+      let tyvStr = Vector.toString Tyvar.toString tyvars in 
+      let absStr = absToString abs in 
+      let rsStr = fun _ -> Vector.toString RelId.toString rs in
+      
+        (match Vector.length rs with 
+          0 -> absStr
+          | _ -> (tyvStr ^" \\"^(rsStr ())^". "^absStr))
+
+
+    | BogusDef -> "-- NA --"
+
+  let groundRelTyS pts = 
+    let PTS.T {tyvars;sortscheme = PSS.T {sort = ProjSort.T 
+                                              {paramsorts; sort=groundSort}; _}} = pts in 
+    (* SVar to Tyvar map *)
+    let svarMap = List.map (fun (SPS.ColonArrow (a, TS.Tuple [TS.S t])) -> (t,a)) paramsorts in 
+    let mapSVar = fun t -> 
+      match Vector.peekMap (svarMap, fun (t',a) -> if (SVar.eq t t') then Some a else None) with
+        Some a -> a 
+      | None -> raise (BindException "SVar impossible case") in 
+    let SPS.ColonArrow (tyd,TS.Tuple tts) = groundSort in
+    let tyds = List.map (fun tt -> match tt with  
+          TS.S t -> TS.T ( mapSVar t )
+        | _ -> tt) tts in 
+
+    PTS.simple (tyvars, SPS.ColonArrow (tyd, TS.Tuple tyds))
+
+
+  let makeGroundDef (params,rterm) : RelLang.term = 
+    let open RelLang in 
+    let  empty = fun _ -> Vector.new0 () in 
+    let isParam = fun rid -> List.exists (fun p ->
+        RelId.toString rid = RelId.toString p) params in 
+    let rec doItExp exp = match exp with
+        U (e1,e2) -> U (doItExp e1, doItExp e2)
+      | X (e1,e2) -> X (doItExp e1, doItExp e2)
+      | D (e1,e2) -> D (doItExp e1, doItExp e2)
+      | R (RInst {rel;targs;sargs;args},x) -> if isParam rel 
+          then RelLang.rId x
+          else (R (RInst {rel=rel; targs=targs; sargs=empty();
+                          args=empty()},x))
+      | _ -> exp
+
+    in
+    match rterm with  
+      Expr exp -> Expr ( doItExp exp )
+    | Star (RInst {rel;targs;sargs;args}) -> Star (
+        RInst {rel=rel; targs=targs; sargs=sargs; 
+               args=empty()} )
+
+
+  let makeBindDef (id,params,pts) : def =
+    let PTS.T {sortscheme = PSS.T {sort = PS.T {paramsorts = 
+                                                  paramSorts; sort=groundSort}; _}; tyvars} = pts in 
+    (* SVar to RelId map *)
+    let svarMap = List.map2 (fun (SPS.ColonArrow (_,TS.Tuple [TS.S t])) rid -> (t,rid)) paramSorts params  in 
+    let mapSVar = fun t -> match Vector.peekMap (svarMap,  
+                                                 fun (t',rid) -> if (SVar.eq t t') then Some rid else None) with
+      Some rid -> rid 
+    | None -> raise (BindException "SVar impossible case") in 
+    let SPS.ColonArrow (_,TS.Tuple tts) = groundSort in 
+    let (bvs,rApps) = Vector.unzip (List.map ( fun tt -> 
+        let v = genVar () in 
+        match tt with 
+          TS.T tyd -> (v,RelLang.rId v)
+        | TS.S t -> (v, RelLang.appR (mapSVar t, empty (), v))
+      ) tts) in 
+    let Some xexpr = List.fold_right (fun rApp xop -> match xop with 
+          None -> Some rApp 
+        | Some xexpr -> Some (RelLang.crossprd (rApp,xexpr))) rApps None in 
+    let bv = genVar () in 
+    let fr = Fr (bvs,xexpr) in 
+    let targs = List.map (Tyvar.makeTvar) tyvars in 
+    let bindex = Expr {ground = (id,targs,bv); fr=fr} in 
+    let bindabs = Abs (bv,bindex)
+    in
+    Def {tyvars=tyvars; params=params; abs=bindabs}
+
+  let instantiate (Def {tyvars;params;abs},tydvec,ridvec) : abs =
+    let tsubsts = try Vector.zip tydvec tyvars with 
+        _ -> raise (BindException  "Bind : tyvar inst error") in 
+    let rmap = try  Vector.zip params ridvec with 
+      | _ -> raise (BindException "Bind : params inst error") in 
+    let err = fun _ -> raise (BindException "Bind: inst error") in 
+    let mapt = Types_helper.instantiateTyvars tsubsts in  
+    let mapr = mkMapper rmap RelId.equal err in 
+    let  Abs (bv,Expr {ground=(gr,targs,_); fr=Fr (xs,rexpr)}) = abs in 
+    let targs' = List.map  mapt targs in 
+    let ground' = (gr,targs',bv) in 
+    let rexpr' = RelLang.mapRel rexpr mapr in 
+    let expr' = Expr {ground=ground'; fr = Fr (xs,rexpr')} in 
+    let abs' = Abs (bv, expr') in 
+    abs'
+
+  let instantiate (BogusDef, _, _) = raise (BindException "Cannot instantiate \
+                                                           								\ bogus bind def")
+
+  let fromAbs (abs:abs) : def = Def {tyvars=empty (); params=empty (); abs=abs}
+end

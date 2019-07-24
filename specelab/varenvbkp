@@ -1,0 +1,73 @@
+module type VarEnvStruts  = sig
+	module Var : Ident
+	module SpecLang : SpecLang
+end
+
+(*module type VarEnv (S : VarEnvStruts)= sig
+
+	include VarEnvStruts
+	type tyscheme
+    exception VarNotFound of Var.t
+  	type t
+  	val empty : t
+  	val mem : t -> Var.t -> bool
+  	val find : t -> Var.t -> tyscheme
+  	val add : t -> (Var.t * tyscheme) -> t
+  	val remove : t -> Var.t -> t
+  	val toVector : t -> (Var.t * tyscheme) vector
+  	val layout : t -> Layout.t
+
+end*)
+
+
+module VarEnv (S: VarEnvStruts) : VarEnv = 
+
+struct 
+	open S
+	module L = Layout
+	open SpecLang
+
+	let (<<) = fun f g x -> f (g x)
+
+	type tyscheme = RefinementTypeScheme.t
+
+  	let varStrEq = fun (v,v') -> (Var.toString v) = (Var.toString v')
+
+	module Key:Key = 
+  	struct
+    	type t = Var.t
+    	let equal = varStrEq
+    	let layout = L.str << Var.toString
+  	end
+  	
+  	module Value:Value = 
+  	struct
+    	type t = tyscheme
+    	let layout = RefinementTypeScheme.layout
+  	end
+
+  
+  	module VarMap = ApplicativeMap (module Key = Key
+                                     module Value = Value)
+
+  	exception VarNotFound of Var.t
+
+  	type t = VarMap.t
+
+  	let empty = VarMap.empty
+
+  	let mem = VarMap.mem
+
+  	let find var env = 
+  		try VarMap.find  var  env with
+  		| (VarMap.KeyNotFound k) -> raise (VarNotFound k)
+
+  	let add = fun env -> fun (var,tys) -> VarMap.add env var tys 
+
+  	let remove = VarMap.remove
+
+  	let toVector = VarMap.toVector
+
+  	let layout = VarMap.layout
+
+end

@@ -1,0 +1,71 @@
+[
+  structure_item (test1.ml[1,0+0]..[1,0+11])
+    Pstr_open Fresh "Printf" (test1.ml[1,0+5]..[1,0+11])
+  structure_item (test1.ml[2,12+0]..[5,87+30])
+    Pstr_value Nonrec
+    [
+      <def>
+        pattern (test1.ml[2,12+4]..[2,12+6])
+          Ppat_construct "()" (test1.ml[2,12+4]..[2,12+6])
+          None
+        expression (test1.ml[3,22+8]..[5,87+30])
+          Pexp_let Nonrec
+          [
+            <def>
+              pattern (test1.ml[3,22+12]..[3,22+15])
+                Ppat_var "foo" (test1.ml[3,22+12]..[3,22+15])
+              expression (test1.ml[3,22+18]..[3,22+32])
+                Pexp_fun
+                Nolabel
+                None
+                pattern (test1.ml[3,22+22]..[3,22+23])
+                  Ppat_var "x" (test1.ml[3,22+22]..[3,22+23])
+                expression (test1.ml[3,22+27]..[3,22+32])
+                  Pexp_apply
+                  expression (test1.ml[3,22+29]..[3,22+30])
+                    Pexp_ident "+" (test1.ml[3,22+29]..[3,22+30])
+                  [
+                    <arg>
+                    Nolabel
+                      expression (test1.ml[3,22+27]..[3,22+28])
+                        Pexp_ident "x" (test1.ml[3,22+27]..[3,22+28])
+                    <arg>
+                    Nolabel
+                      expression (test1.ml[3,22+31]..[3,22+32])
+                        Pexp_constant PConst_int (1,None)
+                  ]
+          ]
+          expression (test1.ml[4,59+8]..[5,87+30])
+            Pexp_let Nonrec
+            [
+              <def>
+                pattern (test1.ml[4,59+12]..[4,59+15])
+                  Ppat_var "res" (test1.ml[4,59+12]..[4,59+15])
+                expression (test1.ml[4,59+18]..[4,59+23])
+                  Pexp_apply
+                  expression (test1.ml[4,59+18]..[4,59+21])
+                    Pexp_ident "foo" (test1.ml[4,59+18]..[4,59+21])
+                  [
+                    <arg>
+                    Nolabel
+                      expression (test1.ml[4,59+22]..[4,59+23])
+                        Pexp_constant PConst_int (3,None)
+                  ]
+            ]
+            expression (test1.ml[5,87+8]..[5,87+30])
+              Pexp_apply
+              expression (test1.ml[5,87+8]..[5,87+21])
+                Pexp_ident "Printf.printf" (test1.ml[5,87+8]..[5,87+21])
+              [
+                <arg>
+                Nolabel
+                  expression (test1.ml[5,87+22]..[5,87+26])
+                    Pexp_constant PConst_string("%d",None)
+                <arg>
+                Nolabel
+                  expression (test1.ml[5,87+27]..[5,87+30])
+                    Pexp_ident "res" (test1.ml[5,87+27]..[5,87+30])
+              ]
+    ]
+]
+

@@ -1,0 +1,80 @@
+[
+  structure_item (test4.ml[4,37+0]..test4.ml[7,107+21])
+    Tstr_value Nonrec
+    [
+      <def>
+        pattern (test4.ml[4,37+4]..test4.ml[4,37+7])
+          Tpat_var "bar/1002"
+        expression (test4.ml[4,37+10]..test4.ml[7,107+21])
+          Texp_function
+          Nolabel
+          [
+            <case>
+              pattern (test4.ml[4,37+14]..test4.ml[4,37+21])
+                Tpat_tuple
+                [
+                  pattern (test4.ml[4,37+15]..test4.ml[4,37+16])
+                    Tpat_var "x/1003"
+                  pattern (test4.ml[4,37+19]..test4.ml[4,37+20])
+                    Tpat_var "w/1004"
+                ]
+              expression (test4.ml[5,62+8]..test4.ml[7,107+21])
+                Texp_let Nonrec
+                [
+                  <def>
+                    pattern (test4.ml[5,62+12]..test4.ml[5,62+13])
+                      Tpat_var "z/1005"
+                    expression (test4.ml[5,62+17]..test4.ml[5,62+18])
+                      Texp_constant Const_int 2
+                ]
+                expression (test4.ml[6,85+8]..test4.ml[7,107+21])
+                  Texp_let Nonrec
+                  [
+                    <def>
+                      pattern (test4.ml[6,85+12]..test4.ml[6,85+13])
+                        Tpat_var "y/1006"
+                      expression (test4.ml[6,85+16]..test4.ml[6,85+17])
+                        Texp_constant Const_int 3
+                  ]
+                  expression (test4.ml[7,107+8]..test4.ml[7,107+21])
+                    Texp_apply
+                    expression (test4.ml[7,107+18]..test4.ml[7,107+19])
+                      Texp_ident "Pervasives!.+"
+                    [
+                      <arg>
+                        Nolabel
+                        expression (test4.ml[7,107+8]..test4.ml[7,107+17])
+                          Texp_apply
+                          expression (test4.ml[7,107+14]..test4.ml[7,107+15])
+                            Texp_ident "Pervasives!.+"
+                          [
+                            <arg>
+                              Nolabel
+                              expression (test4.ml[7,107+8]..test4.ml[7,107+13])
+                                Texp_apply
+                                expression (test4.ml[7,107+10]..test4.ml[7,107+11])
+                                  Texp_ident "Pervasives!.+"
+                                [
+                                  <arg>
+                                    Nolabel
+                                    expression (test4.ml[7,107+8]..test4.ml[7,107+9])
+                                      Texp_ident "y/1006"
+                                  <arg>
+                                    Nolabel
+                                    expression (test4.ml[7,107+12]..test4.ml[7,107+13])
+                                      Texp_ident "z/1005"
+                                ]
+                            <arg>
+                              Nolabel
+                              expression (test4.ml[7,107+16]..test4.ml[7,107+17])
+                                Texp_ident "x/1003"
+                          ]
+                      <arg>
+                        Nolabel
+                        expression (test4.ml[7,107+20]..test4.ml[7,107+21])
+                          Texp_ident "w/1004"
+                    ]
+          ]
+    ]
+]
+

@@ -1,0 +1,13 @@
+#ifndef __PIC__
+#  define ARCH_CODE32
+#endif
+#define ARCH_SIXTYFOUR
+#define SIZEOF_INT 4
+#define SIZEOF_LONG 8
+#define SIZEOF_PTR 8
+#define SIZEOF_SHORT 2
+#define SIZEOF_LONGLONG 8
+#undef ARCH_BIG_ENDIAN
+#undef ARCH_ALIGN_DOUBLE
+#undef ARCH_ALIGN_INT64
+#define ASM_CFI_SUPPORTED

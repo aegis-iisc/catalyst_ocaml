@@ -1,0 +1,16 @@
+### Starting build.
+Backtrace:
+                      - Failed to build the target specelab/elaborateVarEnv.byte
+                          - Building specelab/elaborateVarEnv.byte:
+                              - Building specelab/elaborateVarEnv.cmo:
+                                  - Failed to build all of these:
+                                      - Building specelab/elaborateVarEnv.ml:
+                                          - Failed to build all of these:
+                                              - Building specelab/elaborateVarEnv.mly
+                                              - Building specelab/elaborateVarEnv.mll
+                                      - Building specelab/elaborateVarEnv.mli:
+                                          - Building specelab/elaborateVarEnv.mly
+                                      - Building specelab/elaborateVarEnv.mlpack
+                                      - Building specelab/elaborateVarEnv.mli:
+                                          - Building specelab/elaborateVarEnv.mly
+# Compilation unsuccessful.

@@ -1,0 +1,257 @@
+%{
+open SpecLang
+open RelLang
+module TypeSpec = SpecLang.RelSpec.TypeSpec
+module RefTy = SpecLang.RefinementType
+let defaultCons = SpecLang.Con.default
+let symbase = "sp_"
+let count = ref 0
+let genVar = fun _ -> 
+  let id = symbase ^ (string_of_int (!count)) in 
+  let () = count := !count + 1
+    in
+      Var.fromString id 
+let ($) (f,arg) = f arg
+let  empty = fun _ -> Vector.new0 ()
+%}
+
+%token   PRIMITIVE 
+ %token RELATION 
+ %token  TRUE  
+ %token FALSE 
+ %token  ASSUME  
+ %token NOT  
+ %token LAMBDA 
+ %token  DOT  
+ %token PLUS  
+ %token MINUS  
+ %token UNION 
+ %token  CROSSPRD  
+ %token SUBSETEQ   
+ %token SUBSET  
+ %token EQUALOP  
+ %token  IMPL  
+ %token  IFF   
+ %token CONJ  
+ %token  DISJ
+ %token  EOL
+%token    COLON  
+%token SEMICOLON 
+%token  COMMA  
+%token  STAR  
+%token LPAREN  
+%token  RPAREN  
+%token LCURLY 
+%token  RCURLY 
+%token  LBRACE  
+%token RBRACE  
+%token ARROW  
+%token  PIPE
+%token  <string> ID 
+%token <int> INT 
+%token UINST
+%token   EOF
+
+%left UINST
+
+%start <SpecLang.RelSpec.t> start
+%%
+start:   
+  | s=spec EOF {s}
+  | EOF       {RelSpec.mk_empty_relspec ()}
+
+spec:   
+  |d = decsandtys  {d}
+
+decsandtys: 
+   | r=reldec SEMICOLON d=decsandtys 
+                  {
+                    match d with 
+                    RelSpec.T ({reldecs; primdecs; typespecs}) -> 
+                    RelSpec.T {reldecs = r ::reldecs; 
+                              primdecs = primdecs;
+                            typespecs = typespecs}
+                          }
+  | p= primdec SEMICOLON d=decsandtys 
+                {match d with 
+                  RelSpec.T ({reldecs; primdecs; 
+                  typespecs}) -> 
+                    RelSpec.T {primdecs = p :: primdecs; 
+                              reldecs=reldecs; 
+                              typespecs = typespecs}
+                }
+  | t=typespec SEMICOLON d=decsandtys
+                {match d with
+                 RelSpec.T {reldecs; primdecs; 
+                  typespecs} -> 
+                    RelSpec.T {reldecs = reldecs; primdecs=primdecs;
+                      typespecs = t :: typespecs}
+                }
+  |             {RelSpec.T {reldecs = [];
+                  primdecs = Vector.new0 ();
+                  typespecs = []}};
+
+primdec : PRIMITIVE RELATION i=ID EQUALOP p=primdef {PrimitiveRelation.T
+                    {id=RelId.fromString i; 
+                    def=PrimitiveRelation.alphaRename p}};
+
+primdef : re=rexpr {PrimitiveRelation.Nullary re}
+        | LAMBDA i=ID DOT p=primdef {PrimitiveRelation.Nary
+                (Var.fromString i, p)};
+
+reldec : RELATION i=ID patmseq=patmatchseq 
+          {StructuralRelation.T {id=RelId.fromString i;
+                params = empty ();
+                mapp = patmseq}}
+       | RELATION LPAREN i=ID p=params RPAREN patmseq=patmatchseq 
+          {StructuralRelation.T {id=RelId.fromString i;
+                params = p;
+                mapp = patmseq}}
+       | RELATION i=ID EQUALOP ie=instexpr STAR
+          {StructuralRelation.T{id=RelId.fromString i;
+                params = empty ();
+                mapp = [(defaultCons,None,
+                  Star ie)]}}
+       | RELATION LPAREN i=ID p=params RPAREN EQUALOP ie=instexpr STAR
+          {StructuralRelation.T{id=RelId.fromString i;
+                params = p;
+                mapp = [(defaultCons,None,
+                  Star ie)]}};
+
+params : i=ID   {[RelId.fromString i]}
+       | i=ID p=params {(RelId.fromString i)::p};
+
+paramseq : i=ID     {[RelId.fromString i]}
+       | i=ID COMMA pseq=paramseq {(RelId.fromString i)::pseq};
+
+patmatchseq : pm=patmatch PIPE pms=patmatchseq {pm :: pms}
+            | pm=patmatch {[pm]};
+
+
+patmatch : LPAREN cp=conpat RPAREN EQUALOP re=rexpr 
+              {match cp with (c,vlop) -> (c, vlop, Expr re)}
+         | i=ID EQUALOP re=rexpr {(Con.fromString i, None, Expr re)};
+
+
+conpat :  i=ID {Con.fromString i, None}
+       |  i=ID co=conargs {Con.fromString i, Some co};
+
+conargs : i=ID {Vector.fromList [Var.fromString i]}
+        | LPAREN is=idseq RPAREN {Vector.fromList is};
+
+idseq : i=ID {[Var.fromString i]}
+      | i=ID COMMA is=idseq {(Var.fromString i)::is};
+
+instexpr : i=ID {RInst { sargs = empty (); 
+                targs = empty(); args = empty (); 
+                rel = RelId.fromString i}}
+         | i=ID ies=instexprs {RInst {
+                sargs = empty (); targs = empty();
+                args = Vector.fromList ies;
+                rel = RelId.fromString i}};
+
+instexprs : LBRACE ie=instexpr RBRACE {[ie]}
+          | LBRACE ie=instexpr RBRACE ies=instexprs {ie :: ies};
+
+
+rexpr : ra=ratom CROSSPRD re=rexpr {X(ra,re)}
+      | ra=ratom UNION re=rexpr {U(ra,re)}
+      | ra=ratom MINUS re=rexpr {D(ra,re)}
+      | ra=ratom {ra};
+
+ratom : LCURLY LPAREN RPAREN RCURLY {T(Vector.fromList [])}
+      | LCURLY LPAREN els=elemseq RPAREN RCURLY {T(Vector.fromList els)}
+      | ie=instexpr LPAREN i=ID RPAREN {R (ie, Var.fromString i)}
+      | LPAREN re=rexpr RPAREN {re};
+
+elemseq : el=elem {[el]}
+        | el=elem COMMA els=elemseq {el::els};
+
+elem : ii=INT {Int(ii)}
+     | t=TRUE {Bool(true)}
+     | f=FALSE {Bool(false)}
+     | i=ID {Var(Var.fromString i)};
+
+
+
+typespec : ASSUME i=ID COLON rt=refty {TypeSpec.T {isAssume = true;
+                                              name = (Var.fromString i);
+                                              params = empty ();
+                                              refty = rt}}
+         | i=ID COLON rt=refty {TypeSpec.T {isAssume = false;
+                                       name = (Var.fromString i);
+                                       params = empty ();
+                                       refty = rt}}
+         | LPAREN ps=paramseq RPAREN i=ID COLON rt=refty {
+                    TypeSpec.T {isAssume = false;
+                                name = Var.fromString i;
+                                params = Vector.fromList ps; 
+                                refty = rt}};
+
+refty : rta=reftyatom {rta}
+      | vrta=vartyatom ARROW rt=refty {RefTy.Arrow (vrta, rt)};
+
+reftyatom : bt=basety {bt}
+          | LPAREN vas=vartyseq RPAREN  {match vas with
+                          
+                          [(v, (RefTy.Base (_, _, _) as refty))] -> 
+                              RefTy.alphaRenameToVar (refty) v
+                        | [(v,refty)] -> refty
+                        | _ -> RefTy.Tuple (Vector.fromList vas)};
+
+vartyatom : bt=basety {match bt with 
+                      RefTy.Base (v,_,_) -> (v,RefTy.alphaRename bt)
+                    | _ -> raise (Failure "Impossible case of basety")}
+           | LPAREN vas=vartyseq RPAREN  {match vas with
+                          [x] -> x 
+                        | _ -> (genVar (), RefTy.Tuple 
+                            (Vector.fromList vas))
+                  };
+
+
+vartyseq : vt=varty {[vt]}
+         | vt=varty COMMA vts=vartyseq {vt :: vts};
+
+varty : rt=refty {let open RefTy in 
+                        match rt with
+                          Base (v,_,_) -> (v,alphaRename rt)
+                        | Tuple _ -> (genVar (),rt)
+                        | Arrow _ -> (genVar (),rt)
+              };
+
+basety : i=ID {RefinementType.Base ((Var.fromString i), 
+                TyD.makeTnil (),
+                Predicate.truee())}
+       | LCURLY i=ID RCURLY {RefinementType.Base ((Var.fromString i), 
+                TyD.makeTnil(), 
+                Predicate.truee())}
+       | LCURLY i=ID PIPE pr=pred RCURLY {RefinementType.Base ((Var.fromString i), 
+                TyD.makeTnil (), pr)};
+
+pred :  pa=patom {pa}
+     |  pa=patom IMPL pr=pred {Predicate.If (pa,pr)}
+     |  pa=patom IFF pr=pred {Predicate.Iff (pa,pr)} 
+     |  pa=patom CONJ pr=pred {Predicate.Conj (pa,pr)}
+     |  pa=patom DISJ pr=pred {Predicate.Disj (pa,pr)};
+
+patom : TRUE {Predicate.truee()}
+      | NOT pa=patom {Predicate.Not pa}
+      | LPAREN pr=pred RPAREN {pr}
+      | ra=rpatom {Predicate.Rel ra}
+      | ba=bpatom {Predicate.Base ba};
+
+bpatom : LBRACE i1=ID EQUALOP i2=ID RBRACE {Predicate.BasePredicate.varEq 
+                      (Var.fromString i1, Var.fromString i2)}
+       | LBRACE i1=ID EQUALOP TRUE RBRACE {Predicate.BasePredicate.varBoolEq 
+                      (Var.fromString i1, true)}
+       | LBRACE i1=ID EQUALOP FALSE RBRACE {Predicate.BasePredicate.varBoolEq 
+                      (Var.fromString i1, false)}; 
+    
+rpatom : re1=rexpr EQUALOP re2=rexpr {Predicate.RelPredicate.Eq(re1,re2)}
+       | re1=rexpr SUBSET re2=rexpr {Predicate.RelPredicate.Sub(re1,re2)}
+       | re1=rexpr SUBSETEQ re2=rexpr {Predicate.RelPredicate.SubEq(re1,re2)};
+
+
+
+
+

@@ -1,0 +1,221 @@
+(**************************************************************************)
+(*                                                                        *)
+(*                                 OCaml                                  *)
+(*                                                                        *)
+(*             Xavier Leroy, projet Cristal, INRIA Rocquencourt           *)
+(*                                                                        *)
+(*   Copyright 2002 Institut National de Recherche en Informatique et     *)
+(*     en Automatique.                                                    *)
+(*                                                                        *)
+(*   All rights reserved.  This file is distributed under the terms of    *)
+(*   the GNU Lesser General Public License version 2.1, with the          *)
+(*   special exception on linking described in the file LICENSE.          *)
+(*                                                                        *)
+(**************************************************************************)
+
+open SpecLang
+open Format
+open Typedtree
+open Compenv
+(*Author - Ashish*)
+module VC = Vcencode
+module SL = SpecLang
+module Nm = Normalize
+module ElabVE = ElabVarEnv
+
+exception CantDischargeVC
+
+
+(* Compile a .mli file *)
+
+(* Keep in sync with the copy in optcompile.ml *)
+
+let tool_name = "catalyst"
+
+
+
+
+let interface ppf sourcefile outputprefix =
+  Compmisc.init_path false;
+  let modulename = module_of_filename ppf sourcefile outputprefix in
+  Env.set_unit_name modulename;
+  let initial_env = Compmisc.initial_env () in
+  let ast = Pparse.parse_interface ~tool_name ppf sourcefile in
+  if !Clflags.dump_parsetree then fprintf ppf "%a@." Printast.interface ast;
+  if !Clflags.dump_source then fprintf ppf "%a@." Pprintast.signature ast;
+  let tsg = Typemod.type_interface initial_env ast in
+  if !Clflags.dump_typedtree then fprintf ppf "%a@." Printtyped.interface tsg;
+  let sg = tsg.sig_type in
+  if !Clflags.print_types then
+    Printtyp.wrap_printing_env initial_env (fun () ->
+        fprintf std_formatter "%a@."
+          Printtyp.signature (Typemod.simplify_signature sg));
+  ignore (Includemod.signatures initial_env sg sg);
+  Typecore.force_delayed_checks ();
+  Warnings.check_fatal ();
+  if not !Clflags.print_types then begin
+    let deprecated = Builtin_attributes.deprecated_of_sig ast in
+    let sg =
+      Env.save_signature ~deprecated sg modulename (outputprefix ^ ".cmi")
+    in
+    Typemod.save_signature modulename tsg outputprefix sourcefile
+      initial_env sg ;
+  end
+
+(* Compile a .ml file *)
+
+let print_if ppf flag printer arg =
+  if !flag then fprintf ppf "%a@." printer arg;
+  arg
+
+let (++) x f = f x
+
+(*load the source file and normalize it before creating the typed tree*)
+(* let np ppf env fenv sourcefile =
+Pparse.file ppf sourcefile Parse.implementation ast_impl_magic_number
+   |> Nm.desugar_forloops
+   |> Nm.eliminate_anys
+   |> (fun x -> if !Clflags.no_anormal && !Clflags.summarize = None then x else
+         try Nm.normalize_structure x with Nm.NormalizationFailure (e, t, m) ->
+           Format.printf "@[Normalization failed at %a(%s) %a@.@]"
+           Location.print t m Qdebug.pprint_expression e; assert false)
+   |> print_if ppf Clflags.dump_parsetree Printast.implementation
+   |> type_implementation env
+   |> (fun (str, _, env) -> (str, env, fenv))
+
+
+ *)
+
+
+(*generates the Specs from the spec file*)
+let catalyst_parse_spec_file (ppf:Format) (fileName:string) : SL.RelSpec.T =
+  let elaborateSMLWithSpec =
+      fun specfile -> 
+         try  
+          let specast = SpecFrontEnd.lex_and_parse_file (specfile)
+          in specast
+         with 
+        | e -> raise e
+  in       
+  let relspec_ast = elaborateSMLWithSpec file in 
+  let string_ast = RelSpec.toString relspec_ast in    
+    
+     fprintf ppf "%a@" string_ast;
+    relspec_ast
+
+
+let catalyst_elaborate_envs ppf relspecs typedtree = 
+(*The logic of elaborateSMLWithSpec goes here*)
+    (* let norm_sourcefile x =
+            try Nm.normalize_structure typedtree 
+         with Nm.NormalizationFailure (e, t, m) ->
+      (Format.printf "@[Normalization failed at %a(%s) %a@.@]") ;false;
+        in 
+    let a_norm_tree = norm_sourcefile typedtree in 
+     *)
+     let speclang = relspec in 
+    let (ve, re, pre) =  ElabVE.elaborate a_norm_tree speclang in 
+    let  _ = Format.printf "@Var Env:\n"
+    let  _ = Format.printf (VE.layout ve)
+    let  _ = Format.printf "@Rel Env:\n"
+    let _ = Format.printf (RE.layout re)
+    let _ = Format.printf "@Param Rel Env:\n"
+    let _ = Format.printf (PRE.layout pre)
+     let _ = Format.printf  "\n"
+           
+
+     (*get the  verification conditions*)
+
+    let initial_vcs = SpecVerify.doIt(ve, PRE.empty, typedtree) in 
+    let elaborated_vcs = VC.elaborate(re, pre, initial_vcs) in 
+
+    let  dischargeVC i vc = 
+        match VCE.discharge vc with
+        VCE.Success -> 
+            Format.printf ("VC# "^(Int.toString i)^" discharged\n")
+        | VCE.Undef -> (Format.printf ("Solver timeout  while trying to \
+                  \discharge VC #"^(Int.toString i)); 
+                  z3_log_close ();
+        raise CantDischargeVC)
+        |VCE.Failure -> (print ("VC # " ^(Int.toString i)^
+                " is invalid!"); 
+                  z3_log_close ();
+                  raise CantDischargeVC)
+    in  
+
+    let unit_lists = List.mapi dischargeVC elaborated_vcs in   
+
+    let _ = z3_log_close () in 
+    
+    Formatr.printf (fileName)^" is correct w.r.t given specification!\n"
+
+
+
+
+
+
+
+
+let implementation ppf sourcefile outputprefix =
+  Compmisc.init_path false;
+  let modulename = module_of_filename ppf sourcefile outputprefix in
+  Env.set_unit_name modulename;
+  let env = Compmisc.initial_env() in
+  try
+    let (typedtree, coercion) =
+      Pparse.parse_implementation ~tool_name ppf sourcefile
+      ++
+        (*Ashish : we use the liquid type normalization routine, which works
+          on the parse tree*) 
+        try 
+          Nm.normalize_structure 
+        with Nm.NormalizationFailure (e, t, m) ->
+           Format.printf "@[Normalization failed at %a(%s) %a@.@]"
+           ; assert false
+      ++ print_if ppf Clflags.dump_parsetree Printast.implementation
+      ++ print_if ppf Clflags.dump_source Pprintast.structure
+      ++ Timings.(time (Typing sourcefile))
+          (Typemod.type_implementation sourcefile outputprefix modulename env)
+      ++ print_if ppf Clflags.dump_typedtree
+        Printtyped.implementation_with_coercion
+    in
+    let rels = catalyst_parse_spec_file ppf fileName in 
+    catalyst_elaborate_envs ppf rels typedtree; 
+
+    if !Clflags.print_types then begin
+      Warnings.check_fatal ();
+      Stypes.dump (Some (outputprefix ^ ".annot"))
+    end else ()(*begin
+      let bytecode, required_globals =
+        (typedtree, coercion)
+        ++ Timings.(time (Transl sourcefile))
+            (Translmod.transl_implementation modulename)
+        ++ print_if ppf Clflags.dump_rawlambda Printlambda.lambda
+        ++ Timings.(accumulate_time (Generate sourcefile))
+            (fun lambda ->
+              Simplif.simplify_lambda lambda
+              ++ print_if ppf Clflags.dump_lambda Printlambda.lambda
+              ++ Bytegen.compile_implementation modulename
+              ++ print_if ppf Clflags.dump_instr Printinstr.instrlist)
+      in
+      let objfile = outputprefix ^ ".cmo" in
+      let oc = open_out_bin objfile in
+      try
+        bytecode
+        ++ Timings.(accumulate_time (Generate sourcefile))
+            (Emitcode.to_file oc modulename objfile);
+        Warnings.check_fatal ();
+        close_out oc;
+        Stypes.dump (Some (outputprefix ^ ".annot"))
+      with x ->
+        close_out oc;
+        remove_file objfile;
+        raise x
+    end*)
+  with x ->
+    Stypes.dump (Some (outputprefix ^ ".annot"));
+    raise x
+
+let c_file name =
+  Location.input_name := name;
+  if Ccomp.compile_file name <> 0 then exit 2

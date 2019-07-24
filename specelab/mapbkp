@@ -1,0 +1,27 @@
+(* module name : <signature> = <implemenation> *)
+module  type Key = sig
+
+	type t 
+	val equal : t*t -> bool
+	val layout : Layout.t
+end 
+module type Value =  sig
+
+ type t
+  val layout: t -> Layout.t
+
+	
+end 
+
+module ApplicativeMap (Key : Key) (Value: Value) = sig
+	exception KeyNotFound of Key.t
+  type t
+  val empty : t
+  val mem : t -> Key.t -> bool
+  val find : t -> Key.t -> Value.t
+  val add : t -> Key.t -> Value.t -> t
+  val remove : t -> Key.t -> t
+  val map : t -> (Key.t * Value.t -> Key.t * Value.t) -> t
+  val toVector : t -> (Key.t * Value.t) vector
+  val layout : t -> Layout.t
+end  
