@@ -81,7 +81,7 @@ let catalyst_elaborate_envs relspecs typedtree =
     let  _ = Printf.printf "@Var Env:\n" in 
     let  _ = Printf.printf "---------\n" in 
     
-    let  _ = Printf.printf "%s" (L.toString (VE.layout ve)) in 
+    let  _ = Printf.printf "%s" ((VE.layout ve)) in 
     let  _ = Printf.printf "\n@Rel Env:\n" in
     let  _ = Printf.printf "-----------\n" in 
      

@@ -27,7 +27,7 @@ let z3_log = Z3_encode.logz3
  module TypeDMapKey =
        struct
          type t = TyD.t
-         let equal(t1,t2)  =  TyD.sameType (t1, t2)
+         let equal(t1,t2)  =  TyD.sametype t1 t2
          let layout = Layout.str << TyD.toString 
        end
 
@@ -166,13 +166,12 @@ let discharge (VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP)) =
           const
          in 
         
-        let encodeStrucRel (rid ,TyD.Tarrow (_,t1,_,_)) =
+        let encodeStrucRel (rid ,TyD.Tarrow (t1,_)) =
           let open TyD in 
-          let t1_tdesc = t1.desc in 
           let  rstr = RI.toString rid in 
-          	let sorts = match t1_tdesc with 
-              TyD.Ttuple tydr -> List.map encodeTyD (List.map (fun tye -> tye.desc) tydr)
-            | _ -> Vector.new1 ( encodeTyD t1_tdesc) in 
+          	let sorts = match t1 with 
+              TyD.Ttuple tydr -> List.map encodeTyD (tydr)
+            | _ -> Vector.new1 ( encodeTyD t1) in 
          	let  sr = mkStrucRel (rstr,sorts) in 
           let _ = RelMap.add relMap rstr sr
         in
@@ -190,11 +189,10 @@ let discharge (VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP)) =
          * are structural relations encoded as functions from
          * a let or tuple of vals to bool.
          *)
-            |Tarrow (_,t1,t2,_)   ->
+            |Tarrow (t1,t2)   ->
               let () = Printf.printf "%s" "Case Tarrow  " in 
 
-              let t2_tdesc = t2.desc in 
-                (match t2_tdesc with 
+                (match t2 with 
                   | Tbool -> ignore (encodeStrucRel (RI.fromString (Var.toString v), tyd) )
                   | _ -> ignore (encodeConst (v,tyd)))
             |_ -> 

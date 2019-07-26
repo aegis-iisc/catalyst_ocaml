@@ -1,9 +1,11 @@
+type t = T of string 
+(*
 let rec concat l1 l2 = 
         match (l1, l2) with 
         ([], _) -> l2 
         | (_, []) -> l2 
         | (x1::xs1,_ ) -> x1 :: concat xs1 l2
-
+*)
 (*let ()= 
         let ls1 = [2;3;4] in 
         let ls2 = [5;6;7] in 

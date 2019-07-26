@@ -101,7 +101,7 @@ let assertEmptyCs = fun cs -> match cs with
 
 
 let bootStrapBools ve = 
-  let boolTyD = TyD.makeTconstr(Path.Pident (Ident.create "bool") , []) in 
+  let boolTyD = TyD.makeTbool () in 
   let tvid = Var.fromString (Con.toString Con.truee) in 
   let  fvid = Var.fromString ( Con.toString Con.falsee) in 
   let RefTy.Base (v,t,_) = RefTy.fromTyD boolTyD in 
@@ -183,11 +183,14 @@ and elabValueBind ve {vb_pat;vb_expr;_ }=
       let () = Printf.printf "%s" ("consname::::::::::::::;"^consName) in  
 
       let cons_name_rel_lang = if consName = "[]" then "Nil" else (if consName = "::" then "Cons" else consName) in   
-      let destTyD = vb_expr.exp_type.desc in 
+      let destTyD = vb_expr.exp_type in 
+      let noramldestTyD = TyD.normalizeTypes destTyD in 
       let vid = Var.fromString ( cons_name_rel_lang ) in 
       let conTyD = match args with 
-        | [] -> destTyD 
-        | argList -> TyD.makeTarrow (Ttuple argList) destTyD in 
+        | [] -> noramldestTyD 
+        | argList -> 
+          let tyDList = List.map (TyD.normalizeTypes) argList in 
+          TyD.makeTarrow ((TyD.Ttuple tyDList), noramldestTyD) in 
       let conTyS =  toRefTyS (RefTy.fromTyD conTyD) 
       in 
       VE.add ve (vid,conTyS)
@@ -215,11 +218,13 @@ and  elabCase ve  {c_lhs;c_rhs;_} =
   | Some (consName,args)->
       let () = Printf.printf "%s" ("consname::::::::::::::;"^consName) in  
       let cons_name_rel_lang = if consName = "[]" then "Nil" else (if consName = "::" then "Cons" else consName) in   
-      let destTyD = vb_expr.exp_type.desc in 
+      let destTyD = vb_expr.exp_type in 
+      let noramldestTyD = TyD.normalizeTypes destTyD in 
       let vid = Var.fromString ( cons_name_rel_lang ) in 
       let conTyD = match args with 
-        | [] -> destTyD 
-        | argList -> TyD.makeTarrow (Ttuple argList) destTyD in 
+        | [] -> noramldestTyD  
+        | argList -> let tyDList = List.map (TyD.normalizeTypes) argList in 
+          TyD.makeTarrow ((TyD.Ttuple tyDList), noramldestTyD) in 
       let conTyS = toRefTyS (RefTy.fromTyD conTyD) 
       in 
       VE.add ve (vid,conTyS)
@@ -228,6 +233,8 @@ open RefTy
 
 let unifyConArgs (ve : VE.t) (con : Con.t) (vars : Var.t list) = 
   let conStr = Con.toString con in 
+    let () = Printf.printf "%s" ("@here4 "^conStr) in 
+                                                
   let convid = Var.fromString conStr in 
   let lenstr = fun v -> (string_of_int << List.length) v in 
 
@@ -236,21 +243,29 @@ let unifyConArgs (ve : VE.t) (con : Con.t) (vars : Var.t list) =
     with
     | _ -> raise (ElebEnvFail "Could not find constructor")
   in 
-
-
+    let () = Printf.printf "%s" ("@here5 "^(RefTy.toString conTy)) in 
+                                                
   match conTy with 
     Base _ -> let () =  assert(List.length vars = 0) in   
       []
   | Arrow ((argv,Base (_,argTyD,_)),Base (_,datTyD,_)) -> 
+        let () = Printf.printf "%s" ("@here6 ") in 
+  
       let () = assert (Vector.length vars = 1) in  
       List.map (fun (var) -> 
-          (argv, var, argTyD, TyD.sameType (argTyD,datTyD))) vars
+          (argv, var, argTyD, TyD.sametype argTyD datTyD)) vars
 
   | Arrow ((argv,Tuple tv), Base (_,datTyD,_)) ->
+    let () = Printf.printf "%s" ("@here7 ") in 
       let () = assert (Vector.length tv = Vector.length vars) in 
-      List.map2 (fun (fldv, Base (_,argTyD,_)) var ->
+    let () = Printf.printf "%s" ("@here8 ") in 
+      
+      let x = (List.map2 (fun (fldv, Base (_,argTyD,_)) var ->
           (newLongVar (argv,fldv), var, argTyD, 
-           TyD.sameType (argTyD,datTyD))) tv vars
+           TyD.sametype argTyD datTyD)) tv vars) in 
+      let () = Printf.printf "%s" ("@here9 ") in 
+      x 
+      
   | _ -> raise (ElebEnvFail "Could not unify and determine rec args")
 
 
@@ -267,7 +282,7 @@ let addRelToConTy (ve: VE.t) (con,letop,rexpr) (id:RelId.t) =
     |_ -> raise (ElebEnvFail "Could not find constructor") 
   in 
   let RefTyS.T {tyvars;_} = conRefTys in 
-  let targs = Vector.map (tyvars,Tyvar.makeTvar) in 
+  let targs = Vector.map (tyvars,TyD.makeTvar) in 
   let refty = RefTyS.specializeRefTy conRefTys in 
   let newref = fun var -> RP.Eq (RelLang.appR(id,targs,var),rexpr') in 
   let annotConTy = match refty with 
@@ -298,20 +313,25 @@ exception Return of TS.cs list * TS.t * RelLang.instexpr
    in 
     ()
 
-*)     
+*)   
+(*
+  This is where relational expressions are translated to RefTy expressions
+*)  
 let rec elabRExpr (re,pre,tyDB,spsB,rexpr) =
 
 
   let typeSynthRElem elem = match elem with
     (*What should be the type constructor for int and bool*)
-      RelLang.Int i -> TyD.makeTconstr (Pident (Ident.create "int"),[])
-    | RelLang.Bool b -> TyD.makeTconstr (Pident (Ident.create "bool"),[])
+      RelLang.Int i -> TyD.makeTint()
+    | RelLang.Bool b -> TyD.makeTbool ()
     | RelLang.Var v -> 
         try 
           TyDBinds.find (tyDB) (v)  
         with 
         | (TyDBinds.KeyNotFound _) -> raise (CantInferType "Type inference failed") in 
-
+  
+  let () = Printf.printf "%s" "@here-elabRE-1  \n" in 
+                                           
   let doIt (e1,e2) cons f = 
     let (cs1,tupTy1,e1') = elabRExpr (re,pre,tyDB,spsB,e1) in 
     let (cs2,tupTy2,e2') = elabRExpr (re,pre,tyDB,spsB,e2) in 
@@ -319,17 +339,31 @@ let rec elabRExpr (re,pre,tyDB,spsB,rexpr) =
     in
     (mergecs [cs1;cs2;cs], tupTy, cons (e1',e2'))  in 
 
+  let () = Printf.printf "%s" "@here-elabRE-2  \n" in 
+            
   let isParam = fun rid -> SPSB.mem spsB rid in 
   (*This has some syntax error *) 
-  let doItParamApp ((RelLang.RInst {rel=rid;_} as rinst) ,tyd) = 
-    let open SPSBValue in 
-    let {dom;range=svar} = SPSB.find spsB rid in 
-    let _ = match !dom with 
-        None -> dom := Some tyd
-      | Some tyd' -> assert (TyD.sameType (tyd,tyd')) in 
+    let () = Printf.printf "%s" "@here-elabRE-3  \n" in 
+ 
+    let doItParamApp ((RelLang.RInst {rel=rid;_} as rinst) ,tyd) = 
+      let open SPSBValue in 
+      let () = Printf.printf "%s" ("@here-elabRE-4   \n") in 
+      let {dom;range=svar} = SPSB.find spsB rid in 
+      let _ = match !dom with 
+        None -> 
+        let () = Printf.printf "%s" ("@here-elabRE-4-1  \n") in 
+        dom := Some tyd
+      | Some tyd' -> 
+          let res = TyD.sametype tyd tyd' in
+          let () = Printf.printf "%s" ("@here-elabRE-4"^(string_of_bool res)^"  \n") in 
+ 
+          assert (res) in 
 
+ 
     let expsort = (TS.fromSVar svar) 
     in 
+    let () = Printf.printf "%s" "@elabRE-exit  \n" in 
+                                           
     (emptycs(), expsort, rinst) 
 
   in 
@@ -355,11 +389,11 @@ let rec elabRExpr (re,pre,tyDB,spsB,rexpr) =
     let relSS = PTS.instantiate (relTyS,targs) in 
     let PSS.T {sort=ProjSort.T {sort; _}; _} = relSS in 
     let SPS.ColonArrow (prD,prR) = sort in 
-    let expectedPrD = List.fold_left (TyD.makeTarrow) (tyd) (argTyDs) in 
+    let expectedPrD = List.fold_left (fun x y -> TyD.makeTarrow (x,y)) (tyd) (argTyDs) in 
     let err = fun _ -> relName^" application failed typecheck.\n" 
                        ^ "Expected: " ^ (TyD.toString expectedPrD)^"\n" 
                        ^ "Got: "^(TyD.toString prD)^"\n" in 
-    let _ = assert (TyD.sameType (expectedPrD,prD)) in 
+    let _ = assert (TyD.sametype expectedPrD prD) in 
 
     let newRInst = RelLang.RInst {rel=rel;args=args;targs= (targs);
                                   sargs=empty}
@@ -378,6 +412,7 @@ let rec elabRExpr (re,pre,tyDB,spsB,rexpr) =
           else () in 
         let relName = RelId.toString rel in 
 
+        let () = Printf.printf "%s" ("doItRInstApp-1"^relName) in   
         let {tys=relTyS;def} =           
           try (PRE.find pre rel) with
 
@@ -393,17 +428,26 @@ let rec elabRExpr (re,pre,tyDB,spsB,rexpr) =
           | PRE.Bind Bind.BogusDef -> (raise (ElebEnvFail ("Cant infer type")))
           | _ -> () in 
         let tyd' = PTS.domain relTyS in 
+        let () = Printf.printf "%s" ("doItRInstApp-2"^(TyD.toString tyd')) in   
+        
 
         let targs = 
           let tydcomp =  tyd  in 
+          
           match (tydcomp,tyd') with 
-            (Types.Tconstr (p, targs, _), Types.Tconstr (p',_,_)) ->
-              targs
-          (* | (_,Types.Tvar _) -> [tyd]
-          *)| _ -> raise (ElebEnvFail ("RelApp type mismatch: " ^ relName) ) in  
+            (TyD.Tconstr (tycon1, targs), TyD.Tconstr (tycon2,_)) ->
+                let () = Printf.printf "%s" (Tycon.toString tycon1) in 
+                let () = Printf.printf "%s" (Tycon.toString tycon2) in 
+                
+                assert  (Tycon.equals (tycon1, tycon2))  ; targs
+            | (_,TyD.Tvar _) -> [tyd]
+            | _ -> raise (ElebEnvFail ("RelApp type mismatch: " ^ relName) ) in  
 
+        
         let relSS = PTS.instantiate (relTyS,targs) in 
 
+        let () = Printf.printf "%s" ("@here-elabRE-5 \n") in 
+        
         let PSS.T {sort=ProjSort.T {paramsorts;_}; _} = relSS  in 
 
         let argDomains = List.map (fun (SPS.ColonArrow (argTyd,_)) -> argTyd) paramsorts in 
@@ -422,9 +466,10 @@ let rec elabRExpr (re,pre,tyDB,spsB,rexpr) =
         let ProjSort.T {paramsorts; sort = SPS.ColonArrow (_,expsort)} = 
           PSS.instantiate (relSS,sargs) in 
         let open Types in    
-        let newRInst = RInst {rel=rel; args=args'; targs=List.map (fun texpr -> texpr.desc) targs;
+        let newRInst = RInst {rel=rel; args=args'; targs=targs;
                               sargs=sargs}
         in
+
         (emptycs(), expsort, newRInst)   
 
          in    
@@ -455,17 +500,12 @@ let rec elabRExpr (re,pre,tyDB,spsB,rexpr) =
 
 let  elabPRBind (pre) (PR.T {id;def}) =
   (*This creates a new Tyvar without a name, Where is this used ??*)
-  let newVarTyD = fun _ -> TyD.makeTvar (None) in 
-
-
+  let newVarTyD = fun _ -> TyD.makeTvar (Ident.create "") in 
   let rec bindVars tyDB (PR.Nary (v,def)) = bindVars (TyDB.add tyDB  v ( newVarTyD())) def  in
   let bindVars tyDB (PR.Nullary rexpr) = (tyDB,rexpr) in 
 
   let  (tyDB, rexpr) = bindVars TyDB.empty def in 
-      (*
-       * We elab all primitive relations before structural relations.
-       * So, we pass RE.empty.
-       *)
+    
   let (_,prRange,rexpr') = elabRExpr (RE.empty, pre, tyDB, 
                                       SPSB.empty, rexpr) in 
   let rec doItDef =  function 
@@ -474,7 +514,7 @@ let  elabPRBind (pre) (PR.T {id;def}) =
         let (tyvars, prDomOp, def') = doItDef def in 
         let prDom = match prDomOp with 
             None -> varTyD
-          | Some tyd -> TyD.makeTarrow varTyD tyd in 
+          | Some tyd -> TyD.makeTarrow (varTyD, tyd) in 
         let  prDef = PR.Nary (v,def') in 
 
         (tyvar::tyvars, Some prDom, prDef)
@@ -485,7 +525,7 @@ let  elabPRBind (pre) (PR.T {id;def}) =
   let prSPS = SPS.ColonArrow (prDom,prRange) in 
   let prSS = PSS.T {svars=empty(); 
                     sort = ProjSort.T {paramsorts=empty(); sort=prSPS}} in 
-  let prTS = PTS.T {tyvars= (List.map (fun so -> Types.Tvar so) tyvars); 
+  let prTS = PTS.T {tyvars=  tyvars; 
                     sortscheme=prSS} in 
   let  reldesc = {PRE.tys=prTS; PRE.def= PRE.Prim prDef}
   in
@@ -504,6 +544,7 @@ let elabSRBind (re)(pre)(ve ) (StructuralRelation.T {id;params;mapp}) =
 
   (* First pass - type & sort annotate instantiations *)
 
+  let () = Printf.printf "%s" "@here1 \n" in 
   let (map', relTySOp) = Vector.mapAndFold (mapp, None, 
 
                                             fun ((con,valop,rterm), relTySOp) ->
@@ -523,15 +564,13 @@ let elabSRBind (re)(pre)(ve ) (StructuralRelation.T {id;params;mapp}) =
                                                     try 
                                                       PRE.find pre rel 
                                                     with
-                                                    | PRE.ParamRelNotFound _ -> raise (ElebEnvFail "Ind of unknown param relation")
+                                                    | PRE.ParamRelNotFound _ -> raise (ElebEnvFail "Id of unknown param relation")
                                                   in 
 
 
                                                   let  PTS.T {tyvars;sortscheme = relSS} = relTyS in 
                                                   let targs = Vector.map (tyvars, 
-                                                                          (fun tvar -> 
-                                                                             let string_of_svar = Tyvar.toString tvar in 
-                                                                             TyD.makeTvar (Some string_of_svar))) in 
+                                                                            TyD.makeTvar) in 
                                                   let PSS.T {svars;sort} = relSS in
                                                   let sargs = Vector.map (svars, TS.fromSVar) in 
                                                   let newRInst = RelLang.RInst {rel=rel; args=args; 
@@ -540,6 +579,7 @@ let elabSRBind (re)(pre)(ve ) (StructuralRelation.T {id;params;mapp}) =
                                                   ((con, valop , RelLang.Star newRInst), Some relTyS)
 
                                               | (Some vars, RelLang.Expr rexpr) -> 
+                                                  let () = Printf.printf "%s" "@here3 \n " in 
                                                   let convid = Var.fromString (Con.toString con) in 
                                                   let RefTyS.T {tyvars;refss;_} = 
                                                     try VE.find ve convid 
@@ -547,14 +587,20 @@ let elabSRBind (re)(pre)(ve ) (StructuralRelation.T {id;params;mapp}) =
                                                     | VE.VarNotFound _ -> 
                                                         let s = "Constructor " ^(Con.toString con)^ " not found in var env." in 
                                                         raise (ElebEnvFail s) in 
+                                                  let () = Printf.printf "%s" "@here3-1  \n" in 
+                                                
                                                   let refty = RefSS.toRefTy refss in
                                                   let datTyD = match refty with
                                                       RefTy.Base (_,datTyD,_) -> datTyD
                                                     | RefTy.Arrow (_,RefTy.Base (_,datTyD,_)) -> datTyD
                                                     | _ -> raise (ElebEnvFail "Impossible case") in 
+                                                  let () = Printf.printf "%s" "@here3-2  \n" in 
+                                                  
                                                   let tyDB = List.fold_left (fun tyDB (_,var,tyD,_) -> TyDBinds.add tyDB var tyD)  
                                                       TyDBinds.empty (unifyConArgs ve con vars)in 
 
+                                                   let () = Printf.printf "%s" "@here3-3  \n" in 
+                                                       
             (*
              * Hack : For structural relations with recursive
              * occurances, we currently assume existence of a base
@@ -567,10 +613,15 @@ let elabSRBind (re)(pre)(ve ) (StructuralRelation.T {id;params;mapp}) =
                                                   let bogusDesc = {
                                                     tys = PTS.simple (empty, SPS.ColonArrow
                                                                         (*author Ashish : Treating Tnil as Tunknown in SML , confirm ??*)
-                                                                        (TyD.Tnil,TS.Tuple []));
-                                                    def = PRE.Bind ( Bind.BogusDef)} in 
+                                                                        (TyD.Tunknown,TS.Tuple []));
+                                                    def = PRE.Bind ( Bind.BogusDef)} in
+
                                                   let extendedPRE = PRE.add pre (id,bogusDesc) in 
+                                                  let () = Printf.printf "%s" "@here3-4  \n" in 
+                                           
                                                   let (cs,tupTy,rexpr') = elabRExpr (re, extendedPRE, (tyDB), spsB, rexpr) in 
+                                                  let () = Printf.printf "%s" "@here3-5  \n" in 
+                                           
                                                   let _ = assertEmptyCs cs in 
                                                   let relSPS = SPS.ColonArrow (datTyD, tupTy) in 
                                                   let (svars, paramSPS) = Vector.unzip (Vector.map 
@@ -582,6 +633,7 @@ let elabSRBind (re)(pre)(ve ) (StructuralRelation.T {id;params;mapp}) =
                                                                                               in
                                                                                               (svar,SPS.ColonArrow (tyD,tupTy))
                                                                                           )) in 
+                                                
                                                   let relPS = ProjSort.newProjSort paramSPS relSPS in 
                                                   let relSS = PSS.generalize (svars,relPS) in 
                                                   let relTyS = PTS.generalize (tyvars,relSS) 
@@ -592,6 +644,7 @@ let elabSRBind (re)(pre)(ve ) (StructuralRelation.T {id;params;mapp}) =
                                               | _ -> raise (ElebEnvFail "Impossible case of valop -rterm :") ) in 
 
 
+  let () = Printf.printf "%s" "@here2 " in 
   let pts = match relTySOp with
       None -> raise (ElebEnvFail "Failed Elaboraion")
     | Some relTyS -> relTyS in 
@@ -618,9 +671,7 @@ let elabSRBind (re)(pre)(ve ) (StructuralRelation.T {id;params;mapp}) =
                          let PTS.T {tyvars;_} = relTyS in 
                          let open SpecLang in  
                          let targs = Vector.map (tyvars,
-                                                 (fun tvar -> 
-                                                    let string_of_svar = Tyvar.toString tvar in 
-                                                    TyD.makeTvar (Some string_of_svar)))
+                                                    TyD.makeTvar )
 
 
                          in
@@ -670,17 +721,17 @@ let mergeTypes (tyd , refTy ) =
         in
         (Vector.new0 (), newArgBind)
 
-    | ( Types.Ttuple te_list , Tuple argBinds') ->
-        let td_list = List.map (fun {desc=d;_} -> d) te_list in     
-
+        (*Look at the merging operation again *)
+   (* |  ( TyD.Ttuple telist , Tuple argBinds') ->
+        
         let (substss,newArgBinds') = (Vector.unzip 
                                         ( List.map2 
-                                            (fun (Types.Tvar (Some lbl)) ((argv',refty') as argBind' ) -> 
+                                            (fun (lbl) ((argv',refty') as argBind' ) -> 
                                                let newargv' = Var.fromString (lbl) in 
                                                let (substs,newArgBind) = doMerge tyd (newargv',refty') in 
                                                let substs = Vector.concat [Vector.new1 (newargv',argv'); 
                                                                            substs]  in 
-                                               (substs,newArgBind)) (td_list) (argBinds'))  
+                                               (substs,newArgBind)) (te_list) (argBinds'))  
 
                                      ) in
         let substs = Vector.map (List.concat substss,
@@ -690,9 +741,8 @@ let mergeTypes (tyd , refTy ) =
         in
         (substs, newArgBind)
 
-
-    | ( Types.Tarrow (_,tyex1,tyex2,_), Arrow (argBind,resTy) ) ->
-        let (tyd1, tyd2) = (tyex1.desc, tyex2.desc) in   
+ *)
+    | ( TyD.Tarrow (tyd1,tyd2), Arrow (argBind,resTy) ) ->
         let (substs,argBind') = doMerge tyd1 argBind in 
         let dummyArgVar = argv in 
         let (_,(_,resTy')) = doMerge tyd2 (dummyArgVar, 
@@ -747,10 +797,10 @@ let elab_vbs (ve) (vb_list) =
           let case_list_first = List.nth case_list 0 in 
           case_list_first.c_rhs in 
         (*The original sml version has toMyType which we do not need*)
-        let argTyD = argType.desc  in 
-        let bodyTyD = body.exp_type.desc in 
+        let normalargTyD = TyD.normalizeTypes argType in 
+        let normalbodyTyD = TyD.normalizeTypes body.exp_type in 
 
-        let funTyD = TyD.makeTarrow argTyD bodyTyD in 
+        let funTyD = TyD.makeTarrow(normalargTyD, normalbodyTyD) in 
         let fun_name =get_name_for_pat vb_pat in
         let () = Printf.printf "%s" (Var.toString (fun_name)^"\n") in 
         let funTyS = VE.find ve fun_name in 
@@ -913,11 +963,11 @@ let elaborate (tstr) (RelSpec.T {reldecs;primdecs;
                                  typespecs}) =
 
   let tstr_items = tstr.str_items in
-
   let veWithBool = bootStrapBools VE.empty in 
 
+
   let  _ = Printf.printf "@Var Env Before:\n" in
-  let  _ = Printf.printf "%s" (L.toString (VE.layout veWithBool)) in
+  let  _ = Printf.printf "%s" ((VE.layout veWithBool)) in
 
 
   let initialVE = List.fold_left
@@ -931,16 +981,24 @@ let elaborate (tstr) (RelSpec.T {reldecs;primdecs;
          |_ -> ve) veWithBool tstr_items in 
 
 
-  let  _ = Printf.printf "@Var Env:\n" in
-  let  _ = Printf.printf "%s" (L.toString (VE.layout initialVE)) in
+  let  _ = Printf.printf "@Var Env After:\n" in
+  let  _ = Printf.printf "%s" ((VE.layout initialVE)) in
 
 
-  let  initialPRE = List.fold_left (fun (pre) (primbind) -> elabPRBind pre primbind) PRE.empty  primdecs
-  in 
+  let  initialPRE = List.fold_left (fun (pre) (primbind) -> elabPRBind pre primbind) PRE.empty  primdecs in 
+
+  let  _ = Printf.printf "@PRE Env After:\n" in
+  let  _ = Printf.printf "%s" (Layout.toString (PRE.layout initialPRE)) in
+
+  
 
   let  initialRE =  RE.empty in 
   let  (elabRE,elabPRE) = List.fold_left (fun (re, pre) srbind -> 
-      elabSRBind re pre initialVE srbind) (initialRE, initialPRE) reldecs  in 
+     elabSRBind re pre initialVE srbind) (initialRE, initialPRE) reldecs  in 
+
+  let  _ = Printf.printf "@RE Env After:\n" in
+  let  _ = Printf.printf "%s" (Layout.toString (RE.layout initialRE)) in
+
 
   let  refinedVE = Vector.fold (RE.toVector elabRE, initialVE, 
                                 fun ((id,{ty;map}),ve) -> Vector.fold (map, ve, 
@@ -950,7 +1008,7 @@ let elaborate (tstr) (RelSpec.T {reldecs;primdecs;
   let  protoVE = List.fold_left          
       (fun ve (TypeSpec.T {isAssume;name;params;refty}) -> 
          let  dummySPS = 
-           SPS.ColonArrow ( TyD.makeTvar (Some (Var.toString (genVar ())))
+           SPS.ColonArrow ( TyD.makeTvar (Tyvar.fromString (Var.toString (genVar ())))
                           , TS.Tuple 
                               [TS.S ( SVar.newSVar())]) in 
          let  sortedParams = Vector.map (params, 

@@ -37,7 +37,12 @@ module Con = struct
 let constant_to_string t = match t with 
       Const_int i -> string_of_int i 
     | Const_char c -> Char.escaped c
-    | Const_string  (s1, s2) -> "s1"^"::"^"s2"
+    | Const_string  (s1, _) -> (s1^"::s2")
+      (*   match (s1,s2) with 
+         | (Some s1', Some s2') -> 
+         | (Some s1', None) -> (s1'^"::empty")
+         | (None, Some s2') -> ("empty::"^s2')
+         | (_,_) -> "_::_" *)
     | Const_float fl -> fl
     | Const_int32 i -> Int32.to_string i
     | Const_int64 i -> Int64.to_string i  
@@ -62,34 +67,14 @@ let constant_to_string t = match t with
 
 
 end                    
-
+(*Types varaiable 'a , 'b etc*)
 module Tyvar = 
 struct
-  open Types
-  type t = Types.type_desc(* //{name:string} *)
-  (* use the definition of Tyvar in type_desc and define the equality of Tvars *)
-  (* Equaility checking Logic*)
-  let toString t = match  t with
-    | Tvar s -> match s with 
-      | Some s' -> s'
-      | None -> "Unknown"
-      | _ -> "UnKnown"
-
-
-
-  let equal = fun tvar1 tvar2 -> if (toString tvar1) = (toString tvar2) then true else false
-
-  let eq = equal
-  (*let toString tds = match tds with 
-      | Tvar str -> match str with 
-                      | Some s -> s
-                      | None -> ""
-      | _ -> ""*)
-
-  let makeTvar t = Tvar (Some (toString t))
-
-  let newNoname () = Tvar None
-
+  open Ident
+  type t = Ident.t
+  let equal (t1,t2) = Ident.equal t1 t2
+  let toString = Ident.name
+  let fromString s = create s
 
 end 
 
@@ -98,6 +83,7 @@ module Var = struct
   type t = Ident.t
   let toString = Ident.name
   let fromString s = create s
+  let layout t = Layout.str (toString t )
 
 
 end
@@ -131,14 +117,155 @@ struct
 end
 (* define a module for the Type_desc and define helper functions on them
         * It will be easier to move this module to types module*)
-module TyD = 
+exception SpecLangEx of string
+
+exception TyConEx of string 
+(* module Tycon = 
+struct
+  open Types
+  type t = Types.type_desc
+  let toString t  =
+    match t with 
+    | Tconstr (p , te_list, _) ->
+    let expr_list_types = List.map (fun te -> TyD.normalizeTypes te) te_list in 
+    let str_list = List.fold_left (fun acc tyd -> acc^";"^(TyD.toString tyd )) " [ " expr_list_types in 
+    ("Tconstr ["^str_list^"]"^(Path.name p))
+    | _ -> "@unknown constructor type"
+  
+  let sametypeExprs te1 te2 = if (string_of_int te1.id = string_of_int te2.id) then true else false
+
+  let equals (t1,t2) =
+      match (t1, t2) with 
+      | (Tconstr (p1, telist1, _) , Tconstr(p2, telist2, _)) ->
+                if (Path.name p1 = Path.name p2)
+                then true else false 
+             (*  ((List.length telist1 = List.length telist2) 
+              && 
+                try 
+                  let _ = List.iter2 (fun e1  e2 -> Printf.printf "%s" ((string_of_int e1.id)^":<>:"^(string_of_int e2.id))) telist1 telist2 in 
+                  let res = List.for_all2 sametypeExprs telist1 telist2  in 
+                  let _ =  Printf.printf "%s" (string_of_bool res) in 
+                  res
+              with 
+                | _ -> false) *)
+      | (_,_) -> false
+  end
+ *)
+
+module Tycon= 
+struct
+  open Path
+  type t = Path.t
+  let equals(t1,t2) = Path.same t1 t2  
+  let toString  = Path.name  
+  let is_ident  = Path.is_ident
+
+end
+
+     
+module   TyD = 
 struct
   open Types
   include Types
-  type t =Types.type_desc
-          
+  
+  (*Noramlize all other types into this type*)
+  type t =
+          Tunknown
+        | Tvar of Tyvar.t
+        | Tarrow of t * t
+        | Ttuple of t list
+        | Tconstr of Tycon.t * t list
+        | Tfield of string * t
+        | Tbool 
+        | Tint
+
+  let makeTarrow (tdesc1, tdesc2) = Tarrow (tdesc1, tdesc2)
+  let makeTconstr (cons, tdlist) = Tconstr (cons, tdlist)
+  let makeTvar tvar = Tvar tvar
+  let makeTfield (str, tdesc1) = Tfield (str, tdesc1)
+  let makeTtuple tdlist = Ttuple tdlist
+  let makeTunknown () = Tunknown
+  let makeTbool () = Tbool 
+  let makeTint () = Tint
+    
+  let rec visitType t = match t with 
+        Tunknown -> "Tunknown"
+      | Tvar v  -> "Tvar ("^(Tyvar.toString v)^")"
+      | Tarrow (t1,t2) -> "Tarrow ("^(visitType t1)^","^(visitType t2)^")"
+      | Ttuple tdl -> "Ttuple (["^(List.fold_left (fun s t ->(s^","^(visitType t))) "" tdl)^"])"
+      | Tconstr (tc,tdl) -> "Tconstr("^(Tycon.toString tc)^","^"["^
+                            (List.fold_left (fun s t -> (s^","^(visitType t))) "" tdl)^"])"
+      | Tfield (s,td) -> "Tfield ("^s^","^(visitType td)^")"
+      | Tbool -> "Tbool"
+      | Tint -> "Tint"
+    
+
+  let rec sametype t1 t2 = 
+      let _ = Printf.printf "%s" ("Asked if "^(visitType t1)^" and "^(visitType t2)^" are sametypes\n") in 
+        let rec sametypes tl1 tl2 = (List.length tl1 = List.length tl2) &&  
+          List.fold_left2 (fun flag t1 t2  -> (flag && sametype t1 t2)) true tl1 tl2 
+      in
+      match (t1,t2) with 
+          (Tunknown,Tunknown) -> true
+        | (Tvar v1, Tvar v2 ) -> Tyvar.equal(v1, v2)
+        | (Tarrow (tda1,tdr1), Tarrow (tda2,tdr2)) -> 
+            (sametype tda1 tda2) &&
+            (sametype tdr1 tdr2)
+        | (Ttuple td1, Ttuple td2) -> sametypes td1 td2
+        | (Tconstr (tycon1,td1), Tconstr (tycon2,td2)) -> 
+            Tycon.equals (tycon1,tycon2) &&
+            sametypes td1 td2
+        | (Tfield (s1,td1),Tfield (s2,td2)) -> (s1 = s2) && sametype td1 td2
+        | (Tbool, Tbool) -> true
+        | (Tint, Tint) -> true  
+        | (_,_) -> false
+      
+    let toString t = visitType t     
+
+  
+  (* let instantiateTyvars substs : ((Tyd*Tyvar.t) list)  t = 
+   *)    
+  let instantiateTyvars substs tyd = 
+      try 
+      let () = Printf.printf "%s" (string_of_int (List.length substs )) in 
+      Tvar (List.assq tyd substs)
+      with 
+      | Not_found -> 
+      let () = List.iter (fun (tyd1, tyvar) -> Printf.printf "%s" ((toString tyd1)^"|-> "^(Tyvar.toString tyvar))) substs in 
+      raise (SpecLangEx ( "Not present "^(toString tyd)))
+   (*normalizeTypes : Types.type_expr -> TyD.t*)
+  let rec normalizeTypes oc_type = 
+      let oc_type_desc = oc_type.desc in 
+      let oc_type_id = oc_type.id in 
+
+      match oc_type_desc with 
+        Types.Tvar s -> (match s with 
+                          Some s' -> Tvar (Tyvar.fromString s')
+                          |None -> Tvar (Tyvar.fromString "_"))
+       | Types.Tbool -> Tbool 
+
+       | Types.Tint  -> Tint 
+       | Types.Ttuple tel -> Ttuple (List.map (fun te -> normalizeTypes te) tel)
+       | Types.Tconstr (p,tel,_) -> 
+          if Tycon.is_ident p then
+            Tconstr (p, (List.map (fun te -> normalizeTypes te) tel))
+          else 
+            raise (TyConEx "Only Identities allows as paths")  
+       | Types.Tfield (s,_, te1,_) -> Tfield (s, normalizeTypes te1) 
+       | Types.Tarrow (_,te1, te2 ,_) -> Tarrow (normalizeTypes te1, normalizeTypes te2)
+       | _ -> Tunknown
+
+
+                     
+
+
+
+  
+
+  (* 
+  type t =Types.type_desc       
   let idCount = ref 0
-  let getNewCount = fun _ ->
+   let getNewCount = fun _ ->
     let id = !idCount in 
     let _ = idCount := !idCount + 1 in id
   let toString t  =
@@ -169,32 +296,32 @@ struct
       Types.Ttuple texp_list  
 
 
-  (*In Ocaml all types are unifiable*)
+   *)
+   (*In Ocaml all types are unifiable*)
   let unifiable (t1,t2) = 
     true
-   let makeTnil () = Types.Tnil 
-
+ (*  let makeTnil () = Types.Tnil 
+ *)
 
 end 
 
 module TupSort = 
 struct
-  type tT = T of Ty.type_desc | S of SVar.t
+  type tT = T of TyD.t | S of SVar.t
   type t = Tuple of tT list
   type cs = Eq of t*t
 
   let tTToString tT = match tT with 
-      T tyd -> Types_helper.toString tyd
+      T tyd -> TyD.toString tyd
     | S svar -> SVar.toString svar
 
 
-  let toString (Tuple tts) = List.fold_left (fun parsedStr tT ->  parsedStr ^(tTToString tT)) "Tuple " tts
+  let toString (Tuple tts) = List.fold_left (fun parsedStr tT ->  parsedStr^(tTToString tT)) "Tuple " tts
 
   let toString = fun t -> "{"^(toString t)^"}" 
 
 
-
-  let fromSVar = fun t ->  Tuple [S t]
+   let fromSVar = fun t ->  Tuple [S t]
 
   let filter_map  f l =
     let rec aux accu = function
@@ -204,14 +331,14 @@ struct
           | None -> aux accu l1
           | Some v -> aux (v :: accu) l1
     in
-    aux []
+    aux [] l 
 
 
-  let getSVars (Tuple ts) = 
-    filter_map (fun tT -> match tT with S t -> Some t | _ -> None) ts
+  let getSVars (Tuple tts) = 
+    filter_map (fun tT -> match tT with S t -> Some t | _ -> None) tts
 
   let tTeq t1 t2 = match (t1, t2) with 
-    |(T tyd1, T tyd2) ->Types_helper.equal tyd1 tyd2
+    |(T tyd1, T tyd2) ->TyD.sametype tyd1 tyd2
     |(S v1, S v2) -> SVar.eq v1 v2
     | (_, _) -> false
 
@@ -232,13 +359,11 @@ struct
     | (_,0) -> ([], Tuple tyds2)
     | _ -> ([], Tuple (List.concat [tyds1; tyds2]))
 
-  let instSVars (Tuple ttl) mapSVar = Tuple (List.concat  
-                                               (List.map(fun tt -> match tt with 
-                                                      T _ -> [tt] 
-                                                    | S t -> (fun (Tuple ttl') -> ttl') (mapSVar t)) ttl) )  
-
-
-
+  let instSVars (Tuple ttl) mapSVar = 
+    Tuple (List.concat  
+          (List.map (fun tt -> match tt with 
+                T _ -> [tt] 
+                | S t -> (fun (Tuple ttl') -> ttl') (mapSVar t)) ttl) )  
 
   let mapTyD (Tuple ttl) f = Tuple (List.map (fun tt -> match tt with 
         T tyd -> T (f tyd)
@@ -251,27 +376,27 @@ struct
   type sol = (SVar.t * t)
   (* Understanding - Example of a function within a function *)
 
-  let trySolveConstraint c  =
+  let trySolveConstraint (c:cs) : sol option =
     let len = List.length in   
-
-    let assertNotCirc (v, rt) = assert true in 
-    (* let rhsvs = getSVars rt in 
-       let cStr = fun _ -> (SVar.toString v) ^ " =" ^ (toString rt) in
-       let () = assert (List.for_all (fun rhsv ->
-                     not (SVar.eq v rhsv)) rhsvs) in () in    *)
-    match (eq c) with
-    |(Tuple [S v1], Tuple []) -> None
-    | (Tuple [], Tuple [S v2]) -> None
-    | (Tuple [S v1], rty2) -> assertNotCirc (v1, rty2); Some (v1, rty2)
-    |(rty1, Tuple [S v2]) -> assertNotCirc (v2, rty1); Some (v2, rty1)
-    | _ -> None 
-
-
-
+    
+    let assertNotCirc (v, rt) = (* assert true in *) 
+      let rhsvs = (getSVars rt) in 
+      let cStr = fun _ -> (SVar.toString v)^" = "^ (toString rt) in
+      let () = assert (List.for_all (fun rhsv ->
+                       not (SVar.eq v rhsv)) rhsvs)  
+        
+      in () in   
+     (match (eq c) with
+      |(Tuple [S v1], Tuple []) -> None
+      |(Tuple [], Tuple [S v2]) -> None
+      |(Tuple [S v1], rty2) -> (assertNotCirc (v1, rty2); Some (v1, rty2))
+      |(rty1, Tuple [S v2]) -> (assertNotCirc (v2, rty1); Some (v2, rty1))
+      | _ -> None )
+  
   let clearTautologies cs =
     let taut = fun (tt1, tt2) ->
       match (tt1, tt2) with
-      |(T tyd1, T tyd2) -> (assert ( Types_helper.sameType tyd1 tyd2); true)
+      |(T tyd1, T tyd2) -> (assert ( TyD.sametype tyd1 tyd2); true)
       |(S v1, S v2) -> SVar.eq v1 v2
       | _ -> false
     in 
@@ -351,12 +476,12 @@ end
 
 module TS = TupSort
 module SimpleProjSort = struct
-  type t = ColonArrow of (Types.type_desc * TupSort.t)
+  type t = ColonArrow of (TyD.t * TupSort.t)
 
   let toString (ColonArrow (tyD, tupsort)) = 
-    (Types_helper.toString tyD)^ " :-> "^(TupSort.toString tupsort)
+    (TyD.toString tyD)^ " :-> "^(TupSort.toString tupsort)
   (* The pretty-printing will be added later*)
-  (*let layout t = Layout.str $ toString t*)
+  let layout t = Layout.str ( toString t)
 
   let newSPSort tyd rt  = ColonArrow (tyd, rt)
 
@@ -381,7 +506,7 @@ module ProjSort = struct
           ^ " :-> "^ (SimpleProjSort.toString sort)
 
   let newProjSort paramsorts sort =  T {paramsorts = paramsorts; sort = sort}                
-  (* The Vector datatype is defined in the mlton compiler, we need to define a corresponding data type in ocaml*)
+
   let simple sps = T {paramsorts = Vector.new0 (); sort = sps}
 
   let domain (T {sort; _}) = SimpleProjSort.domain sort
@@ -409,10 +534,12 @@ module ProjSortScheme = struct
 
   let instantiate (T{svars;sort}, tsv) = 
     let svarMap = try 
-        Vector.zip svars tsv with 
+        Vector.zip svars tsv 
+      with 
       _ -> raise (PSSInst "PSS inst error1") in
     let mapsSVar = fun t -> 
-      match (Vector.peekMap (svarMap, fun (t', ts) -> if (SVar.eq t t') then Some ts else None ) )
+      match (Vector.peekMap (svarMap, fun (t', ts) -> if (SVar.eq t t') then 
+          Some ts else None ) )
       with 
         Some ts -> ts 
       |None -> raise (PSSInst "PSS inst error2") in 
@@ -442,14 +569,20 @@ module ProjTypeScheme = struct
   let generalize (tyvars, ss) = T {tyvars=tyvars; sortscheme = ss}
 
   let instantiate (T {tyvars;sortscheme=ss}, tydv) = 
+    
     let tyvmap = try (Vector.zip tydv tyvars) with 
         _ -> raise (PTSInst "PTS : insufficient or more type args") in
-    let f = Types_helper.instantiateTyvars tyvmap in 
+
+    let f = TyD.instantiateTyvars tyvmap in 
+    
     let PSS.T{sort = PS.T{paramsorts; sort = (SPS.ColonArrow (tyd, ts))}; svars} = ss in 
+    
     let sort' = SPS.ColonArrow (f tyd, TS.mapTyD ts f) in 
+  
     let ps' = List.map (fun (SPS.ColonArrow (tyd, ts)) -> SPS.ColonArrow (f tyd, ts)) paramsorts in 
     let s' = PS.T {paramsorts = ps'; sort = sort'} in 
     let ss' = PSS.T {svars = svars; sort = s'} in 
+
     ss'
   let domain (T {sortscheme = PSS.T { sort = ProjSort.T{sort = SPS.ColonArrow (tyd,_);_}; _};_ }) = tyd
 
@@ -465,7 +598,7 @@ struct
             | Bool of bool
             | Var of Ident.t
 
-  type instexpr = RInst of {targs: Types.type_desc list;
+  type instexpr = RInst of {targs: TyD.t list;
                             sargs : TupSort.t list;
                             args : instexpr list;
                             rel : RelId.t       }
@@ -500,7 +633,7 @@ struct
     | Var v -> v.name (* define the Var moudle*)
 
   let rec ieToString (RInst {targs; sargs; args; rel}) = 
-    let tstr = vecToStr Types_helper.toString targs in 
+    let tstr = vecToStr TyD.toString targs in 
     let sstr = vecToStr TupSort.toString sargs in 
     let rstr = vecToStr ieToString args in 
     "(" ^ (RelId.toString rel)^tstr^sstr^rstr ^ ")"
@@ -647,9 +780,9 @@ module PrimitiveRelation = struct
       match def with  
     	| (Nary (v, def), arg :: args) ->  instantiate (def,args) ((arg,v)::substs)
     	| (def, [])  -> applySubsts def  substs
-    	| _  -> failwith "Invalid primitive relation instantiation"
-
-    	(* 		let instantiate = fun (def, args) -> instantiate (def, Vector.toList args) []
+    	| (_,_)  -> failwith "Invalid primitive relation instantiation"
+(* 
+	let instantiate = fun (def, args) -> instantiate (def, Vector.toList args) []
  *)
   let symbase = "pv_" 
 
@@ -679,7 +812,7 @@ module TyDBinds = struct
   end
 
   module Value = struct 
-    type t =Types.type_desc
+    type t = TyD.t
     let layout = fun x -> x 
 
   end 
@@ -881,7 +1014,7 @@ module RefinementType =
 struct 
   exception RefTyEx of string 
   type t = 
-      Base of Var.t * Types.type_desc * Predicate.t 
+      Base of Var.t * TyD.t * Predicate.t 
     | Tuple of (Var.t * t) list
     | Arrow of (Var.t * t) * t
     (* Records are tuples with fixed bound var *)
@@ -896,19 +1029,14 @@ struct
     Var.fromString id	
 
   let rec fromTyD tyD = 
+    let open TyD in 
     match tyD with 
-      Types.Tarrow (_,te1,te2,_) -> 
-        let td1 = te1.desc in 
-        let td2 = te2.desc in   
+      Tarrow (td1,td2) -> 
         Arrow ((genVar (), fromTyD td1),
                fromTyD td2)
-    | Types.Tvar s ->  
-        let s' =  TyD.toString (Types.Tvar s) in 
-        Base (Var.fromString s', Types.Tvar s, True)
-    |Types.Ttuple ls  -> 
-     let recRefTy = List.map (fun (te : Types.type_expr)->
-        let desc = te.desc  in 
-        (genVar (), (fromTyD desc))) ls in 
+    | Ttuple tl  -> 
+     let recRefTy = List.map (fun (td :TyD.t)->
+        (genVar (), (fromTyD td))) tl in 
         Tuple recRefTy  
     |  tyD -> Base (genVar(), tyD, Predicate.truee())
    
@@ -917,18 +1045,34 @@ struct
       | Tuple tv -> TyD.makeTtuple (List.map (fun (v,t) ->  
               let ty_desc_for_t = toTyD t in 
               ty_desc_for_t)  tv)
-      | Arrow ((v1,t1),t2) -> TyD.makeTarrow (toTyD t1) (toTyD t2)
+      | Arrow ((v1,t1),t2) -> TyD.makeTarrow ((toTyD t1), (toTyD t2))
      
 
 
 
 
-  let layout rty = match  rty with
-      Base(var,td,pred) ->L.str "Base"
-    | Tuple tv -> L.str "Tuple"
-    | Arrow ((  v1, Arrow _ as t1),t2) -> L.str "Arrow"
-    | Arrow ((v1,t1),t2) -> L.str "Arrow"
+(*   let rec layout rty = match rty with 
+          Base(var,td,pred) -> L.seq [L.str ("{" ^ (Var.toString var)^ ":" ^ (TyD.toString td) ^ " | "); 
+            Predicate.layout pred;L.str "}"]
+        | Tuple tv -> L.vector (Vector.map (tv, fun (v,t) -> 
+            L.seq [L.str (Var.toString v); L.str ":"; layout t]))
+        | Arrow ((v1,(Arrow (_,_) as t1)),t2) -> L.align (L.separateLeft (
+            [L.seq [L.str "("; L.str (Var.toString v1;L.str ":";
+              layout t1, L.str ")")], 
+            layout t2]," -> "))
+        | Arrow ((v1,t1),t2) -> L.align (L.separateLeft (
+            [L.seq [L.str (Var.toString v1; L.str ":"; layout t1)]; 
+            layout t2];" -> "))
+ *)
 
+
+  let rec layout rty = match rty with 
+          Base(var,td,pred) -> L.str "@refinementBase "
+        | Tuple tv ->  L.str "@refinementTuple"
+        | Arrow (_,_)-> L.str "@refinementArrow"
+       
+   let toString t = Layout.toString (layout t)    
+    
   let  rec mapBaseTy t f = match t with
       Base (v,t,p) -> 
         let (x,y,z) = f (v,t,p) in 
@@ -956,7 +1100,7 @@ struct
   let alphaRename refty = alphaRenameToVar refty (genVar())
 
 
-  let exnTyp = fun _ -> Base (genVar(),Types.Tnil,
+  let exnTyp = fun _ -> Base (genVar(),TyD.makeTunknown (),
                               Predicate.falsee())
 
   let mapSVar t f = mapBaseTy t (fun (v,t,p) ->
@@ -1068,6 +1212,7 @@ struct
     let refsslyt = RefinementSortScheme.layout refss in 
     L.seq [flaglyt;( L.seq tyvlyt);refsslyt]
 
+  let toString t = Layout.toString (layout t) 
 
   let instantiate (T{tyvars;refss;_},tydvec) =
     let len = List.length in 
@@ -1079,7 +1224,7 @@ struct
 		           * We do not panic.
 		           *)
     in
-    RefSS.mapTyD refss (Types_helper.instantiateTyvars tyvmap)
+    RefSS.mapTyD refss (TyD.instantiateTyvars tyvmap)
 end
 
 module  RefTyS = RefinementTypeScheme
@@ -1121,7 +1266,7 @@ module Bind = struct
   exception BindException of string 
 
   type transformer = Fr of Var.t list * RelLang.expr 
-  type expr = Expr of {ground : RelId.t * Types.type_desc list * Var.t;
+  type expr = Expr of {ground : RelId.t * TyD.t list * Var.t;
                        fr : transformer}
 
   type abs = Abs of Var.t * expr
@@ -1233,7 +1378,7 @@ module Bind = struct
         | Some xexpr -> Some (RelLang.crossprd (rApp,xexpr))) rApps None in 
     let bv = genVar () in 
     let fr = Fr (bvs,xexpr) in 
-    let targs = List.map (Tyvar.makeTvar) tyvars in 
+    let targs = List.map (TyD.makeTvar) tyvars in 
     let bindex = Expr {ground = (id,targs,bv); fr=fr} in 
     let bindabs = Abs (bv,bindex)
     in
@@ -1245,7 +1390,7 @@ module Bind = struct
     let rmap = try  Vector.zip params ridvec with 
       | _ -> raise (BindException "Bind : params inst error") in 
     let err = fun _ -> raise (BindException "Bind: inst error") in 
-    let mapt = Types_helper.instantiateTyvars tsubsts in  
+    let mapt = TyD.instantiateTyvars tsubsts in  
     let mapr = mkMapper rmap RelId.equal err in 
     let  Abs (bv,Expr {ground=(gr,targs,_); fr=Fr (xs,rexpr)}) = abs in 
     let targs' = List.map  mapt targs in 

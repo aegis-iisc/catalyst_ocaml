@@ -41,6 +41,7 @@ let remove = VarMap.remove
 
 let toVector = VarMap.toVector
 
-let layout = VarMap.layout
+let string_var_type_pair (v, ty) = (Var.toString v)^" : "^(Layout.toString (RefinementTypeScheme.layout ty)) 
+let layout mp = (List.fold_left (fun acc (v, ty) -> acc^string_var_type_pair(v,ty)) "[" mp)^"]" 
 
 

@@ -43,7 +43,7 @@ struct
     let toVector mp = Vector.fromList mp
   
     let layout mp = L.align (Vector.map (mp, fun (k,v) ->
-    L.seq [Key.layout k; L.str " :-> "; Val.layout v]))
+    L.seq [Key.layout k; L.str " :: "; Val.layout v]))
 
 
 

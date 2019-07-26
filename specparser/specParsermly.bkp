@@ -220,13 +220,13 @@ varty : rt=refty {let open RefTy in
               };
 
 basety : i=ID {RefinementType.Base ((Var.fromString i), 
-                TyD.makeTnil (),
+                TyD.makeTunknown (),
                 Predicate.truee())}
        | LCURLY i=ID RCURLY {RefinementType.Base ((Var.fromString i), 
-                TyD.makeTnil(), 
+                TyD.makeTunknown (), 
                 Predicate.truee())}
        | LCURLY i=ID PIPE pr=pred RCURLY {RefinementType.Base ((Var.fromString i), 
-                TyD.makeTnil (), pr)};
+                TyD.makeTunknown (), pr)};
 
 pred :  pa=patom {pa}
      |  pa=patom IMPL pr=pred {Predicate.If (pa,pr)}

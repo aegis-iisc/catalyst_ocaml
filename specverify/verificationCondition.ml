@@ -179,7 +179,7 @@ let rec havocTyBind (v ,refTy) =
   in
   match refTy with
   (* removing any _mark_ *)
-    Base (_,TyD.Tnil,_) -> Vector.new0 ()
+    Base (_,TyD.Tunknown,_) -> Vector.new0 ()
   | Base (bv,td,pred) -> 
       let
         pred' = P.applySubst (v,bv) pred in 
@@ -231,14 +231,14 @@ let rec fromTypeCheck (ve, pre, subTy, supTy)  =
   in
   try 
     match (subTy,supTy) with
-      (Base (_,TyD.Tnil,p),_) -> if P.isFalse p 
+      (Base (_,TyD.Tunknown,p),_) -> if P.isFalse p 
         then raise TrivialVC
         else raise (Failed "ML type of subtype is unknown")
     | (Base (v1,t1,p1), Base (v2,t2,p2)) -> 
             (*
              * First, make sure that base types are same.
              *)
-        let _ = assert (TyD.sameType (t1, t2)) in 
+        let _ = assert (TyD.sametype t1 t2) in 
             (*
              * Second, substitute actuals for formals in p2
              *)
@@ -281,10 +281,7 @@ let rec fromTypeCheck (ve, pre, subTy, supTy)  =
 
 
     | (Tuple t1v,Tuple t2v) -> 
-          (*
-           * Unimpl: records
-           *)
-
+        
         List.concat (List.map2 
                        (fun (v1,t1) (v2,t2) -> 
                           fromTypeCheck (ve,pre,t1,t2)) t1v t2v )
@@ -338,7 +335,7 @@ struct
 
       let eq = (RI.equal (id1,id2)) &&
                (len targs1 = len targs2) &&
-               (List.for_all2 (TyD.sameTypeListFormat) targs1 targs2) &&
+               (List.for_all2 (TyD.sametype) targs1 targs2) &&
                (len sargs1 = len sargs2) &&
                (List.for_all2 (TS.equal) sargs1 sargs2) &&
                (len sargs1 = len sargs2) &&
@@ -368,6 +365,8 @@ module RIT = RelInstTable
 
 exception Return of (RIT.t * RI.t)
 exception SVarNotFound
+exception ReturnPRE of PRE.t
+
 
 module SVarHash =
 struct
@@ -455,7 +454,7 @@ let elaborate (re,pre,vc) =
       let SPS.ColonArrow (prD,prR) = sps in 
 
       let rec rangeOf = function  
-        |(TyD.Tarrow (l,_,tye,_)) -> (rangeOf tye.desc )
+        |(TyD.Tarrow (_,tye)) -> (rangeOf tye )
         | tyd -> tyd 
       in 
       let rinstSort = SPS.ColonArrow (rangeOf prD,prR) in 
@@ -588,7 +587,7 @@ let elaborate (re,pre,vc) =
         SVarHashtbl.find sMap v 
       with
       | Not_found -> 
-          let tyvar = TyD.makeTvar (Some (SVar.toString v)) in 
+          let tyvar = TyD.makeTvar (Tyvar.fromString (SVar.toString v)) in 
           let _ = SVarHashtbl.add sMap v tyvar
           in
           tyvar 
@@ -602,9 +601,9 @@ let elaborate (re,pre,vc) =
                                                                       TS.T tyd -> tyd 
                                                                     | TS.S t ->  encodeSVar t)) in 
                                   (*How we create a boolean type??*)
-                                  let boolTyD = TyD.makeTvar (Some "bool") in 
-                                  let relArgTyd = TyD.Ttuple (List.map (TyD.makeExpFromDesc) tydvec) in 
-                                  let relTyD = TyD.makeTarrow (relArgTyd) (boolTyD) in
+                                  let boolTyD = TyD.makeTbool () in 
+                                  let relArgTyd = TyD.Ttuple (tydvec) in 
+                                  let relTyD = TyD.makeTarrow ((relArgTyd), (boolTyD)) in
                                   let rtov = Var.fromString << RelId.toString in 
                                   let relvid = rtov relId'
                                   in 
@@ -617,30 +616,33 @@ let elaborate (re,pre,vc) =
 
     let rtov = Var.fromString << RelId.toString in 
     let argVars = Vector.map (rargs, rtov) in 
-    let def' = PR.instantiate (def, argVars)
+    let def' = PR.instantiate (def,argVars) []
     in
     def'
 
   in   
-
-
-  (* fun instParamRelDef def (RInst {targs,sargs,rargs,rel}) =
-     let
-      let abs = Bind.instantiate (def, targs, rargs)
-      let Bind.Abs (bv,expr) = abs
-      let Bind.Expr {ground=(grel,gtargs,_), fr} = expr
-      let grinst = RInst {targs=gtargs, sargs=empty(),
-        rargs=empty(), rel=grel}
-      let {rel=grAlias, ...} = RIT.find rinstTab grinst handle
-        RIT.KeyNotFound _ -> Error.bug "GRel Inst not found"
-      let expr' = Bind.Expr {ground=(grAlias,empty(),bv), fr=fr}
-      let abs' = Bind.Abs (bv,expr')
-      let def' = Bind.fromAbs abs'
+  
+  let instParamRelDef def (RInst {targs;sargs;rargs;rel}) =
+     
+      let abs = Bind.instantiate (def, targs, rargs) in 
+      let Bind.Abs (bv,expr) = abs in 
+      let Bind.Expr {ground=(grel,gtargs,_); fr} = expr in 
+      let grinst = RInst {targs=gtargs; sargs=empty();
+        rargs=empty(); rel=grel} in 
+      let {rel=grAlias;_} = 
+          try 
+            RIT.find rinstTab grinst 
+           with   
+           | RIT.KeyNotFound _ -> failwith "GRel Inst not found"
+      in      
+      let expr' = Bind.Expr {ground=(grAlias,empty(),bv); fr=fr} in 
+      let abs' = Bind.Abs (bv,expr') in 
+      let def' = Bind.fromAbs abs' 
      in
       def'
-     end
-  *)
-  (*) exception Return of PRE.t
+      
+     in  
+ 
     (*
     * newPre contains instantiated definitions of instantiated
     * parametric/primitive relations.
@@ -648,27 +650,37 @@ let elaborate (re,pre,vc) =
     * Therefore, type declarations of all relations in newPre are
     * present in tbinds of elaborated VC.t.
     *)
-    let newPre = Vector.fold (RIT.toVector rinstTab, PRE.empty,
-     fun ((rinst, {rel=newRel,sort}),newPre) ->
-       let
-         let RInst {rel, rargs, ...} = rinst
-         let {def,...} = PRE.find pre rel handle
-           (*
-            * r \in domain(rinstTab) /\ r \notin domain(pre) ->
-            * r is a rel-param
-            *)
-           PRE.ParamRelNotFound _ -> raise (Return newPre)
-         let def'  = case (def, len rargs) of 
-           (PRE.Prim pdef, _) -> PRE.Prim $ instPrimRelDef pdef rinst
-         | (PRE.Bind bdef, 0) -> raise (Return newPre)
-         | (PRE.Bind bdef, _) -> PRE.Bind $ instParamRelDef bdef rinst
-       in
-         PRE.add newPre (newRel,{ty=PTS.simple (empty(),sort), 
-           def=def'})
-       end handle Return newPre -> newPre)
-  *)
-  let tydbinds' = Vector.concat [tydbinds;newtydbinds] in 
-  let bindings = {tbinds=tydbinds'; rbinds=PRE.empty} in 
+    let newPre =
+    let open PRE in 
+     List.fold_right 
+     (fun (rinst, {rel=newRel;sort}) (newPre) ->
+        try 
+          let RInst {rel;rargs; _} = rinst in 
+          let {def;_} = 
+            try 
+              PRE.find pre rel 
+             (*
+              * r \in domain(rinstTab) /\ r \notin domain(pre) ->
+              * r is a rel-param
+              *)
+             with 
+             |PRE.ParamRelNotFound _ -> raise (ReturnPRE newPre) 
+           in   
+           let def'  = match (def, len rargs) with
+             (PRE.Prim pdef, _) -> PRE.Prim (instPrimRelDef (pdef) (rinst))
+           | (PRE.Bind bdef, 0) -> raise (ReturnPRE newPre)
+           | (PRE.Bind bdef, _) -> PRE.Bind (instParamRelDef bdef rinst)
+         in
+           PRE.add newPre (newRel,{tys=PTS.simple (empty,sort); 
+             def=def'})
+          with 
+        |ReturnPRE newPre -> newPre
+      )
+       (RIT.toVector rinstTab) PRE.empty
+    
+    in 
+    let tydbinds' = Vector.concat [tydbinds;newtydbinds] in 
+    let bindings = {tbinds=tydbinds'; rbinds=PRE.empty} in 
       (*
       let _ = print "RelInstTable : \n"
       let _ = Control.message (Control.Top, fun _ ->

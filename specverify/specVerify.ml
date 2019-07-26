@@ -58,10 +58,9 @@ let genVar () =  getUniqueId "sv_"
 let getUniqueMarker () = getUniqueId "_mark_"
 
 let dummyRefTyS () = RefTyS.generalize (Vector.new0(),
-                                        RefSS.fromRefTy (RefTy.fromTyD (TyD.makeTnil())))
+                                        RefSS.fromRefTy (RefTy.fromTyD (TyD.makeTunknown())))
 
-let  newLongVar = fun (var,fld) -> Var.fromString (
-    (Var.toString var)^"."^(Var.toString fld))
+let  newLongVar = fun (var,fld) -> Var.fromString ((Var.toString var)^"."^(Var.toString fld))
 
 let  varEq (v1,v2) = ((Var.toString v1) = (Var.toString v2))
 
@@ -204,11 +203,11 @@ let rec unifyArgs ((argv ,argTy) as argBind,
 let  rec unifyWithDisj refTy1  refTy2  =
   let open RefTy in 
   match (refTy1, refTy2) with
-    (Base (_, TyD.Tnil, _),_) -> refTy2
-  | (_,Base (_, TyD.Tnil, _)) -> refTy1
+    (Base (_, TyD.Tunknown, _),_) -> refTy2
+  | (_,Base (_, TyD.Tunknown, _)) -> refTy1
   (*Disjunction of Predicates*)
   |(Base (bv1,td1,pred1),Base (bv2,td2,pred2)) ->
-      let _ = assert (TyD.sameType (td1,td2)) in 
+      let _ = assert (TyD.sametype td1 td2) in 
       let pred1' = Predicate.applySubst (bv2,bv1) pred1
       in
       Base (bv2,td2,Predicate.dot (pred1',pred2))
@@ -271,8 +270,9 @@ let rec  type_synth_exp (ve, pre, exp) =
   let open Typedtree  in 
   let exp_desc = exp.exp_desc in 
   let exp_type = exp.exp_type in 
+  let normal_exp_type = TyD.normalizeTypes exp_type in 
 
-  let trivialAns = fun _ -> ([], RefTy.fromTyD (exp_type.desc)) in 
+  let trivialAns = fun _ -> ([], RefTy.fromTyD (normal_exp_type)) in 
 
   
   match exp_desc with 
@@ -547,8 +547,9 @@ and type_synth_function (ve , pre , fexp)
 
   in 
   
-  let argType = arg.pat_type.desc in 
-  let argRefTy = RefTy.fromTyD (argType) in 
+  let argType = arg.pat_type in
+  let normal_arg_type = TyD.normalizeTypes argType in  
+  let argRefTy = RefTy.fromTyD (normal_arg_type) in 
   let argBind = (get_var_from_pattern arg,argRefTy) in 
       (*val _ = L.print (L.seq[Var.layout arg, L.str " :-> ",
         RefTy.layout argRefTy], print)*)

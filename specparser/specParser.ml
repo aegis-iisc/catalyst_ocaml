@@ -875,7 +875,7 @@ and _menhir_goto_pred : _menhir_env -> 'ttv_tail -> _menhir_state -> 'tv_pred ->
             let _v : 'tv_basety = 
 # 228 "specParser.mly"
                                          (RefinementType.Base ((Var.fromString i), 
-                TyD.makeTnil (), pr))
+                TyD.makeTunknown (), pr))
 # 880 "specParser.ml"
              in
             _menhir_goto_basety _menhir_env _menhir_stack _menhir_s _v) : 'freshtv520)) : 'freshtv522)
@@ -3197,7 +3197,7 @@ and _menhir_run90 : _menhir_env -> 'ttv_tail -> _menhir_state -> 'ttv_return =
             let _v : 'tv_basety = 
 # 225 "specParser.mly"
                             (RefinementType.Base ((Var.fromString i), 
-                TyD.makeTnil(), 
+                TyD.makeTunknown (), 
                 Predicate.truee()))
 # 3203 "specParser.ml"
              in
@@ -3243,7 +3243,7 @@ and _menhir_run130 : _menhir_env -> 'ttv_tail -> _menhir_state -> (
     ((let _v : 'tv_basety = 
 # 222 "specParser.mly"
               (RefinementType.Base ((Var.fromString i), 
-                TyD.makeTnil (),
+                TyD.makeTunknown (),
                 Predicate.truee()))
 # 3249 "specParser.ml"
      in
@@ -3897,7 +3897,7 @@ and start : (Lexing.lexbuf -> token) -> Lexing.lexbuf -> (
         _menhir_env._menhir_error <- true;
         _menhir_errorcase _menhir_env (Obj.magic _menhir_stack) MenhirState0) : 'freshtv6))
 
-# 233 "/home/ashish/.opam/4.06.0/lib/menhir/standard.mly"
+# 233 "/home/ashish/.opam/4.03.0/lib/menhir/standard.mly"
   
 
 # 3904 "specParser.ml"
