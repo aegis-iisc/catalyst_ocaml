@@ -558,7 +558,7 @@ module ProjTypeScheme = struct
   type t = T of {tyvars : Tyvar.t list; sortscheme : ProjSortScheme.t}
 
   let toString (T {tyvars; sortscheme}) = (Vector.toString (Tyvar.toString) tyvars) 
-                                          ^ ". " ^ (ProjSortScheme.toString sortscheme)
+                                          ^ " @ss: " ^ (ProjSortScheme.toString sortscheme)
 
   let paramSorts ( T {sortscheme = PSS.T {sort = ProjSort.T {paramsorts; _}; _}; _} ) = paramsorts
 
@@ -568,9 +568,14 @@ module ProjTypeScheme = struct
 
   let generalize (tyvars, ss) = T {tyvars=tyvars; sortscheme = ss}
 
-  let instantiate (T {tyvars;sortscheme=ss}, tydv) = 
-    
-    let tyvmap = try (Vector.zip tydv tyvars) with 
+  let instantiate (T {tyvars;sortscheme=ss} as pts, tydlist) = 
+    let () = Printf.printf "%s" (toString pts) in
+    let lentyDlist = (List.length tydlist) in
+    let lentyvar = (List.length tyvars) in
+     
+    let () = Printf.printf "%s" ("_______") in
+     
+    let tyvmap = try (Vector.zip tydlist tyvars) with 
         _ -> raise (PTSInst "PTS : insufficient or more type args") in
 
     let f = TyD.instantiateTyvars tyvmap in 

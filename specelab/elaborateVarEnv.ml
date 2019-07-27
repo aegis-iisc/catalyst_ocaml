@@ -436,8 +436,8 @@ let rec elabRExpr (re,pre,tyDB,spsB,rexpr) =
           
           match (tydcomp,tyd') with 
             (TyD.Tconstr (tycon1, targs), TyD.Tconstr (tycon2,_)) ->
-                let () = Printf.printf "%s" (Tycon.toString tycon1) in 
-                let () = Printf.printf "%s" (Tycon.toString tycon2) in 
+                let () = Printf.printf "%s" ((TyD.toString tydcomp)^"\n") in 
+                let () = Printf.printf "%s" ((TyD.toString tyd')^"\n") in 
                 
                 assert  (Tycon.equals (tycon1, tycon2))  ; targs
             | (_,TyD.Tvar _) -> [tyd]
@@ -494,7 +494,10 @@ let rec elabRExpr (re,pre,tyDB,spsB,rexpr) =
   | D (v1,v2) -> doIt (v1,v2) (funD) TS.unionType 
   | T els -> (emptycs(), TS.Tuple   
                 (List.map (funT << typeSynthRElem) els) ,rexpr)
-  | R (rinst,y) ->  doItRInstApp (rinst,y)  
+  | R (rinst,y) ->  
+   let () = Printf.printf "%s" ("@here-elabRE-6 \n") in 
+     
+    doItRInstApp (rinst,y)  
 
 
 
