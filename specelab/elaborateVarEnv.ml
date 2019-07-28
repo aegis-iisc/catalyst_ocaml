@@ -404,7 +404,6 @@ let rec elabRExpr (re,pre,tyDB,spsB,rexpr) =
   
   let rec doItRInstApp ((RInst {rel;args;_} as rinst) ,tyd) = 
         let open ParamRelEnv in 
-
         let _ = if isParam rel 
           then
             let (x,y,z) =  doItParamApp (rinst,tyd) in 
@@ -422,6 +421,7 @@ let rec elabRExpr (re,pre,tyDB,spsB,rexpr) =
 
         let _ = match def with 
             PRE.Prim _ -> 
+            let ()= Printf.printf "%s" ("doItRInstApp-1-5\n") in   
               let (x,y,z) = doItPrimApp (rinst,tyd) in 
               raise (Return (x,y,z))
           (* Hack: For recursive applications. *)
@@ -432,22 +432,20 @@ let rec elabRExpr (re,pre,tyDB,spsB,rexpr) =
         
 
         let targs = 
-          let tydcomp =  tyd  in 
-          
-          match (tydcomp,tyd') with 
+           match (tyd,tyd') with 
             (TyD.Tconstr (tycon1, targs), TyD.Tconstr (tycon2,_)) ->
-                let () = Printf.printf "%s" ((TyD.toString tydcomp)^"\n") in 
+                let () = Printf.printf "%s" ((TyD.toString tyd)^"\n") in 
                 let () = Printf.printf "%s" ((TyD.toString tyd')^"\n") in 
-                
+     
                 assert  (Tycon.equals (tycon1, tycon2))  ; targs
             | (_,TyD.Tvar _) -> [tyd]
             | _ -> raise (ElebEnvFail ("RelApp type mismatch: " ^ relName) ) in  
 
         
+
+        
         let relSS = PTS.instantiate (relTyS,targs) in 
 
-        let () = Printf.printf "%s" ("@here-elabRE-5 \n") in 
-        
         let PSS.T {sort=ProjSort.T {paramsorts;_}; _} = relSS  in 
 
         let argDomains = List.map (fun (SPS.ColonArrow (argTyd,_)) -> argTyd) paramsorts in 
@@ -487,7 +485,6 @@ let rec elabRExpr (re,pre,tyDB,spsB,rexpr) =
   let funX (e1, e2) = X (e1, e2) in 
   let funD (e1, e2) = D (e1, e2) in 
   let funT td = TS.T td in
-  let () = Printf.printf "%s" ("["^(exprToString rexpr)^"]") in 
   match rexpr with
     U (v1, v2) -> doIt (v1,v2) (funU) TS.unionType 
   | X (v1,v2) -> doIt (v1,v2) (funX) TS.crossPrdType
@@ -495,7 +492,6 @@ let rec elabRExpr (re,pre,tyDB,spsB,rexpr) =
   | T els -> (emptycs(), TS.Tuple   
                 (List.map (funT << typeSynthRElem) els) ,rexpr)
   | R (rinst,y) ->  
-   let () = Printf.printf "%s" ("@here-elabRE-6 \n") in 
      
     doItRInstApp (rinst,y)  
 
@@ -539,15 +535,12 @@ let elabSRBind (re)(pre)(ve ) (StructuralRelation.T {id;params;mapp}) =
   let open SPSBValue in 
   let open SPSBKey in   
 
-
-
   let spsB = List.fold_left (fun spsB r -> 
       SPSBinds.add spsB r {dom = ref None; range = SVar.newSVar ()}) SPSBinds.empty params in 
   let isParam = fun rid -> SPSB.mem spsB rid in 
 
   (* First pass - type & sort annotate instantiations *)
 
-  let () = Printf.printf "%s" "@here1 \n" in 
   let (map', relTySOp) = Vector.mapAndFold (mapp, None, 
 
                                             fun ((con,valop,rterm), relTySOp) ->
@@ -582,7 +575,10 @@ let elabSRBind (re)(pre)(ve ) (StructuralRelation.T {id;params;mapp}) =
                                                   ((con, valop , RelLang.Star newRInst), Some relTyS)
 
                                               | (Some vars, RelLang.Expr rexpr) -> 
-                                                  let () = Printf.printf "%s" "@here3 \n " in 
+                                                  let () = List.iter (fun e -> Printf.printf "%s" ((Ident.name e)^"\n")) vars in
+                                                  
+                                           
+                                                   
                                                   let convid = Var.fromString (Con.toString con) in 
                                                   let RefTyS.T {tyvars;refss;_} = 
                                                     try VE.find ve convid 
@@ -590,19 +586,16 @@ let elabSRBind (re)(pre)(ve ) (StructuralRelation.T {id;params;mapp}) =
                                                     | VE.VarNotFound _ -> 
                                                         let s = "Constructor " ^(Con.toString con)^ " not found in var env." in 
                                                         raise (ElebEnvFail s) in 
-                                                  let () = Printf.printf "%s" "@here3-1  \n" in 
-                                                
+                                                  
                                                   let refty = RefSS.toRefTy refss in
                                                   let datTyD = match refty with
                                                       RefTy.Base (_,datTyD,_) -> datTyD
                                                     | RefTy.Arrow (_,RefTy.Base (_,datTyD,_)) -> datTyD
                                                     | _ -> raise (ElebEnvFail "Impossible case") in 
-                                                  let () = Printf.printf "%s" "@here3-2  \n" in 
                                                   
                                                   let tyDB = List.fold_left (fun tyDB (_,var,tyD,_) -> TyDBinds.add tyDB var tyD)  
                                                       TyDBinds.empty (unifyConArgs ve con vars)in 
 
-                                                   let () = Printf.printf "%s" "@here3-3  \n" in 
                                                        
             (*
              * Hack : For structural relations with recursive
@@ -647,7 +640,6 @@ let elabSRBind (re)(pre)(ve ) (StructuralRelation.T {id;params;mapp}) =
                                               | _ -> raise (ElebEnvFail "Impossible case of valop -rterm :") ) in 
 
 
-  let () = Printf.printf "%s" "@here2 " in 
   let pts = match relTySOp with
       None -> raise (ElebEnvFail "Failed Elaboraion")
     | Some relTyS -> relTyS in 
@@ -994,7 +986,6 @@ let elaborate (tstr) (RelSpec.T {reldecs;primdecs;
   let  _ = Printf.printf "%s" (Layout.toString (PRE.layout initialPRE)) in
 
   
-
   let  initialRE =  RE.empty in 
   let  (elabRE,elabPRE) = List.fold_left (fun (re, pre) srbind -> 
      elabSRBind re pre initialVE srbind) (initialRE, initialPRE) reldecs  in 

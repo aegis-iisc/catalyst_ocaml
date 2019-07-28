@@ -112,15 +112,13 @@ let decomposeTupleBind = RefTy.decomposeTupleBind
    * contain type bindings for matched pattern vars.
    *)
 let rec unifyArgs ((argv ,argTy) as argBind,
-               argExp ) =
-  let exp_desc = argExp.exp_desc in 
+               (arg:Ident.t) ) =
   let open Typedtree in  
-  let open Path in 
-  match (argTy, exp_desc) with
-  | (RefTy.Base _, Texp_ident(p,_,_)) -> 
-      let Pident (v) = p in 
-      (Vector.new1 (v,argTy), Vector.new1 (v,argv))
-  | (RefTy.Tuple argBinds',Texp_tuple expl) -> 
+  
+  match (argTy, arg) with
+  | (RefTy.Base _, _) -> 
+      (Vector.new1 (arg,argTy), Vector.new1 (arg,argv))
+  (* | (RefTy.Tuple argBinds',Texp_tuple expl) -> 
           (*
            * Unifies v:{1:T0,2:T1} with (v0,v1)
            * Returns binds = [v0 ↦ T0, v1 ↦ T1],
@@ -140,7 +138,7 @@ let rec unifyArgs ((argv ,argTy) as argBind,
       in
 
       (List.concat reftyss, List.concat substss)
-
+ *)
   (* |  (RefTy.Tuple argBinds', Texp_record ) => 
      let
       val (reftyss,substss)= (Vector.unzip o Vector.map)
@@ -164,23 +162,20 @@ let rec unifyArgs ((argv ,argTy) as argBind,
      in
       (Vector.concatV reftyss, Vector.concatV substss)
   *) 
-  |(RefTy.Tuple argBinds', Texp_ident(p,a,b)) -> 
+  |(RefTy.Tuple argBinds', _) -> 
 
       (* Unifying v0:{x0:T0,x1:T1} with v1 would return
        * v1 ↦ {x0:T0,x1:T1} as the only new bind. However,
        * all references v0 elements should now refer to v1
        * elements. Therefore, substs = [v1.x0/v0.x0, v1.x1/v0.x1]
       *)
-      let Pident (v) = p in   
-      let binds = Vector.new1 (v,argTy) in 
+      let binds = Vector.new1 (arg,argTy) in 
       let substs = List.concat  
           (Vector.map (argBinds', 
                        fun (argBind') ->
                          let (argv',_) = argBind' in 
-                         let newVar = newLongVar (v,argv') in 
-                         let newIdent = Texp_ident((Pident newVar), a, b) in
-                         let new_exp = {argExp with exp_desc = newIdent} in  
-                         let (_,substs') = unifyArgs (argBind', new_exp ) in 
+                         let newVar = newLongVar (arg,argv') in 
+                         let (_,substs') = unifyArgs (argBind', newVar ) in 
                          let  substs = Vector.map (substs', 
                                                    fun (n,o') -> (n, newLongVar (argv,o')))
                          in
@@ -189,11 +184,9 @@ let rec unifyArgs ((argv ,argTy) as argBind,
           ) 
       in
       (binds,substs)
-  | (RefTy.Arrow _, Texp_ident(p,_,_)) -> 
-      let Pident (v) = p in   
-
-      (Vector.new1 (v,argTy), 
-       Vector.new1 (v,argv))
+  | (RefTy.Arrow _, _) -> 
+      (Vector.new1 (arg,argTy), 
+       Vector.new1 (arg,argv))
   | _ -> raise (SpecVerifyExc "Invalid argTy-argExpVal pair encountered")
 
 
@@ -278,7 +271,7 @@ let rec  type_synth_exp (ve, pre, exp) =
   match exp_desc with 
 
   | Texp_apply (fexp, arg_label_exp_list) ->
- 
+      let () = Printf.printf "%s" "######### synthesis:apply \n" in 
       let (_,fty) = type_synth_exp (ve, pre, fexp) in 
       let ((farg,fargty) as fargBind, fresty) = 
         match fty with 
@@ -304,15 +297,27 @@ let rec  type_synth_exp (ve, pre, exp) =
              * Then, determine type of this expression by substituion of
              * actuals for formals.
              *)
-      let  (_,substs) = unifyArgs (fargBind,exp_from_valExp) in 
+
+      (**)
+      (* let get the pattern for the id   *) 
+      let exp_desc_from_exp = exp_from_valExp.exp_desc in 
+      let argPId  = match exp_desc_from_exp with 
+        | Texp_ident (p,_,_) -> p 
+      in 
+      let argId = match argPId with 
+          Pident id -> id
+        | _ -> raise (SpecVerifyExc "Only Pident handled ")in 
+   
+                  
+      let  (_,substs) = unifyArgs (fargBind,argId) in 
       let resTy = RefTy.applySubsts substs fresty
       in
       (vcs,resTy)
 
 
   | Texp_ident (p, l, vd) ->
-          let () = print "typesyntt exp1" in 
-    
+          
+    let () = Printf.printf "%s" "######### synthesis:ident \n" in
  
       let ident_var = match p with 
           Pident id -> id
@@ -322,17 +327,17 @@ let rec  type_synth_exp (ve, pre, exp) =
 
       ([], idRefTy)
   | Texp_constant c -> 
-                let () = print "typesyntt exp3" in 
-    
+                
+    let () = Printf.printf "%s" "######### synthesis:constant \n" in
  
       trivialAns ()
 
 
   | Texp_let (rf, vbl, exp) ->
       (*T-let rule from the paper*)
-          let () = print "typesyntt exp4" in 
+          
     
- 
+        let () = Printf.printf "%s" "######### synthesis:let \n" in
 
       let (marker, markedVE) = markVE ve in 
       let (vcs1 , refTys_bind) = 
@@ -359,6 +364,7 @@ let rec  type_synth_exp (ve, pre, exp) =
       (*patlist is a list of pattern and expression, i.e. list of cases *)
   | Texp_match (testexp, case_list, explist, p) ->
       (*\Gamma *)
+     let () = Printf.printf "%s" "######### synthesis:match \n" in
       let (marker, markedVE) = markVE ve in 
       (* let pat_exp_list =  
         let patterns = List.map (fun cs -> cs.c_lhs) patlist in 
@@ -401,13 +407,14 @@ let rec  type_synth_exp (ve, pre, exp) =
 
   (** try E with P1 -> E1 | ... | PN -> EN *)
   | Texp_tuple ( lsexp) ->
-
+let () = Printf.printf "%s" "######### synthesis:tuple \n" in
       let vcs_type_list = List.map (fun e -> type_synth_exp (ve, pre, e)) lsexp in 
       let (vcs_final, types_final) = List.fold_left (fun (accvcs, types) (vcs, ty) -> (List.concat [accvcs;vcs], ty::types))
           ([],[]) vcs_type_list in 
       (vcs_final, List.hd (List.rev types_final) )                   
 
   | Texp_construct (lc, cd, lexp) ->
+  let () = Printf.printf "%s" "######### synthesis:constructor \n" in
       trivialAns ()
 
   (** C                []
@@ -416,11 +423,16 @@ let rec  type_synth_exp (ve, pre, exp) =
 
   *)
   | Texp_function (lab, csl, part) ->
+  let () = Printf.printf "%s" "######### synthesis:function  \n" in
       type_synth_function (ve, pre, exp_desc)
 
-  | Texp_sequence (exp1 , exp2) -> type_synth_exp (ve,pre,exp2) 
+  | Texp_sequence (exp1 , exp2) -> 
+let () = Printf.printf "%s" "######### synthesis:seq \n" in
+    type_synth_exp (ve,pre,exp2) 
 
-  | _ -> trivialAns ()   
+  | _ -> 
+let () = Printf.printf "%s" "######### synthesis:Other \n" in
+  trivialAns ()   
 
 
 
@@ -445,11 +457,12 @@ and type_synth_value_bindings (ve, pre, vblist) =
 
 and type_check_function (ve, pre, fexp, ty)  =
   let ((_,argRefTy) as argBind, resRefTy) = 
-    match ty with 
-      RefTy.Arrow (x,y) -> (x,y ) 
+     match ty with 
+      RefTy.Arrow (x,y) -> (x,y) 
     | _ -> raise (SpecVerifyExc "Function with non-arrow type")
   in 
-  let () = print "typecheck fexp2" in 
+  let () = Printf.printf "%s" ("$$ArgTy "^(RefTy.toString argRefTy)) in 
+  let () = Printf.printf "%s" ("$$resRefTy "^(RefTy.toString resRefTy)) in 
      
   let (arg, fexp_body) = 
     (*assume single case*)
@@ -460,18 +473,17 @@ and type_check_function (ve, pre, fexp, ty)  =
     ( c_lhs, c_rhs) 
 
   in 
-  let argType = arg.pat_type.desc in 
+  let argType = TyD.normalizeTypes arg.pat_type in 
   let extendedVE = VE.add ve ((get_var_from_pattern arg), toRefTyS argRefTy) in
   (*TODO correct this we do not have Exp.Val.Atom or Exp.Val.Var*)
-  (* let  e_des = Texp_ident (path_n, Location.none
-  let (binds, substs) = unifyArgs (argBind, (Exp.Val.Atom 
-                                               (Exp.Val.Var (arg, Vector.new0 ())))) in 
-  let _ = assert (List.length bind = 1) in 
-  let resRefTy' = RefTy.applySubsts [] resRefTy in 
-   *)     (*
+
+  let (binds, substs) = unifyArgs (argBind, (get_var_from_pattern arg)) in 
+  let _ = assert (List.length binds = 1) in 
+  let resRefTy' = RefTy.applySubsts substs resRefTy in 
+       (*
        * Γ[arg↦argRefTy] ⊢ body <= resRefTy
        *)
-  let () = print "typecheck fexp3" in 
+  let () = Printf.printf "%s" "Typechecking the body of the function in extendedVE \n" in 
       
   type_check_exp (extendedVE,pre,fexp_body,resRefTy)
 
@@ -481,9 +493,12 @@ and type_check_function (ve, pre, fexp, ty)  =
 
 and type_check_exp (ve, pre, exp, tyexp)  = 
   match exp.exp_desc with 
-  | Texp_function (_,_,_) -> type_check_function(ve, pre, exp.exp_desc, tyexp)
+  | Texp_function (_,_,_) -> 
+      let () = Printf.printf "%s" "Expression :: Texp_function \n" in 
+      type_check_function(ve, pre, exp.exp_desc, tyexp)
   | _ -> 
-
+      let () = Printf.printf "%s" "Expression :: Not a Texp_function \n" in 
+      
         (*
          * Γ ⊢ exp => expRefTy
          *)
@@ -491,6 +506,13 @@ and type_check_exp (ve, pre, exp, tyexp)  =
         (*
          * Γ ⊢ expRefTy <: ty
          *)
+
+      let () = Printf.printf "%s" ("size "^(string_of_int (List.length expvcs))) in    
+      let () = Printf.printf "%s" ("refinement Type for exp ::: "^(RefTy.toString expRefTy)) in    
+      let () = Printf.printf "%s" ("refinement Type for tyexp :::"^(RefTy.toString tyexp)) in    
+         
+      let () = Printf.printf "%s" "Γ ⊢ expRefTy <: ty" in    
+         
       let () = print "Γ ⊢ expRefTy <: ty" in    
       let new_vcs = VC.fromTypeCheck (ve, pre, expRefTy, tyexp)  in 
       let () = print "generated VCS" in    
@@ -499,7 +521,7 @@ and type_check_exp (ve, pre, exp, tyexp)  =
 
 
 and doIt_lambda (ve, pre, lambda) =
-  let var = lambda.var in 
+  let var  = lambda.var in 
   let body = lambda.body in
 
   let extendedPat = 
@@ -512,15 +534,16 @@ and doIt_lambda (ve, pre, lambda) =
           with 
           | _ -> raise (SpecVerifyExc "Impossible case")   
         in  
+        let () = Printf.printf "%s" (RefTyS.toString ftys)  in 
         let  RefSS.T {prefty = PRf.T {refty=fty;params};_} 
           = RefTyS.specialize ftys  in 
         let var_from_pat = get_var_from_pattern var in     
-        let extendedVE = VE.add (VE.remove ve var_from_pat) (var_from_pat,
-                                                    toRefTyS fty) in 
 
-        let extendedPRE = Vector.fold (params, pre, 
-                                       fun ((r,sps),pre) -> PRE.addUniterp pre (r, 
-                                                                                PTS.simple (empty(),sps))) in 
+        let extendedVE = VE.add (VE.remove ve var_from_pat) (var_from_pat,
+                                                    ftys) in 
+        let extendedPRE = List.fold_right (fun (r,sps) pre -> PRE.addUniterp pre (r, 
+                                                                                PTS.simple (empty(),sps))) params pre 
+                                       in 
 
         let vcs = match RefTyS.isAssumption ftys with
             false -> (Printf.printf "%s" ((Var.toString var_from_pat)^" will be\
@@ -528,7 +551,7 @@ and doIt_lambda (ve, pre, lambda) =
                       type_check_function (extendedVE, extendedPRE, body.exp_desc , fty))
           | true -> Vector.new0 ()
         in 
-           
+        let () = Printf.printf "%s" ("Length of vcs "^(string_of_int (List.length vcs )))   in 
         (vcs,  extendedVE)
   (*if not Tpat_var then unhandled*)
   | _ -> ([], ve)  
@@ -576,9 +599,9 @@ and doIt_value_bindings (ve, pre, valbinds) :(VC.t list * VE.t) =
 
 
       if (is_function_Exp vb.vb_expr) then 
-        let () = print "doIt_value_bindings:: fexp" in 
+        let () = Printf.printf "%s" "doIt_value_bindings:: fexp" in 
         let lambda_for_vb = {var= vbpat; body = vb.vb_expr} in 
-          doIt_lambda (ve, pre, lambda_for_vb)
+            doIt_lambda (ve, pre, lambda_for_vb)
       else
          let () = print "doIt_value_bindings:: fexp" in 
         
@@ -610,7 +633,7 @@ let () = print "doIt exp" in
 
 
 let doIt_struct_items (ve, pre, tstr) = 
-  let () = print "doIt sruct Items" in 
+  let () = Printf.printf "%s" "doIt sruct Items" in 
 
   (*Set the initial environment*)
   let struct_items = tstr.str_items  in 
@@ -620,15 +643,14 @@ let doIt_struct_items (ve, pre, tstr) =
     (*These are different Expressions which will generated an expression *) 
       Tstr_eval (exp , attr) ->  (*Any let expression at the top level  *)
         let () = print "Tstr_eval" in 
-
         let vcs_exp = doIt_exp (ve, pre, exp)
         in
         vcs_exp 
 
     | Tstr_value (rec_flag , value_bindings) -> (* and Tfun*)
-        let () = print "Tstr_value" in 
+        let () = Printf.printf "%s" "Tstr_value" in 
+        let vcs_vb = doIt_value_bindings (ve, pre, value_bindings) in
 
-        let vcs_vb = doIt_value_bindings (ve, pre, value_bindings) in 
         vcs_vb
 
     | _ -> ([], ve) in 

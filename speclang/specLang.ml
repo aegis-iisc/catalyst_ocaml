@@ -171,7 +171,7 @@ struct
   (*Noramlize all other types into this type*)
   type t =
           Tunknown
-        | Tvar of Tyvar.t
+        | Tvar of (Tyvar.t)
         | Tarrow of t * t
         | Ttuple of t list
         | Tconstr of Tycon.t * t list
@@ -232,7 +232,7 @@ struct
       with 
       | Not_found -> 
       let () = List.iter (fun (tyd1, tyvar) -> Printf.printf "%s" ((toString tyd1)^"|-> "^(Tyvar.toString tyvar))) substs in 
-      raise (SpecLangEx ( "Not present "^(toString tyd)))
+        raise (SpecLangEx ( "Not present "^(toString tyd)))
    (*normalizeTypes : Types.type_expr -> TyD.t*)
   let rec normalizeTypes oc_type = 
       let oc_type_desc = oc_type.desc in 
@@ -241,7 +241,9 @@ struct
       match oc_type_desc with 
         Types.Tvar s -> (match s with 
                           Some s' -> Tvar (Tyvar.fromString s')
-                          |None -> Tvar (Tyvar.fromString "_"))
+                          |None -> Tvar (Tyvar.fromString "_") 
+                            (*no type variable meants int type *)
+                          )
        | Types.Tbool -> Tbool 
 
        | Types.Tint  -> Tint 
@@ -490,7 +492,8 @@ module SimpleProjSort = struct
   let range (ColonArrow (_,r)) = r
 
   let mapTyD (ColonArrow (tyd, ts)) f =
-    ColonArrow (f tyd, TS.mapTyD ts f)
+    ColonArrow (
+     tyd, TS.mapTyD ts f)
 end
 
 module SPS = SimpleProjSort 
@@ -567,23 +570,31 @@ module ProjTypeScheme = struct
   let simple (tyvars, sps) = T {tyvars = tyvars; sortscheme = PSS.simple sps}
 
   let generalize (tyvars, ss) = T {tyvars=tyvars; sortscheme = ss}
-
+  (*Instantiate returns the same ProjSortScheme*)
   let instantiate (T {tyvars;sortscheme=ss} as pts, tydlist) = 
     let () = Printf.printf "%s" (toString pts) in
     let lentyDlist = (List.length tydlist) in
     let lentyvar = (List.length tyvars) in
      
     let () = Printf.printf "%s" ("_______") in
-     
-    let tyvmap = try (Vector.zip tydlist tyvars) with 
-        _ -> raise (PTSInst "PTS : insufficient or more type args") in
-
-    let f = TyD.instantiateTyvars tyvmap in 
     
+    let () = Printf.printf "%s" (string_of_int lentyDlist) in
+     let () = Printf.printf "%s" (string_of_int lentyvar) in
+    (* let tyvmap = try 
+      (List.map2 (fun x y  -> (x,y)) tydlist tyvars) with 
+        _ -> raise (PTSInst "PTS : insufficient or more type args") in
+ *)
+    let f = fun tyd -> tyd in  
+     (* try    
+      TyD.instantiateTyvars tyvmap 
+    with 
+    | _ -> raise (PTSInst "Error while instantiating Tyvars") 
+  in 
+ *)
     let PSS.T{sort = PS.T{paramsorts; sort = (SPS.ColonArrow (tyd, ts))}; svars} = ss in 
+    let () = Printf.printf "%s" ("@PTSInst1") in
     
     let sort' = SPS.ColonArrow (f tyd, TS.mapTyD ts f) in 
-  
     let ps' = List.map (fun (SPS.ColonArrow (tyd, ts)) -> SPS.ColonArrow (f tyd, ts)) paramsorts in 
     let s' = PS.T {paramsorts = ps'; sort = sort'} in 
     let ss' = PSS.T {svars = svars; sort = s'} in 

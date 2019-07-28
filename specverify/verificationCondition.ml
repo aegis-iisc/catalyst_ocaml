@@ -224,16 +224,22 @@ let havocVE (ve ) =
                                    | _ -> Some (v,refty))
   in
   havocTyBindSeq vevec
+(*COrrect this in the simplest possible way *)
+
 
 let rec fromTypeCheck (ve, pre, subTy, supTy)  = 
   let
     open RefTy
   in
+
   try 
     match (subTy,supTy) with
-      (Base (_,TyD.Tunknown,p),_) -> if P.isFalse p 
-        then raise TrivialVC
-        else raise (Failed "ML type of subtype is unknown")
+      (* (Base (_,TyD.Tunknown,p),_) -> 
+        let () = Printf.printf "%s" ("@@"^(Layout.toString (P.layout p)))  in 
+        if P.isFalse p 
+        then raise TrivialVC else 
+        
+         raise (Failed "ML type of subtype is unknown")  *)
     | (Base (v1,t1,p1), Base (v2,t2,p2)) -> 
             (*
              * First, make sure that base types are same.

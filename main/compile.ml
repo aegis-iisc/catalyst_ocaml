@@ -94,23 +94,26 @@ let catalyst_elaborate_envs relspecs typedtree =
            
 
      (*get the  verification conditions*)
-
     let initial_vcs = 
       try 
       SpecVerify.doIt(ve, PRE.empty , typedtree) 
       with 
       | e -> raise e
     in    
-    let elaborated_vcs = 
+    let  _ = Printf.printf "-- Initial vcs generation done------\n" in 
+    let _ = Printf.printf "%s" (string_of_int (List.length initial_vcs)) in 
+    
+      let elaborated_vcs = 
         List.map (fun vc -> VC.elaborate (re,pre,vc)) initial_vcs in 
+      
       let  _ = Printf.printf "----------\n" in 
     
       let _ = Printf.printf "%s" ("Elaborated VCS") in 
-      let _ = Printf.printf "%s" (L.toString (VC.layout elaborated_vcs)) in 
-     let _ = Printf.printf  "\n" in 
+      let _ = Printf.printf "%s" (string_of_int (List.length elaborated_vcs)) in 
+      let _ = Printf.printf  "\n" in 
     
 
-        let  dischargeVC i vc = 
+      let  dischargeVC i vc = 
           match VCE.discharge vc with
           VCE.Success -> 
             Printf.printf  "%s" ("VC# "^(string_of_int i)^" discharged\n")

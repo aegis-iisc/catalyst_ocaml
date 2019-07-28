@@ -16,65 +16,11 @@ module TyD = TyD
   module Solver = Z3.Solver 
 
   
-  exception TyDNotFound
-  exception ConstNotFound
-  exception RelNotFound of string
   exception VCEncodingFailed of string 
 
 let ignore = fun _ -> ()
 
 let z3_log = Z3_encode.logz3
- module TypeDMapKey =
-       struct
-         type t = TyD.t
-         let equal(t1,t2)  =  TyD.sametype t1 t2
-         let layout = Layout.str << TyD.toString 
-       end
-
- module TypeDMapValue =
-       struct
-         type t = Z3_encode.sort
-         let layout = Z3_encode.sort_layout
-               end
-
-
-module TyMap = SpecMap.ApplicativeMap (TypeDMapKey) (TypeDMapValue) 
-let tyMap = TyMap.empty 
-
-let strEq str1 str2 = (str1 = str2)  
-
-module ConstantMapKey = 
-       struct
-         type t = string
-         let equal (t1, t2)  =  strEq t1 t2
-         let layout t = Layout.str t
-       end
-
-module ConstantMapValue = 
-       struct
-         type t = Z3_encode.ast
-         let layout = Z3_encode.ast_layout
-        end
-
-module ConstMap = SpecMap.ApplicativeMap (ConstantMapKey) (ConstantMapValue)
-let constMap = ConstMap.empty 
-
-module RelMapKey = 
-       struct
-         type t = string
-         let equal (t1, t2)  =  strEq t1 t2
-         let layout t = Layout.str t 
-       end
-
-
-module RelMapValue = 
-       struct
-         type t = Z3_encode.struc_rel
-         let layout =Z3_encode.sr_layout
-       end
-
-module RelMap = SpecMap.ApplicativeMap (RelMapKey) (RelMapValue)
-let relMap = RelMap.empty
 
 let discharge (VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP)) =
 
@@ -82,30 +28,34 @@ let discharge (VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP)) =
 
     let ctx = ref @@ Z3_encode.mkDefaultContext ()  in 
     let solver = ref @@ Solver.mk_solver !ctx None in   
-
+   
+    let constMap = ConstMap.empty in  
+     let relMap = RelMap.empty in 
      
         (*
        * Maps to keep track of encoded values
        *)
-       let tyMap = TyMap.empty in 
-  
-      let intTyD =  TyD.Tint   in 
-      let boolTyD = TyD.Tbool   in 
+      
       (*int_sort and bool_sort are sort functions in MSFOL
       	check how to encode MSFOL in Z3*)
-      let _ = TyMap.add tyMap intTyD (Int (Z3_encode.mk_int_sort ())) in 
-      let _ = TyMap.add tyMap boolTyD (Bool (Z3_encode.mk_bool_sort ())) in 
+       let tyMap = TyMap.empty  in 
+
+       let () = Printf.printf "%s" ("TyMap size"^(string_of_int (List.length tyMap))) in 
+   
+      let tyMap = TyMap.add tyMap (TyD.Tint) (Int (Z3_encode.mk_int_sort ())) in 
+      let tyMap = TyMap.add tyMap (TyD.Tbool) (Bool (Z3_encode.mk_bool_sort ())) in 
       let addTyD tyd = (fun sort -> 
           (TyMap.add tyMap tyd sort ; sort)) (T ("T", Z3_encode.mk_uninterpreted_s ("T"))) in 
-
+      let () = Printf.printf "%s" ("TyMap size"^(string_of_int (List.length tyMap))) in 
+   
       
        (*
        * bootStrapBools for constMap
        *)
       let constMap = ConstMap.empty  in 
 
-      let _ = ConstMap.add constMap "true" const_true in 
-      let _ = ConstMap.add constMap "false" const_false in 
+      let constMap = ConstMap.add constMap "true" const_true in 
+      let constMap = ConstMap.add constMap "false" const_false in 
       
         
       let getConstForVar v = (
@@ -113,7 +63,7 @@ let discharge (VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP)) =
       		try 
       			ConstMap.find constMap vstr
         	with 
-        		|Not_found  -> raise (ConstNotFound)) (Var.toString v) in 
+        		|Not_found  -> raise (ConstMap.ConstNotFound vstr)) (Var.toString v) in 
       
       let relMap = RelMap.empty in 
 
@@ -121,7 +71,7 @@ let discharge (VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP)) =
       		try
       			RelMap.find relMap ridstr 
       		with
-      		|Not_found  -> raise (RelNotFound ("Rel "^ridstr^" undeclared despite processing tydbinds")) 
+      		|Not_found  -> raise (RelMap.RelNotFound ("Rel "^ridstr^" undeclared despite processing tydbinds")) 
       		 
       	) 
           (RI.toString rid)
@@ -132,7 +82,7 @@ let discharge (VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP)) =
         	try 
         	RelMap.find  relMap rstr 
         with 
-        	| Not_found -> raise (RelNotFound ("Rel "^rstr^" undeclared despite processing tydbinds"))
+        	| Not_found -> raise (RelMap.RelNotFound ("Rel "^rstr^" undeclared despite processing tydbinds"))
         
         ) (RI.toString rid)
      	in 
@@ -145,23 +95,25 @@ let discharge (VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP)) =
        *)
       let encodeTyD tyD = 
       	try 
-          TyMap.find tyMap tyD 
+         TyMap.find tyMap tyD  
         with 
-        | TyMap.KeyNotFound _ -> 
+        | TyMap.TyDNotFound _ -> 
            let () = Printf.printf "%s" ("@@@@@"^(TyD.toString tyD)) in 
    
         	(match tyD with 
-        	 TyD.Tvar _ ->  addTyD tyD
+        	   TyD.Tvar _ ->  addTyD tyD 
             | TyD.Tconstr _ -> addTyD tyD
-            | _ -> failwith "Unexpected type") in 
+            | _ -> 
+
+            failwith "Unexpected type") in 
 
       let encodeConst (v,tyd) = 
         let vstr = Var.toString v in 
         let sort = encodeTyD tyd in 
-           let () = Printf.printf "%s" "Location-------1>" in 
+           let () = Printf.printf "%s" (" @@@@@@@@encoding const >"^vstr) in 
    
          let  const = mkConst (vstr,sort) in 
-          let _ = ConstMap.add constMap vstr const
+          let constMap = ConstMap.add constMap vstr const
         in
           const
          in 
@@ -173,29 +125,28 @@ let discharge (VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP)) =
               TyD.Ttuple tydr -> List.map encodeTyD (tydr)
             | _ -> Vector.new1 ( encodeTyD t1) in 
          	let  sr = mkStrucRel (rstr,sorts) in 
-          let _ = RelMap.add relMap rstr sr
+          let relMap = RelMap.add relMap rstr sr
         in
           sr
        
       in 
        (* ---- Encoding TyD binds and relations ---- *)
-       let open TyD in 
+      let open TyD in 
       let processTyDBind (v,tyd) = 
-          let () = Printf.printf "%s" ((Var.toString v)^"\n") in 
-          let () = Printf.printf "%s" (TyD.toString tyd) in 
+          let () = Printf.printf "%s" ("PTY "^(Var.toString v)) in 
+           
            match tyd with  
         (*
          * Currently, the only values with function types
          * are structural relations encoded as functions from
          * a let or tuple of vals to bool.
          *)
-            |Tarrow (t1,t2)   ->
+          |Tarrow (t1,t2)   ->
               let () = Printf.printf "%s" "Case Tarrow  " in 
-
                 (match t2 with 
                   | Tbool -> ignore (encodeStrucRel (RI.fromString (Var.toString v), tyd) )
                   | _ -> ignore (encodeConst (v,tyd)))
-            |_ -> 
+          |_ -> 
               let () = Printf.printf "%s" "Case other" in 
               ignore(encodeConst (v,tyd))
            
@@ -240,7 +191,11 @@ let discharge (VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP)) =
             |Int i -> mkInt i 
             | Bool true -> const_true 
             | Bool false -> const_false
-            | Var v -> getConstForVar v 
+            | Var v -> 
+              try 
+                getConstForVar v
+                with  
+               | ConstMap.ConstNotFound v -> const_true   
           in 
           let rec encodeQRelExpr (e:expr) =
             match e with 
@@ -298,10 +253,12 @@ let discharge (VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP)) =
                
        in 
 
+      let () = Printf.printf "%s" "Location-------%%%%%%%%%%%>" in 
+      let () = Printf.printf "%s" ("tydnidns size "^(string_of_int (List.length tydbinds))) in 
+      
       let _ = List.iter processTyDBind tydbinds in 
       (* pre is rbinds of elaborated VC.t. Maps newRelNames to
          instantiated definitions.*)
-      let () = Printf.printf "%s" "Location-------1>" in 
    
      let () = Printf.printf "%s" "Location------->" in 
 
