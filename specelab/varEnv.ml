@@ -10,7 +10,7 @@ let varStrEq = fun (v,v') -> (Var.toString v) = (Var.toString v')
 module Key = 
 struct
   type t = Var.t
-  let equal = varStrEq
+  let equal = varStrEq 
   let layout = L.str << Var.toString
 end
 
@@ -42,6 +42,6 @@ let remove = VarMap.remove
 let toVector = VarMap.toVector
 
 let string_var_type_pair (v, ty) = (Var.toString v)^" : "^(Layout.toString (RefinementTypeScheme.layout ty)) 
-let layout mp = (List.fold_left (fun acc (v, ty) -> acc^string_var_type_pair(v,ty)) "[" mp)^"]" 
+let layout mp = (List.fold_left (fun acc (v, ty) -> acc^string_var_type_pair(v,ty)^"\n") "[" mp)^"]" 
 
 

@@ -23,16 +23,55 @@ module MyIteratorArgument = struct
 
   let enter_pattern p = match p.pat_desc with
     | Tpat_var (id, _) ->
-        Format.printf "found var \n";
-        
-        Format.printf "@[<2>%s@ : %a@]@."
+        Format.printf "\nfound var \n";
+         Format.printf "@[<2>%s@ : %a@]@."
           (Ident.name id)
-          Printtyp.type_expr p.pat_type;
+         Printtyp.type_expr p.pat_type;
+         (match p.pat_type.desc with
+          | Tlink te ->  
+            let rec tlink_to_arrow ty params =
+              let td = ty.desc  in 
+              match td with 
+                | Tlink te' -> 
+                    Format.printf " \t count  \t  ";
+            
+                      let params' = (te' :: params) in 
+                    tlink_to_arrow te' params'  
+                | _ -> (params, ty)
+            in 
+            let (args, res) = tlink_to_arrow te [] in      
+
+            Format.printf " \t found Tlink  \t  ";
+            Format.printf "%a" Printtyp.type_expr (p.pat_type);
+            
+            Format.printf " \t \n arguments  ::  ";
+            let () = Printf.printf "%s" (" size   "^(string_of_int (List.length args))) in 
+            
+            let () = List.iter (fun arg -> Format.printf "%a" Printtyp.type_expr (arg);) args  in 
+            Format.printf " \t \n res  ::  ";
+            Format.printf "%a" Printtyp.type_expr (res);
+            
+
+           (* 
+            (match te.desc with
+                | Tlink te' ->  
+                  Format.printf " \t found Tlink  \n \t ";
+                Format.printf "%a" Printtyp.type_expr (te');
+           
+
+               | _ -> Format.printf "Not a Tlink##   \t ";Format.printf "%a" Printtyp.type_expr (te))  
+ *)
+          | _ -> Format.printf "Not a Tlink  \n ";)
     |  Tpat_construct (_, cd, pl) ->
           Format.printf "found constructor \n";
-        
-          (* List.iter (fun te -> Printtyp.type_expr te) (cd.cstr_args);
- *)
+          Format.printf "%s" ("const name "^(cd.cstr_name));
+          List.iter (fun e ->Format.printf "%a"
+          Printtyp.type_expr e;   Format.printf "%s" ("->");) cd.cstr_args;
+          Format.printf "%a" Printtyp.type_expr (cd.cstr_res);
+
+
+          
+   
   
     (* let enter_binding vb = 
       let pattern = vb.vb_pat in 

@@ -189,7 +189,7 @@ typespec : ASSUME i=ID COLON rt=refty {TypeSpec.T {isAssume = true;
                                 refty = rt}};
 
 refty : rta=reftyatom {rta}
-      | vrta=vartyatom ARROW rt=refty {RefTy.Arrow (vrta, rt)};
+      | vrta=vartyatom ARROW rt=refty {RefTy.Arrow ((Var.noName , (snd vrta)), rt)};
 
 reftyatom : bt=basety {bt}
           | LPAREN vas=vartyseq RPAREN  {match vas with
@@ -200,7 +200,7 @@ reftyatom : bt=basety {bt}
                         | _ -> RefTy.Tuple (Vector.fromList vas)};
 
 vartyatom : bt=basety {match bt with 
-                      RefTy.Base (v,_,_) -> (v,RefTy.alphaRename bt)
+                      RefTy.Base (v,_,_) -> (v,bt)
                     | _ -> raise (Failure "Impossible case of basety")}
            | LPAREN vas=vartyseq RPAREN  {match vas with
                           [x] -> x 

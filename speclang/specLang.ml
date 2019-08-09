@@ -32,6 +32,8 @@ module Con = struct
   type t = 
         Cons  
       | Nil 
+      | True 
+      | False 
       | Const of Asttypes.constant
 
 let constant_to_string t = match t with 
@@ -47,16 +49,18 @@ let constant_to_string t = match t with
     | Const_int32 i -> Int32.to_string i
     | Const_int64 i -> Int64.to_string i  
     | Const_nativeint n -> Nativeint.to_string n
-
+    
 
   let toString t = match t with 
-      Cons -> "Cons"
-      | Nil -> "Nil"
+        Cons -> "::"
+      | Nil -> "[]"
+      | True -> "true"
+      | False -> "false"
       | Const t' ->  constant_to_string t'
 
   let default = Cons  
-  let truee = Const (Asttypes.Const_string ("__TRUE__", None))
-  let falsee = Const (Asttypes.Const_string ("__FALSE__", None))
+  let truee = True
+  let falsee = False
 
   let fromString s = match s ="cons" with
     | true -> Cons 
@@ -72,6 +76,18 @@ module Tyvar =
 struct
   open Ident
   type t = Ident.t
+
+  let symbase = "'a"
+  let  count = ref 0
+
+  let newSVar () = Ident.create_persistent "'a"
+
+  (* fun _ ->
+    let id = symbase ^ string_of_int !count in 
+    let _ = count := !count + 1
+    in 
+    Ident.create_persistent id
+ *)
   let equal (t1,t2) = Ident.equal t1 t2
   let toString = Ident.name
   let fromString s = create s
@@ -80,10 +96,24 @@ end
 
 module Var = struct
   open Ident
+  
+  
+  let  count = ref 0
+
+  let genVar = 
+    fun _ ->
+      let id = "dummy"^(string_of_int !count) in 
+    let _ = count := !count + 1
+    in 
+    Ident.create_persistent id
+
   type t = Ident.t
   let toString = Ident.name
   let fromString s = create s
   let layout t = Layout.str (toString t )
+  let noName = create ""
+  let uniqueDummy = genVar ()  
+
 
 
 end
@@ -156,9 +186,11 @@ module Tycon=
 struct
   open Path
   type t = Path.t
-  let equals(t1,t2) = Path.same t1 t2  
   let toString  = Path.name  
+  let equals(t1,t2) = (Path.name t1 = Path.name t2  )
+  
   let is_ident  = Path.is_ident
+  let fromString s = Path.mk_ident s 
 
 end
 
@@ -178,8 +210,21 @@ struct
         | Tfield of string * t
         | Tbool 
         | Tint
-
+(*         | Tlink of t
+ *)
   let makeTarrow (tdesc1, tdesc2) = Tarrow (tdesc1, tdesc2)
+  (*given a list of tds [T1, T2, ... Tn ] and a destination type TD
+    create Arrow 
+  *)
+  
+  
+  let makeTarrowExt (tdlist, tdest) =
+    let td0 = List.nth tdlist 0 in
+    let remainingList = Vector.sublist 1 ((List.length tdlist)-1) tdlist in  
+    let prefix_arrow = List.fold_left (fun src dest -> makeTarrow(src, dest)) td0 remainingList
+
+  in makeTarrow (prefix_arrow, tdest)
+
   let makeTconstr (cons, tdlist) = Tconstr (cons, tdlist)
   let makeTvar tvar = Tvar tvar
   let makeTfield (str, tdesc1) = Tfield (str, tdesc1)
@@ -187,6 +232,7 @@ struct
   let makeTunknown () = Tunknown
   let makeTbool () = Tbool 
   let makeTint () = Tint
+
     
   let rec visitType t = match t with 
         Tunknown -> "Tunknown"
@@ -201,9 +247,9 @@ struct
     
 
   let rec sametype t1 t2 = 
-      let _ = Printf.printf "%s" ("Asked if "^(visitType t1)^" and "^(visitType t2)^" are sametypes\n") in 
-        let rec sametypes tl1 tl2 = (List.length tl1 = List.length tl2) &&  
-          List.fold_left2 (fun flag t1 t2  -> (flag && sametype t1 t2)) true tl1 tl2 
+      (* let _ = Printf.printf "%s" ("Asked if "^(visitType t1)^" and "^(visitType t2)^" are sametypes\n") in 
+       *)  let rec sametypes tl1 tl2 = (List.length tl1 = List.length tl2) &&  
+          List.fold_left2 (fun flag t1 t2  -> (sametype t1 t2)) true tl1 tl2 
       in
       match (t1,t2) with 
           (Tunknown,Tunknown) -> true
@@ -212,36 +258,66 @@ struct
             (sametype tda1 tda2) &&
             (sametype tdr1 tdr2)
         | (Ttuple td1, Ttuple td2) -> sametypes td1 td2
-        | (Tconstr (tycon1,td1), Tconstr (tycon2,td2)) -> 
-            Tycon.equals (tycon1,tycon2) &&
-            sametypes td1 td2
+        | (Tconstr (tycon1,tdl1), Tconstr (tycon2,tdl2)) -> 
+            let tyconeq = Tycon.equals (tycon1,tycon2)  in 
+            (tyconeq) && 
+            (List.fold_left2 (fun acc x y -> acc && (sametype x y)) true tdl1 tdl2)
         | (Tfield (s1,td1),Tfield (s2,td2)) -> (s1 = s2) && sametype td1 td2
         | (Tbool, Tbool) -> true
         | (Tint, Tint) -> true  
         | (_,_) -> false
       
-    let toString t = visitType t     
 
-  
+
+    let rec toStrings (ts: t list) =
+      match ts with                                         
+         [] -> ""
+       | [t] -> L.toString (L.seq [L.str " "; L.str (toString t)])
+       | _ -> L.toString (L.seq [L.str " "; L.str (List.fold_left (fun acc l -> ((L.toString l)^acc)) ("") (Vector.map (ts, 
+                                                                  L.str << toString))
+
+      )])
+
+    and toString t = 
+      match t with
+        Tunknown -> "<?>"
+      | Tvar v  -> Tyvar.toString v
+      | Tarrow (t1,t2)-> "("^(toString t1)^") -> ("^(toString t2)^")"
+      | Ttuple tdrec -> "{" ^ (List.fold_left (fun acc td -> 
+          (toString td)^acc^",") ("") (tdrec))^ "}"
+      | Tconstr (tc,tdl) -> (toStrings tdl)^" "^(Tycon.toString tc)
+      | Tbool -> "bool"
+      | Tint -> "int"
+
+    
+
+    let layout t = Layout.str (toString t)
+
+
+    (* let toString t = visitType t     
+ *)
+
   (* let instantiateTyvars substs : ((Tyd*Tyvar.t) list)  t = 
    *)    
   let instantiateTyvars substs tyd = 
       try 
-      let () = Printf.printf "%s" (string_of_int (List.length substs )) in 
       Tvar (List.assq tyd substs)
       with 
       | Not_found -> 
       let () = List.iter (fun (tyd1, tyvar) -> Printf.printf "%s" ((toString tyd1)^"|-> "^(Tyvar.toString tyvar))) substs in 
         raise (SpecLangEx ( "Not present "^(toString tyd)))
    (*normalizeTypes : Types.type_expr -> TyD.t*)
+
+      
   let rec normalizeTypes oc_type = 
       let oc_type_desc = oc_type.desc in 
       let oc_type_id = oc_type.id in 
 
       match oc_type_desc with 
         Types.Tvar s -> (match s with 
+                          (*This is a hack currently we have only one type of Tyvar*)
                           Some s' -> Tvar (Tyvar.fromString s')
-                          |None -> Tvar (Tyvar.fromString "_") 
+                          |None -> Tvar (Tyvar.fromString "'a") 
                             (*no type variable meants int type *)
                           )
        | Types.Tbool -> Tbool 
@@ -249,14 +325,63 @@ struct
        | Types.Tint  -> Tint 
        | Types.Ttuple tel -> Ttuple (List.map (fun te -> normalizeTypes te) tel)
        | Types.Tconstr (p,tel,_) -> 
-          if Tycon.is_ident p then
+           if Tycon.is_ident p then
             Tconstr (p, (List.map (fun te -> normalizeTypes te) tel))
           else 
             raise (TyConEx "Only Identities allows as paths")  
        | Types.Tfield (s,_, te1,_) -> Tfield (s, normalizeTypes te1) 
        | Types.Tarrow (_,te1, te2 ,_) -> Tarrow (normalizeTypes te1, normalizeTypes te2)
-       | _ -> Tunknown
+             
+        |  Types.Tobject (type_expr, _ ) -> (* Format.printf "found Tobject $$$$$$$$$$$$$$$$$$ \n";
+           Format.printf "%a" Printtyp.type_expr (oc_type); *) Tunknown
+      
 
+        | Types.Tfield (_,_,_,_) -> Format.printf "found Tfield $$$$$$$$$$$$$$$$$$ \n";
+           Format.printf "%a" Printtyp.type_expr (oc_type); Tunknown
+      
+
+        | Types.Tnil -> Format.printf "found Tnil $$$$$$$$$$$$$$$$$$  :: ";
+           Format.printf "%a" Printtyp.type_expr (oc_type); Tunknown
+      
+
+        | Types.Tlink (te) -> 
+           (*  Format.printf "found Tlink $$$$$$$$$$$$$$$$$$  :: ";
+            Format.printf "%a" Printtyp.type_expr (oc_type);
+            *) normalizeTypes te
+          (* Tunknown *)
+        | Types.Tsubst (te) -> Format.printf "found Tsubst $$$$$$$$$$$$$$$$$$ \n";
+           Format.printf "%a" Printtyp.type_expr (oc_type); Tunknown
+      
+
+        | Types.Tvariant rd  -> Format.printf "found Tvariant $$$$$$$$$$$$$$$$$$ \n";
+           Format.printf "%a" Printtyp.type_expr (oc_type); Tunknown
+      
+
+        | Types.Tunivar (str) -> Format.printf "found Tunivar $$$$$$$$$$$$$$$$$$ \n";
+           Format.printf "%a" Printtyp.type_expr (oc_type); Tunknown
+      
+
+        | Types.Tpoly (te, tel) -> Format.printf "found Tpoly $$$$$$$$$$$$$$$$$$ \n";
+           Format.printf "%a" Printtyp.type_expr (oc_type); Tunknown
+      
+
+        | Types.Tpackage (_,_,_) -> Format.printf "found Tpackage  $$$$$$$$$$$$$$$$$$ \n";
+           Format.printf "%a" Printtyp.type_expr (oc_type); Tunknown
+      
+
+       | _ -> 
+           Format.printf "found unknow $$$$$$$$$$$$$$$$$$ \n";
+           Format.printf "%a" Printtyp.type_expr (oc_type);
+      
+              Tunknown
+
+  (* and uncurry_Tlink linkTyExp argList= 
+              match linkTyExp.desc with 
+              | Tlink te' -> 
+                List.fold_right uncurry_Tlink te' argList
+              
+              | _ -> (normalizeTypes linkTyExp) :: argList
+   *)          
 
                      
 
@@ -318,7 +443,7 @@ struct
     | S svar -> SVar.toString svar
 
 
-  let toString (Tuple tts) = List.fold_left (fun parsedStr tT ->  parsedStr^(tTToString tT)) "Tuple " tts
+  let toString (Tuple tts) = List.fold_left (fun parsedStr tT ->  parsedStr^(tTToString tT)) "TupleSort " tts
 
   let toString = fun t -> "{"^(toString t)^"}" 
 
@@ -693,9 +818,11 @@ struct
   let rec applySubsts substs rexpr = 
     let doIt = applySubsts substs  in 
     let subst v = List.fold_left (fun v (newEl, oldEl) -> 
-        if (Ident.name oldEl = Ident.name newEl) then newEl else v) v substs in 
+         if (Ident.name oldEl = Ident.name v) then newEl else v) v substs in 
     let elemSubst elem = match elem with 
-        Var v -> Var (subst v)
+
+        Var v -> 
+          Var (subst v)
       | c -> c in
     match rexpr with 
       T elem -> T (List.map elemSubst elem)
@@ -819,7 +946,6 @@ module PrimitiveRelation = struct
   let alphaRename =fun def -> alphaRename def []
 
 end
-(*Checked till this point *)
 module TyDBinds = struct
   module Key = struct
     type t = Var.t
@@ -839,6 +965,7 @@ module TyDBinds = struct
   let find = TydMap.find
   let add = TydMap.add
   let empty = TydMap.empty
+
 
   exception KeyNotFound = TydMap.KeyNotFound
 
@@ -947,18 +1074,37 @@ struct
          |  Disj of t * t
          |  Dot of t * t
   (*needs to be rewritten when layout is defined *)          
-  let rec layout t = match t with 
+ (*  let rec layout t = match t with 
       True -> L.str "true" 
     | False -> L.str "false" 
     | Base bp -> L.str  (BasePredicate.toString bp)
     | Rel rp -> L.str  (RelPredicate.toString rp )
     | Exists (binds,t) ->  L.str "exist"
     | Not t -> L.str "not" 
-    | Conj (e1,e2) -> L.str "Conj"  
+    | Conj (e1,e2) -> L.str ("Conj"  
     | Disj (e1,e2) -> L.str "Disj"  
     | If (e1,e2) -> L.str "If"
     | Iff (e1,e2) -> L.str "Iff"
     | Dot (e1,e2) -> L.str "Dot"
+ *)
+let rec  layout t = match t with
+        True -> L.str "true" 
+      | False -> L.str "false" 
+      | Base bp -> L.str (BasePredicate.toString bp)
+      | Rel rp -> L.str (RelPredicate.toString rp )
+      | Exists (binds,t) -> L.str "exist"   
+      | Not t -> L.seq [L.str "not ("; layout t; L.str ")"]
+      | Conj (e1,e2) -> L.align (L.separateLeft ([(layout e1); (
+          layout e2)],"/\\ "))
+      | Disj (e1,e2) -> L.align (L.separateLeft ([(layout e1); (
+          layout e2)],"\\/ "))
+      | If (e1,e2) -> L.align (L.separateLeft ([(layout e1); (
+          layout e2)]," => "))
+      | Iff (e1,e2) -> L.align (L.separateLeft ([(layout e1); (
+          layout e2)]," <=> "))
+      | Dot (e1,e2) -> L.align (L.separateLeft ([(layout e1); (
+          layout e2)]," o "))
+
 
 
   let truee  _ = True
@@ -1043,17 +1189,21 @@ struct
     let id = symbase ^ (string_of_int !count) in 
     let _  = count := !count + 1 in 
     Var.fromString id	
+    (*currently there i sonly one type variable 'a*)
+  let emptyVar () = Var.fromString ""    
 
   let rec fromTyD tyD = 
     let open TyD in 
     match tyD with 
       Tarrow (td1,td2) -> 
-        Arrow ((genVar (), fromTyD td1),
+        Arrow ( (emptyVar (), fromTyD td1),
                fromTyD td2)
     | Ttuple tl  -> 
      let recRefTy = List.map (fun (td :TyD.t)->
-        (genVar (), (fromTyD td))) tl in 
+        (emptyVar (), (fromTyD td))) tl in 
         Tuple recRefTy  
+    (* | Tlink td ->  Tuple [(genVar, fromTyD td)]
+     *)                 
     |  tyD -> Base (genVar(), tyD, Predicate.truee())
    
    let rec toTyD t = match t with
@@ -1067,25 +1217,24 @@ struct
 
 
 
-(*   let rec layout rty = match rty with 
+  let rec layout rty = match rty with 
           Base(var,td,pred) -> L.seq [L.str ("{" ^ (Var.toString var)^ ":" ^ (TyD.toString td) ^ " | "); 
             Predicate.layout pred;L.str "}"]
-        | Tuple tv -> L.vector (Vector.map (tv, fun (v,t) -> 
-            L.seq [L.str (Var.toString v); L.str ":"; layout t]))
+        | Tuple tv -> L.vector (List.rev (List.map (fun (v,t) ->  L.seq [L.str (Var.toString v); L.str ":"; layout t]) tv))
         | Arrow ((v1,(Arrow (_,_) as t1)),t2) -> L.align (L.separateLeft (
-            [L.seq [L.str "("; L.str (Var.toString v1;L.str ":";
-              layout t1, L.str ")")], 
+            [L.seq 
+                [L.str "("; L.str (Var.toString v1);L.str ":";
+              layout t1; L.str ")"]; 
             layout t2]," -> "))
-        | Arrow ((v1,t1),t2) -> L.align (L.separateLeft (
-            [L.seq [L.str (Var.toString v1; L.str ":"; layout t1)]; 
-            layout t2];" -> "))
- *)
+        | Arrow ((v1,t1),t2) -> L.seq [L.str (Var.toString v1); L.str ":"; layout t1 ; L.str "->" ; layout t2] 
+            
 
+(* 
 
   let rec layout rty = match rty with 
           Base(var,td,pred) -> L.str "@refinementBase "
         | Tuple tv ->  L.str "@refinementTuple"
-        | Arrow (_,_)-> L.str "@refinementArrow"
+        | Arrow (_,_)-> L.str "@refinementArrow" *)
        
    let toString t = Layout.toString (layout t)    
     
@@ -1104,9 +1253,11 @@ struct
   
   let rec applySubsts substs refty = 
 	   mapBaseTy refty (fun (bv,t,pred) ->
-	   if List.exists (fun(n,ol) -> varStrEq (ol,bv)) substs 
-				then  raise (RefTyEx "Attempted substitution of bound var")
-				else (bv,t,Predicate.applySubsts substs pred))
+	   (* if List.exists (fun(n,ol) -> 
+          let () = Printf.printf "%s" ("Matching Replaced "^(Var.toString ol)) in 
+          varStrEq (ol,bv)) substs 
+				then  raise (RefTyEx ("Attempted substitution of bound var "))
+				else  *)(bv,t,Predicate.applySubsts substs pred))
 
   let  alphaRenameToVar refty newbv = match refty with
       Base (bv,t,p) -> Base (newbv,t,
@@ -1140,8 +1291,22 @@ struct
      												refTyBinds in 
      				let binds = List.map (fun (v,ty) -> (newLongVar (tvar,v), ty)) (List.concat bindss) in 
      		     			binds
- 
+  
 
+  let uncurry_Arrow (arrowty) =
+    let Arrow ((_, frstargTy), res) = arrowty in  
+      
+      let rec get_params ty params resTy  = 
+        match ty with
+          | Arrow ((arg, argTy) as argBind, remainingTy)  ->
+            let params' = (argBind :: params) in 
+                get_params remainingTy params' resTy 
+
+          | _ -> (params, ty)
+    in 
+    let (parametersTyBind, resTy ) =  get_params arrowty [] res in
+     (parametersTyBind, resTy)
+ 
 end
 
 module RefTy = RefinementType 
@@ -1226,7 +1391,7 @@ struct
       List.fold_right (consFun) [] (List.map (fun tyv ->
           L.str (Tyvar.toString tyv)) tyvars) in 
     let refsslyt = RefinementSortScheme.layout refss in 
-    L.seq [flaglyt;( L.seq tyvlyt);refsslyt]
+    L.seq ( [flaglyt;( L.seq tyvlyt);refsslyt])
 
   let toString t = Layout.toString (layout t) 
 

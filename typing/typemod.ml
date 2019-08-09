@@ -1211,6 +1211,8 @@ and type_structure ?(toplevel = false) funct_body anchor env sstr scope =
   let names = new_names () in
 
   let type_str_item env srem {pstr_loc = loc; pstr_desc = desc} =
+    let () = Printf.printf "%s" "TyMod 1" in 
+        
     match desc with
     | Pstr_eval (sexpr, attrs) ->
         let expr =
@@ -1219,6 +1221,8 @@ and type_structure ?(toplevel = false) funct_body anchor env sstr scope =
         in
         Tstr_eval (expr, attrs), [], env
     | Pstr_value(rec_flag, sdefs) ->
+         let () = Printf.printf "%s" "TyMod Pstr_value " in 
+   
         let scope =
           match rec_flag with
           | Recursive ->
@@ -1232,8 +1236,13 @@ and type_structure ?(toplevel = false) funct_body anchor env sstr scope =
               in
               Some (Annot.Idef {scope with Location.loc_start = start})
         in
+         let () = Printf.printf "%s" "TyMod Pstr_value -2 " in 
+   
         let (defs, newenv) =
           Typecore.type_binding env rec_flag sdefs scope in
+
+        let () = Printf.printf "%s" "TyMod Pstr_value -3 " in 
+   
         (* Note: Env.find_value does not trigger the value_used event. Values
            will be marked as being used during the signature inclusion test. *)
         Tstr_value(rec_flag, defs),

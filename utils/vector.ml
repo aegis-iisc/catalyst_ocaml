@@ -207,5 +207,11 @@ let rec index v filtermap =
     let array_prefix = Array.sub array_lst 0 i in 
     Array.to_list array_prefix
 
+let rec sublist b e l = 
+    match l with
+    [] -> failwith "sublist"
+  | h :: t -> 
+     let tail = if e=0 then [] else sublist (b-1) (e-1) t in
+     if b>0 then tail else h :: tail
 
 

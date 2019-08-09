@@ -1,0 +1,171 @@
+WARNING: unknown parameter 'smt.macro_finder'
+Legal parameters are:
+  auto_config (bool) (default: true)
+  debug_ref_count (bool) (default: false)
+  dot_proof_file (string) (default: proof.dot)
+  dump_models (bool) (default: false)
+  model (bool) (default: true)
+  model_validate (bool) (default: false)
+  proof (bool) (default: false)
+  rlimit (unsigned int) (default: 0)
+  smtlib2_compliant (bool) (default: false)
+  timeout (unsigned int) (default: 4294967295)
+  trace (bool) (default: false)
+  trace_file_name (string) (default: z3.log)
+  type_check (bool) (default: true)
+  unsat_core (bool) (default: false)
+  well_sorted_check (bool) (default: false)
+
+TyMod 1TyMod Pstr_value TyMod Pstr_value -2 TyCore tybidns  TyMod Pstr_value -3 HIrelation Rhd (cons(x,xs)) = {(x)} | nil = {()};
+relation Rmem = Rhd*;
+relation Rob (cons(x,xs)) = {(x)} X Rmem(xs) | nil = {()};
+relation Robs = Rob*;
+
+concat : l1 -> l2 -> { l | Rmem(l) = Rmem(l1) U Rmem(l2)};
+relationwhitespacevar: Rhd
+whitespacelparen
+var: cons
+lparen
+var: x
+comma
+var: xs
+rparen
+rparen
+whitespaceequalopwhitespacelcurly
+lparen
+var: x
+rparen
+rcurly
+whitespacepipe
+whitespacevar: nil
+whitespaceequalopwhitespacelcurly
+lparen
+rparen
+rcurly
+semicolon
+relationwhitespacevar: Rmem
+whitespaceequalopwhitespacevar: Rhd
+star
+semicolon
+relationwhitespacevar: Rob
+whitespacelparen
+var: cons
+lparen
+var: x
+comma
+var: xs
+rparen
+rparen
+whitespaceequalopwhitespacelcurly
+lparen
+var: x
+rparen
+rcurly
+whitespacecrossprdwhitespacevar: Rmem
+lparen
+var: xs
+rparen
+whitespacepipe
+whitespacevar: nil
+whitespaceequalopwhitespacelcurly
+lparen
+rparen
+rcurly
+semicolon
+relationwhitespacevar: Robs
+whitespaceequalopwhitespacevar: Rob
+star
+semicolon
+var: concat
+whitespacecolon
+whitespacevar: l1
+whitespacearrow
+whitespacevar: l2
+whitespacearrow
+whitespacelcurly
+whitespacevar: l
+whitespacepipe
+whitespacevar: Rmem
+lparen
+var: l
+rparen
+whitespaceequalopwhitespacevar: Rmem
+lparen
+var: l1
+rparen
+whitespaceunionwhitespacevar: Rmem
+lparen
+var: l2
+rparen
+rcurly
+semicolon
+concat :  : : {l1:<?> |  true } -> : {l2:<?> |  true } -> {l:<?> |  (Rmem)(l) = ((Rmem)(l1) U (Rmem)(l2)) }   :   :relation (Rhd) = {::::xxs => {(x)}[] => {()}}
+relation (Rmem) = {::: => (Rhd)*}
+relation (Rob) = {::::xxs => ({(x)} X (Rmem)(xs))[] => {()}}
+relation (Robs) = {::: => (Rob)*}
+Print the AST
+found var 
+concat : 'a list -> 'a list -> 'a list
+ size   0 	 found Tlink  	  'a list -> 'a list -> 'a list 	 
+ arguments  ::   	 
+ res  ::  
+'a list -> 'a list -> 'a list
+found var 
+l3 : 'a list
+ size   0 	 found Tlink  	  'a list 	 
+ arguments  ::   	 
+ res  ::  'a list
+found var 
+
+l4 : 'a list
+ size   0 	 found Tlink  	  'a list 	 
+ arguments  ::   	 
+ res  ::  'a listfound constructor 
+const name []
+'b listfound constructor 
+const name ::'b->'b list->'b list
+found var 
+
+x : 'a
+ size   0 	 found Tlink  	  'a 	 
+ arguments  ::   	 
+ res  ::  'a
+found var 
+
+xs : 'a list
+WARNING: unknown parameter 'smt.macro_finder'
+Legal parameters are:
+  auto_config (bool) (default: true)
+  debug_ref_count (bool) (default: false)
+  dot_proof_file (string) (default: proof.dot)
+  dump_models (bool) (default: false)
+  model (bool) (default: true)
+  model_validate (bool) (default: false)
+  proof (bool) (default: false)
+  rlimit (unsigned int) (default: 0)
+  smtlib2_compliant (bool) (default: false)
+  timeout (unsigned int) (default: 4294967295)
+  trace (bool) (default: false)
+  trace_file_name (string) (default: z3.log)
+  type_check (bool) (default: true)
+  unsat_core (bool) (default: false)
+  well_sorted_check (bool) (default: false)
+
+WARNING: unknown parameter 'smt.macro_finder'
+Legal parameters are:
+  auto_config (bool) (default: true)
+  debug_ref_count (bool) (default: false)
+  dot_proof_file (string) (default: proof.dot)
+  dump_models (bool) (default: false)
+  model (bool) (default: true)
+  model_validate (bool) (default: false)
+  proof (bool) (default: false)
+  rlimit (unsigned int) (default: 0)
+  smtlib2_compliant (bool) (default: false)
+  timeout (unsigned int) (default: 4294967295)
+  trace (bool) (default: false)
+  trace_file_name (string) (default: z3.log)
+  type_check (bool) (default: true)
+  unsat_core (bool) (default: false)
+  well_sorted_check (bool) (default: false)
+

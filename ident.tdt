@@ -1,0 +1,20 @@
+[
+  structure_item (identity.ml[1,0+0]..identity.ml[1,0+15])
+    Tstr_value Nonrec
+    [
+      <def>
+        pattern (identity.ml[1,0+4]..identity.ml[1,0+9])
+          Tpat_var "ident/1199"
+        expression (identity.ml[1,0+10]..identity.ml[1,0+15]) ghost
+          Texp_function
+          Nolabel
+          [
+            <case>
+              pattern (identity.ml[1,0+10]..identity.ml[1,0+11])
+                Tpat_var "l/1200"
+              expression (identity.ml[1,0+14]..identity.ml[1,0+15])
+                Texp_ident "l/1200"
+          ]
+    ]
+]
+

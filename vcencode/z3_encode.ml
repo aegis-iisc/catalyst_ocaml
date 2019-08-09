@@ -151,6 +151,7 @@ let mk_add es = mk_add !ctx es
 let mk_sub es = mk_sub !ctx es
 let mk_mul es = mk_mul !ctx es
 let _assert e = Solver.add !solver [e]
+let getSolver () = !solver  
 let _assert_all e = Solver.add !solver e
 let push () = Solver.push !solver
 let pop () = Solver.pop !solver 1

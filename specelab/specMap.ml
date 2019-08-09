@@ -36,14 +36,14 @@ struct
 
   	let add mp k v = (k,v) :: mp 
 
-  	let remove mp k = List.remove_assoc k mp
+  	let remove mp k = List.remove_assq k mp
 
   	let map f t = List.map f t
   	
     let toVector mp = Vector.fromList mp
   
-    let layout mp = L.align (Vector.map (mp, fun (k,v) ->
-    L.seq [Key.layout k; L.str " :: "; Val.layout v]))
+    let layout mp = L.align (List.map (fun (k, v) ->
+    L.seq [L.str "\n";Key.layout k; L.str " :: "; Val.layout v; L.str "\n"]) mp)
 
 
 

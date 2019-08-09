@@ -60,7 +60,6 @@ let (<<) f g x = f (g x)
 
 let tyconEq = Types.TypeOps.equal 
 
-(* -- Function duplicated from SpecVerify -- *)
 let count = ref 0
 let  getUniqueId symbase =
   let id = symbase ^ (string_of_int(!count)) in 
@@ -68,8 +67,8 @@ let  getUniqueId symbase =
   Var.fromString id 
 
 let genVar () =  getUniqueId "x_" 
-let newLongVar = fun (var,fld) -> Var.fromString $ 
-                                  (Var.toString var)^"."^(Var.toString fld)
+let newLongVar = fun (var,fld) -> Var.fromString (
+                                  (Var.toString var)^"."^(Var.toString fld))
 let empty = fun _ -> Vector.new0 ()
 let emptycs = fun _ -> []
 let mergecs = List.concat
@@ -100,20 +99,53 @@ let assertEmptyCs = fun cs -> match cs with
   | _ -> raise (ElebEnvFail "sort inference impossible")
 
 
+
+let toRefTyS refTy = RefTyS.generalize (Vector.new0(), 
+                                        RefSS.fromRefTy refTy)
+
 let bootStrapBools ve = 
   let boolTyD = TyD.makeTbool () in 
   let tvid = Var.fromString (Con.toString Con.truee) in 
   let  fvid = Var.fromString ( Con.toString Con.falsee) in 
-  let RefTy.Base (v,t,_) = RefTy.fromTyD boolTyD in 
-  let eqPred1 = P.baseP ( BP.varBoolEq (v,true) ) in 
-  let eqPred2 = P.baseP (  BP.varBoolEq (v,false) ) in 
+  let RefTy.Base (v1,t,_) = RefTy.fromTyD boolTyD in
+  let RefTy.Base (v2,t,_) = RefTy.fromTyD boolTyD in
+   
+  let eqPred1 = P.baseP ( BP.varBoolEq (v1,true) ) in 
+  let eqPred2 = P.baseP (  BP.varBoolEq (v2,false) ) in 
   let empty = Vector.new0 () in
   let tTyS = RefTyS.generalizeRefTy (empty, 
-                                     RefTy.Base (v,t,eqPred1)) in 
+                                     RefTy.Base (v1,t,eqPred1)) in 
   let fTyS = RefTyS.generalizeRefTy (empty, 
-                                     RefTy.Base (v,t,eqPred2)) in
+                                     RefTy.Base (v2,t,eqPred2)) in
   let ve' = VE.add ve (tvid,tTyS) in 
   let ve'' = VE.add ve' (fvid,fTyS)
+  in
+  ve''
+let bootStrapCons ve = 
+  (*create nil*)
+  let nilvid = Var.fromString "[]" in 
+  let consvid = Var.fromString "::" in 
+  let conparam = TyD.Tvar (Tyvar.fromString "'a") in 
+  let list_cons = Tycon.fromString "list" in 
+  let listconsparams = [conparam] in 
+  let listTyD = TyD.makeTconstr (list_cons, listconsparams) in 
+
+
+  let nilRefTy = RefTy.fromTyD listTyD in 
+  let nilRefTyS = toRefTyS nilRefTy in 
+
+
+  (*create cons*)
+  let paramTuple = [(Var.noName, RefTy.Base (Var.fromString "x", conparam, Predicate.truee())); 
+                    (Var.noName, RefTy.Base (Var.fromString "xs", listTyD, Predicate.truee()))] in
+  let consArgsRefTy = RefTy.Tuple (paramTuple) in  
+  let consResRefTy = RefTy.fromTyD listTyD in 
+
+let consRefTy = RefTy.Arrow ((Var.noName, consArgsRefTy),  consResRefTy) in 
+
+  let consRefTyS = toRefTyS consRefTy in 
+  let ve' = VE.add ve (nilvid,nilRefTyS) in 
+  let ve'' = VE.add ve' (consvid,consRefTyS)
   in
   ve''
 
@@ -163,77 +195,125 @@ let rec elabExpr ve expr =
   | _ -> ve  
 
 
-and elabValueBind ve {vb_pat;vb_expr;_ }= 
-  let pat_desc = vb_pat.pat_desc in 
+and elabValueBind ve {vb_pat;vb_expr;_ }=
+
+
+ let pat_desc = vb_pat.pat_desc in 
+  let pat_type = vb_pat.pat_type in 
   (*see if pattern is [] or :: *)
-  let consName_args_pair = match pat_desc with 
+  let ve' = match pat_desc with 
+    
     | Tpat_construct (_, cons_desc, plist) ->
         let () = Printf.printf "%s" "&&\n" in 
-        Some (cons_desc.cstr_name, cons_desc.cstr_args)
-
-    | _ -> 
-        let () = Printf.printf "%s" ">>\n" in 
-        None  
-
-  in 
-  match consName_args_pair with 
-  | None -> elabExpr ve vb_expr
-
-  | Some (consName,args)->
-      let () = Printf.printf "%s" ("consname::::::::::::::;"^consName) in  
-
-      let cons_name_rel_lang = if consName = "[]" then "Nil" else (if consName = "::" then "Cons" else consName) in   
-      let destTyD = vb_expr.exp_type in 
-      let noramldestTyD = TyD.normalizeTypes destTyD in 
-      let vid = Var.fromString ( cons_name_rel_lang ) in 
-      let conTyD = match args with 
+        let consName = match cons_desc.cstr_name with 
+                | "[]" -> "[]"
+                | "::" -> "::"
+                | _ -> cons_desc.cstr_name 
+              in 
+         if (consName = "[]" || consName = "::") 
+          then ve 
+        else       
+        (let cosnArgs = cons_desc.cstr_args in 
+        let resTy = cons_desc.cstr_res in 
+        let destTyD = resTy in 
+        let noramldestTyD = TyD.normalizeTypes destTyD in 
+        let vid = Var.fromString (consName ) in 
+        let conTyD = match cosnArgs with 
         | [] -> noramldestTyD 
         | argList -> 
           let tyDList = List.map (TyD.normalizeTypes) argList in 
-          TyD.makeTarrow ((TyD.Ttuple tyDList), noramldestTyD) in 
-      let conTyS =  toRefTyS (RefTy.fromTyD conTyD) 
-      in 
+          TyD.makeTarrow (TyD.Ttuple tyDList, noramldestTyD) in 
+
+
+      let conTyS = toRefTyS (RefTy.fromTyD conTyD ) in 
+      let () = Printf.printf "%s" ("ConTy "^(RefTyS.toString conTyS))
+      in
       VE.add ve (vid,conTyS)
+        )
 
-
-
+(*      | Tpat_var (id,_) -> 
+        let () = Printf.printf "%s" ("@@@@@@@@@1 "^Ident.name id) in 
+        let patid = id in 
+        let pat_type = pat_type in 
+        let normal_pat_type = TyD.normalizeTypes pat_type in 
+        (match normal_pat_type with 
+          Tarrow (Ttuple [], Tbool ) -> ve 
+          |_ ->
+          (let () = Printf.printf "%s" ("TyD "^TyD.toString normal_pat_type) in 
+           let patRefTy = RefTy.fromTyD normal_pat_type in
+            let patTyS = toRefTyS patRefTy in 
+            VE.add ve (patid, patTyS) ))
+   
+ *)     
+    | _ ->
+        
+        let () = Printf.printf "%s" "VB other\n" in 
+      ve  
+    in 
+    elabExpr ve' vb_expr 
 
 
 and  elabCase ve  {c_lhs;c_rhs;_} =
-  let pat_desc = c_lhs.pat_desc in 
+ let pat_desc = c_lhs.pat_desc in 
+  let pat_type = c_lhs.pat_type in 
   let vb_expr= c_rhs in 
   (*see if pattern is [] or :: *)
-  let consName_args_pair = match pat_desc with 
+  let ve' =  match pat_desc with 
     | Tpat_construct (_, cons_desc, plist) ->
         let () = Printf.printf "%s" "&&\n" in 
-        Some (cons_desc.cstr_name, cons_desc.cstr_args)
-
-    | _ -> None
-
-
-  in 
-  match consName_args_pair with 
-  | None -> elabExpr ve vb_expr
-
-  | Some (consName,args)->
-      let () = Printf.printf "%s" ("consname::::::::::::::;"^consName) in  
-      let cons_name_rel_lang = if consName = "[]" then "Nil" else (if consName = "::" then "Cons" else consName) in   
-      let destTyD = vb_expr.exp_type in 
-      let noramldestTyD = TyD.normalizeTypes destTyD in 
-      let vid = Var.fromString ( cons_name_rel_lang ) in 
-      let conTyD = match args with 
-        | [] -> noramldestTyD  
-        | argList -> let tyDList = List.map (TyD.normalizeTypes) argList in 
-          TyD.makeTarrow ((TyD.Ttuple tyDList), noramldestTyD) in 
-      let conTyS = toRefTyS (RefTy.fromTyD conTyD) 
-      in 
+        let consName =  match cons_desc.cstr_name with 
+                | "[]" -> "[]"
+                | "::" -> "::"
+                | _ -> cons_desc.cstr_name 
+              in 
+        if(consName = "[]" || consName = "::")
+          then ve 
+        else       
+        (let cosnArgs = cons_desc.cstr_args in 
+        let resTy = cons_desc.cstr_res in 
+        let destTyD = resTy in 
+        let noramldestTyD = TyD.normalizeTypes destTyD in 
+        let vid = Var.fromString (consName ) in 
+        let conTyD = match cosnArgs with 
+        | [] -> noramldestTyD 
+        | argList -> 
+          let tyDList = List.map (TyD.normalizeTypes) argList in 
+          TyD.makeTarrow (TyD.Ttuple tyDList, noramldestTyD) in 
+      let conRefTy =  RefTy.fromTyD conTyD in 
+      let conTyS = toRefTyS conRefTy in 
+      let () = Printf.printf "%s" ("ConTy "^(RefTyS.toString conTyS))
+      
+      in
       VE.add ve (vid,conTyS)
+    )
+
+(*      | Tpat_var (id,_) -> 
+        let () = Printf.printf "%s" "@2" in 
+        let patid = id in 
+        let pat_type = pat_type in 
+        let normal_pat_type = TyD.normalizeTypes pat_type in 
+        let patRefTy = RefTy.fromTyD normal_pat_type in 
+        let patRefTyS = toRefTyS patRefTy in 
+        VE.add ve (patid, patRefTyS) 
+   
+ *)     |_ ->  
+      let () = Printf.printf "%s" "case other\n" in 
+       ve
+
+      in 
+      elabExpr ve' vb_expr 
+
+
+
 
 open RefTy
 
 let unifyConArgs (ve : VE.t) (con : Con.t) (vars : Var.t list) = 
+
+    (* let () = Printf.printf "%s" ("@unifyConArgs") in 
+
+  let () = List.iter (fun x -> Printf.printf "%s" ("Var "^Var.toString x^"\n") ) vars in *)
   let conStr = Con.toString con in 
-    let () = Printf.printf "%s" ("@here4 "^conStr) in 
                                                 
   let convid = Var.fromString conStr in 
   let lenstr = fun v -> (string_of_int << List.length) v in 
@@ -243,39 +323,55 @@ let unifyConArgs (ve : VE.t) (con : Con.t) (vars : Var.t list) =
     with
     | _ -> raise (ElebEnvFail "Could not find constructor")
   in 
-    let () = Printf.printf "%s" ("@here5 "^(RefTy.toString conTy)) in 
                                                 
   match conTy with 
     Base _ -> let () =  assert(List.length vars = 0) in   
       []
-  | Arrow ((argv,Base (_,argTyD,_)),Base (_,datTyD,_)) -> 
-        let () = Printf.printf "%s" ("@here6 ") in 
-  
-      let () = assert (Vector.length vars = 1) in  
+  | Arrow ((argv,Base (argV,argTyD,_)),Base (_,datTyD,_)) -> 
+        let () = assert (Vector.length vars = 1) in  
       List.map (fun (var) -> 
-          (argv, var, argTyD, TyD.sametype argTyD datTyD)) vars
+          (argV, var, argTyD, TyD.sametype argTyD datTyD)) vars
 
   | Arrow ((argv,Tuple tv), Base (_,datTyD,_)) ->
-    let () = Printf.printf "%s" ("@here7 ") in 
       let () = assert (Vector.length tv = Vector.length vars) in 
-    let () = Printf.printf "%s" ("@here8 ") in 
       
-      let x = (List.map2 (fun (fldv, Base (_,argTyD,_)) var ->
-          (newLongVar (argv,fldv), var, argTyD, 
+      let resUnified = 
+      (List.map2 (fun (fldv, Base (argV,argTyD,_)) var ->
+          ( argV, var, argTyD, 
            TyD.sametype argTyD datTyD)) tv vars) in 
+      resUnified 
+      
+  (* | Arrow (_, Base (_,datTyD,_)) ->
+     let () = Printf.printf "%s" ("@here10 ") in 
+     let (paramsBind, fresTy) = RefTy.uncurry_Arrow conTy in 
+     let paramsVars =
+     let paramsTys = List.map (fun varTyBind -> (snd varTyBind)) paramsBind in 
+     let resUnified = 
+     (List.map2 (fun (fldv, Base (_,argTyD,_)) var ->
+          (newLongVar (argv,fldv), var, argTyD, 
+           TyD.sametype argTyD datTyD))  vars) in 
       let () = Printf.printf "%s" ("@here9 ") in 
       x 
-      
-  | _ -> raise (ElebEnvFail "Could not unify and determine rec args")
+   *)    
+   
+  |_ -> raise (ElebEnvFail "Could not unify and determine rec args")
 
 
 let addRelToConTy (ve: VE.t) (con,letop,rexpr) (id:RelId.t) =
   let convid = Var.fromString (Con.toString con) in 
+
   let substs = match letop with 
-      None -> []
-    | Some lets -> List.map (fun (cvar,var,_,_) -> (cvar,var))
+      None ->
+        []
+    | Some lets -> 
+       
+        List.map (fun (cvar,var,_,_) -> (cvar,var))
                      (unifyConArgs ve con lets) in 
+  
+
   let rexpr' = RelLang.applySubsts substs rexpr in 
+
+  
   let  conRefTys = 
     try VE.find  ve convid
     with 
@@ -293,7 +389,8 @@ let addRelToConTy (ve: VE.t) (con,letop,rexpr) (id:RelId.t) =
     | _ -> raise (ElebEnvFail "Constructor type is neither base not arrow") in 
   let newTyS = RefTyS.generalizeRefTy (tyvars,annotConTy) 
   in
-  VE.add (VE.remove ve convid) (convid,newTyS)
+  let ve = VE.remove ve convid in 
+  VE.add (ve) (convid,newTyS)
 
 
   (*
@@ -328,7 +425,7 @@ let rec elabRExpr (re,pre,tyDB,spsB,rexpr) =
         try 
           TyDBinds.find (tyDB) (v)  
         with 
-        | (TyDBinds.KeyNotFound _) -> raise (CantInferType "Type inference failed") in 
+        | (TyDBinds.KeyNotFound _) -> raise (CantInferType ("Type inference failed "^(Var.toString v))) in 
   
   let () = Printf.printf "%s" "@here-elabRE-1  \n" in 
                                            
@@ -500,9 +597,11 @@ let rec elabRExpr (re,pre,tyDB,spsB,rexpr) =
 let  elabPRBind (pre) (PR.T {id;def}) =
   (*This creates a new Tyvar without a name, Where is this used ??*)
   let newVarTyD = fun _ -> TyD.makeTvar (Ident.create "") in 
-  let rec bindVars tyDB (PR.Nary (v,def)) = bindVars (TyDB.add tyDB  v ( newVarTyD())) def  in
-  let bindVars tyDB (PR.Nullary rexpr) = (tyDB,rexpr) in 
-
+  let rec bindVars tyDB def =  
+    match def with 
+    | (PR.Nary (v,def)) -> bindVars (TyDB.add tyDB  v ( newVarTyD())) def  
+    | (PR.Nullary rexpr) -> (tyDB, rexpr) 
+  in   
   let  (tyDB, rexpr) = bindVars TyDB.empty def in 
     
   let (_,prRange,rexpr') = elabRExpr (RE.empty, pre, tyDB, 
@@ -575,15 +674,12 @@ let elabSRBind (re)(pre)(ve ) (StructuralRelation.T {id;params;mapp}) =
                                                   ((con, valop , RelLang.Star newRInst), Some relTyS)
 
                                               | (Some vars, RelLang.Expr rexpr) -> 
-                                                  let () = List.iter (fun e -> Printf.printf "%s" ((Ident.name e)^"\n")) vars in
-                                                  
-                                           
-                                                   
                                                   let convid = Var.fromString (Con.toString con) in 
                                                   let RefTyS.T {tyvars;refss;_} = 
                                                     try VE.find ve convid 
                                                     with 
                                                     | VE.VarNotFound _ -> 
+                                                        (*Create the basic type for cosntructor*)
                                                         let s = "Constructor " ^(Con.toString con)^ " not found in var env." in 
                                                         raise (ElebEnvFail s) in 
                                                   
@@ -794,7 +890,7 @@ let elab_vbs (ve) (vb_list) =
         (*The original sml version has toMyType which we do not need*)
         let normalargTyD = TyD.normalizeTypes argType in 
         let normalbodyTyD = TyD.normalizeTypes body.exp_type in 
-
+        
         let funTyD = TyD.makeTarrow(normalargTyD, normalbodyTyD) in 
         let fun_name =get_name_for_pat vb_pat in
         let () = Printf.printf "%s" (Var.toString (fun_name)^"\n") in 
@@ -823,7 +919,7 @@ let elab_vbs (ve) (vb_list) =
 
 let elab_possible_fun_exp (ve, str_desc) = 
 
-  let () =  Printf.printf "%s" "elab_possible_fun_exp" in 
+  let () =  Printf.printf "%s" "elaborating_possible_fun_exp" in 
   match str_desc  with
   |  Tstr_eval (exp,_) -> 
       let exp_desc = exp.exp_desc in 
@@ -958,12 +1054,14 @@ let elaborate (tstr) (RelSpec.T {reldecs;primdecs;
                                  typespecs}) =
 
   let tstr_items = tstr.str_items in
-  let veWithBool = bootStrapBools VE.empty in 
+  let veWithBool =(*  bootStrapBools *) VE.empty in 
+  let veWithCons = bootStrapCons veWithBool in 
 
 
-  let  _ = Printf.printf "@Var Env Before:\n" in
+  let  _ = Printf.printf "\n@Var Env Before:\n" in
   let  _ = Printf.printf "%s" ((VE.layout veWithBool)) in
-
+  let  _ = Printf.printf "%s" "\n\n" in
+ 
 
   let initialVE = List.fold_left
       (fun ve str_item ->
@@ -973,36 +1071,52 @@ let elaborate (tstr) (RelSpec.T {reldecs;primdecs;
              List.fold_left (fun ve vb -> elabValueBind ve vb) ve vbl 
          | Tstr_eval (expr, attr) ->
              elabExpr ve expr
-         |_ -> ve) veWithBool tstr_items in 
+         |_ -> ve) veWithCons tstr_items in 
 
 
-  let  _ = Printf.printf "@Var Env After:\n" in
+   let  _ = Printf.printf "\n@Var Env After:\n" in
   let  _ = Printf.printf "%s" ((VE.layout initialVE)) in
-
+    let  _ = Printf.printf "%s" "\n\n" in
+  
 
   let  initialPRE = List.fold_left (fun (pre) (primbind) -> elabPRBind pre primbind) PRE.empty  primdecs in 
 
-  let  _ = Printf.printf "@PRE Env After:\n" in
-  let  _ = Printf.printf "%s" (Layout.toString (PRE.layout initialPRE)) in
-
+  
   
   let  initialRE =  RE.empty in 
   let  (elabRE,elabPRE) = List.fold_left (fun (re, pre) srbind -> 
      elabSRBind re pre initialVE srbind) (initialRE, initialPRE) reldecs  in 
 
-  let  _ = Printf.printf "@RE Env After:\n" in
-  let  _ = Printf.printf "%s" (Layout.toString (RE.layout initialRE)) in
+  let  _ = Printf.printf "\n@RE Elab RE :\n" in
+  let  _ = Printf.printf "%s" (Layout.toString (RE.layout elabRE)) in
+
+  let  _ = Printf.printf "\n@PRE Elab PRE:\n" in
+  let  _ = Printf.printf "%s" (Layout.toString (PRE.layout elabPRE)) in
 
 
   let  refinedVE = Vector.fold (RE.toVector elabRE, initialVE, 
                                 fun ((id,{ty;map}),ve) -> Vector.fold (map, ve, 
+           
                                                                        fun (conPatBind,ve) -> addRelToConTy ve conPatBind id)) in 
+  (*  let  _ = Printf.printf "\n@Var Env After Refinement:\n" in
+  let  _ = Printf.printf "%s" ((VE.layout refinedVE)) in
+ *)
 
-  let refinedVE = initialVE in 
   let  protoVE = List.fold_left          
       (fun ve (TypeSpec.T {isAssume;name;params;refty}) -> 
+         
+         let () = Printf.printf "%s" (" ParamRefTy "^(RefTy.toString refty) ) in 
+      (*    let rec correctedRefTy refty = match refty with 
+          | Base (_,_,_) -> refty
+          | Arrow ((argName, argTy), resTy) -> Arrow ( (Var.fromString "", argTy), correctedRefTy (resTy))
+          | Tuple (_) -> refty
+          in 
+          let correctRefTy = correctedRefTy refty in 
+         let () = Printf.printf "%s" (" ParamRefTyCorrected "^(RefTy.toString correctRefTy) ) in 
+       *)    
+
          let  dummySPS = 
-           SPS.ColonArrow ( TyD.makeTvar (Tyvar.fromString (Var.toString (genVar ())))
+           SPS.ColonArrow ( TyD.makeTvar (Tyvar.fromString (""))
                           , TS.Tuple 
                               [TS.S ( SVar.newSVar())]) in 
          let  sortedParams = Vector.map (params, 
@@ -1014,20 +1128,34 @@ let elaborate (tstr) (RelSpec.T {reldecs;primdecs;
          in
          VE.add ve (name,refTyS)
       ) VE.empty  typespecs 
-  in  
+  in
+
+  let  _ = Printf.printf "\n@PROTO VE:\n" in
+  let  _ = Printf.printf "%s" ((VE.layout protoVE)) in
+  
   (*defined elab_structure_items in place of elabDecs for ocaml*)
   let  typedVE = elab_structure_items (protoVE, tstr_items) in 
+   
+  (*  let  _ = Printf.printf "\n@After Elab str:\n" in
+    let  _ = Printf.printf "%s" ((VE.layout typedVE)) in
 
-  let  fullVE = List.fold_left  
+   *)let fullVE = List.concat [refinedVE;typedVE] in   
+
+  (* let  fullVE = List.fold_left  
       (fun  (ve) (name,RefTyS.T {tyvars;isAssume;refss}) ->
          let  RefSS.T {prefty;_} = refss in 
          let  PRf.T {params=sortedParams;refty} = prefty in 
          let  (params,_) = Vector.unzip sortedParams in 
          let  refss' = elabTypeSpec (elabRE) (elabPRE) prefty in 
          let  refTyS = RefTyS.T {tyvars=tyvars;isAssume=isAssume; 
-                                 refss=refss'} 
+                                 refss=RefSS.fromRefTy refty} 
          in
          VE.add ve (name,refTyS)
       ) typedVE refinedVE
-  in
+   *)
+
+ (* 
+   let  _ = Printf.printf "\n@FULL VE :\n" in
+    let  _ = Printf.printf "%s" ((VE.layout fullVE)) in
+ *)
   (fullVE,elabRE,elabPRE)

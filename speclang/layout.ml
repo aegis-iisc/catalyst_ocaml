@@ -48,12 +48,13 @@ let str s =
 let fold (l, b, f) = List.fold_left f b l
 
 let seq ts =
+    let ts = Vector.rev ts in 
    let len = List.length ts in 
    match len with
       0 -> empty
     | _ -> T {length = len; tree = Sequence ts}
    
-
+  
 let make force ts =
       let rec loop ts =
             match ts with
@@ -123,4 +124,19 @@ let toString t =
 
    
 let vector v = 
-    Sequence v 
+  T {length = 0; tree = Sequence v}
+    
+
+let separateLeft (ts, s) =
+   match ts with
+      [] -> []
+    | [_] -> ts
+    | t :: ts -> t :: (List.map (fun t -> seq [str s; t]) ts)
+(* 
+fun separateRight (ts, s) =
+   rev (let val ts = rev ts
+        in case ts of
+           [] => []
+         | [_] => ts
+         | t :: ts => t :: (map (fn t => seq [t, str s]) ts)
+        end) *)

@@ -4049,17 +4049,25 @@ and type_let ?(check = fun s -> Warnings.Unused_var s)
 
 let type_binding env rec_flag spat_sexp_list scope =
   Typetexp.reset_type_variables();
+   
   let (pat_exp_list, new_env, unpacks) =
     type_let
       ~check:(fun s -> Warnings.Unused_value_declaration s)
       ~check_strict:(fun s -> Warnings.Unused_value_declaration s)
       env rec_flag spat_sexp_list scope false
   in
+  let () = Printf.printf "%s" "TyCore tybidns  " in 
+  
   (pat_exp_list, new_env)
 
 let type_let env rec_flag spat_sexp_list scope =
-  let (pat_exp_list, new_env, unpacks) =
-    type_let env rec_flag spat_sexp_list scope false in
+   
+   let (pat_exp_list, new_env, unpacks) =
+    try 
+      type_let env rec_flag spat_sexp_list scope false 
+    with 
+    | e-> (raise e)
+  in 
   (pat_exp_list, new_env)
 
 (* Typing of toplevel expressions *)

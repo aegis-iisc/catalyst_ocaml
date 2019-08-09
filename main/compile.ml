@@ -20,10 +20,17 @@ module PRE = ParamRelEnv
 module VC = VerificationCondition
 module VCE = Vcencode 
 
-
+ 
 let spec_file = "concat.spec"
 let ml_file = "concat.ml"
 
+(*  
+let spec_file = "identity.spec"
+let ml_file = "identity.ml"
+*)
+(*let spec_file= "head.spec"
+let ml_file = "head.ml"   
+*)
 exception CompilerEx of string
 exception CantDischargeVC
 let ppf = Format.err_formatter 
@@ -79,41 +86,47 @@ let catalyst_elaborate_envs relspecs typedtree =
     let speclang = relspecs in 
     let (ve, re, pre) =  ElabVE.elaborate typedtree speclang in 
     let  _ = Printf.printf "@Var Env:\n" in 
-    let  _ = Printf.printf "---------\n" in 
-    
-    let  _ = Printf.printf "%s" ((VE.layout ve)) in 
-    let  _ = Printf.printf "\n@Rel Env:\n" in
-    let  _ = Printf.printf "-----------\n" in 
-     
-    let _ = Printf.printf "%s" (L.toString (RE.layout re)) in 
-    let _ = Printf.printf "\n@Param Rel Env:\n" in
-    let  _ = Printf.printf "--------------\n" in 
-     
-    let _ = Printf.printf "%s" (L.toString (PRE.layout pre)) in 
-     let _ = Printf.printf  "\n" in 
+      let  _ = Printf.printf "---------\n" in 
+      
+      let  _ = Printf.printf "%s" ((VE.layout ve)) in 
+      let  _ = Printf.printf "\n@Rel Env:\n" in
+      let  _ = Printf.printf "-----------\n" in 
+       
+      let _ = Printf.printf "%s" (L.toString (RE.layout re)) in 
+      let _ = Printf.printf "\n@Param Rel Env:\n" in
+      let  _ = Printf.printf "--------------\n" in 
+       
+      let _ = Printf.printf "%s" (L.toString (PRE.layout pre)) in 
+       let _ = Printf.printf  "\n" in 
            
 
      (*get the  verification conditions*)
+   
+
     let initial_vcs = 
       try 
       SpecVerify.doIt(ve, PRE.empty , typedtree) 
       with 
       | e -> raise e
     in    
-    let  _ = Printf.printf "-- Initial vcs generation done------\n" in 
-    let _ = Printf.printf "%s" (string_of_int (List.length initial_vcs)) in 
-    
-      let elaborated_vcs = 
-        List.map (fun vc -> VC.elaborate (re,pre,vc)) initial_vcs in 
       
+    let elaborated_vcs = 
+        List.map (fun vc -> VC.elaborate (re,pre,vc)) initial_vcs in 
+     
       let  _ = Printf.printf "----------\n" in 
     
       let _ = Printf.printf "%s" ("Elaborated VCS") in 
       let _ = Printf.printf "%s" (string_of_int (List.length elaborated_vcs)) in 
       let _ = Printf.printf  "\n" in 
-    
+
+     let _ = Printf.printf "%s" (L.toString (VC.layouts elaborated_vcs)) in 
+      
 
       let  dischargeVC i vc = 
+      let _ = Printf.printf "%s" ("Discharging VCS "^(string_of_int (i+1))^" of "^(string_of_int (List.length elaborated_vcs))^"\n") in 
+          
+          if (i = 0) then () else 
+
           match VCE.discharge vc with
           VCE.Success -> 
             Printf.printf  "%s" ("VC# "^(string_of_int i)^" discharged\n")
@@ -128,16 +141,13 @@ let catalyst_elaborate_envs relspecs typedtree =
                  (*  z3_log_close ();
                   *) raise CantDischargeVC)
     in  
-
     let unit_lists = List.mapi dischargeVC elaborated_vcs in   
 
    (*  let _ = z3_log_close () in 
     *)
       
     Printf.printf "%s" "is correct w.r.t given specification!\n"
-
-
-
+    
  
 let () = 
   let () = Printf.printf "%s" "HI" in 

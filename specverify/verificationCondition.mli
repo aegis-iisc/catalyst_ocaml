@@ -32,6 +32,8 @@
            (PRE.RelMap.Key.t * PRE.reldesc) list * t -> t
   val layout : t list -> Layout.t
 
-  val layouts: t list * (L.t -> L.t) -> L.t
+  val layouts: t list   -> L.t
 
+  val addPredicate : t -> vc_pred -> t 
 
+  val coercePTtoT : Predicate.t -> vc_pred 

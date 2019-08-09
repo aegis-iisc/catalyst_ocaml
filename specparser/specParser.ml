@@ -909,7 +909,7 @@ and _menhir_goto_refty : _menhir_env -> 'ttv_tail -> _menhir_state -> 'tv_refty 
         let _2 = () in
         let _v : 'tv_refty = 
 # 192 "specParser.mly"
-                                      (RefTy.Arrow (vrta, rt))
+                                      (RefTy.Arrow ((Var.noName , (snd vrta)), rt))
 # 914 "specParser.ml"
          in
         _menhir_goto_refty _menhir_env _menhir_stack _menhir_s _v) : 'freshtv466)) : 'freshtv468)
@@ -2687,7 +2687,7 @@ and _menhir_goto_basety : _menhir_env -> 'ttv_tail -> _menhir_state -> 'tv_baset
         let _v : 'tv_vartyatom = 
 # 202 "specParser.mly"
                       (match bt with 
-                      RefTy.Base (v,_,_) -> (v,RefTy.alphaRename bt)
+                      RefTy.Base (v,_,_) -> (v,bt)
                     | _ -> raise (Failure "Impossible case of basety"))
 # 2693 "specParser.ml"
          in

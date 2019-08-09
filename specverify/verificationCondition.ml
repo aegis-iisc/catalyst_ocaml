@@ -66,7 +66,9 @@ let  vectorFoldrFoldr vec1 vec2 acc f = List.fold_right (fun el1 acc -> List.fol
 let vector_foldr_foldr (vec1,vec2,acc,f) = 
   List.fold_right2 f vec1 vec2 acc
 
-
+let addPredicate (T (bindings,pre,post)) new_pred = 
+    let conjunct = (Conj [pre;new_pred]) in 
+    T (bindings, conjunct, post)
 
 
 let conj (p1 ,p2 ) : vc_pred = 
@@ -234,12 +236,12 @@ let rec fromTypeCheck (ve, pre, subTy, supTy)  =
 
   try 
     match (subTy,supTy) with
-      (* (Base (_,TyD.Tunknown,p),_) -> 
+      (Base (_,TyD.Tunknown,p),_) -> 
         let () = Printf.printf "%s" ("@@"^(Layout.toString (P.layout p)))  in 
         if P.isFalse p 
         then raise TrivialVC else 
         
-         raise (Failed "ML type of subtype is unknown")  *)
+         raise (Failed "ML type of subtype is unknown") 
     | (Base (v1,t1,p1), Base (v2,t2,p2)) -> 
             (*
              * First, make sure that base types are same.
@@ -307,7 +309,7 @@ let rec fromTypeCheck (ve, pre, subTy, supTy)  =
         in
         Vector.concat [vcs1; vcs2]
   with   
-  |TrivialVC -> Vector.new0 ()
+  |_ -> Vector.new0 ()
 
 
 (* -- VC Elaboration -- *)
@@ -386,12 +388,14 @@ module SVarHashtbl = Hashtbl.Make (SVarHash)
 let elaborate (re,pre,vc) =
 
   let count = ref 0 in 
-  let genSym = fun idbase -> 
+  (* let genSym = fun idbase -> 
     let symbase = (*"_"^*)(RI.toString idbase) in 
     let id = symbase ^ (string_of_int (!count)) in 
     let _ = count := !count + 1 
     in
     RI.fromString id in 
+   *)
+  let genSym = fun idbase -> idbase  in 
 
   let inv = fun (x,y) -> (y,x) in 
   let fst = fun (x,y) -> x in 
@@ -599,22 +603,22 @@ let elaborate (re,pre,vc) =
           tyvar 
   in 
 
-  let newtydbinds = Vector.map (RelInstTable.toVector rinstTab,
-                                fun (_,{rel=relId';sort}) ->
-                                  let SPS.ColonArrow (tyd,TS.Tuple tts) = sort in 
-                                  let tydvec =tyd :: (Vector.map (tts, 
-                                                                  fun tts -> match  tts with
-                                                                      TS.T tyd -> tyd 
-                                                                    | TS.S t ->  encodeSVar t)) in 
-                                  (*How we create a boolean type??*)
-                                  let boolTyD = TyD.makeTbool () in 
-                                  let relArgTyd = TyD.Ttuple (tydvec) in 
-                                  let relTyD = TyD.makeTarrow ((relArgTyd), (boolTyD)) in
-                                  let rtov = Var.fromString << RelId.toString in 
-                                  let relvid = rtov relId'
-                                  in 
-                                  (relvid,relTyD)
-                               ) in 
+    let newtydbinds = Vector.map (RelInstTable.toVector rinstTab,
+                                  fun (_,{rel=relId';sort}) ->
+                                    let SPS.ColonArrow (tyd,TS.Tuple tts) = sort in 
+                                    let tydvec =tyd :: (Vector.map (tts, 
+                                                                    fun tts -> match  tts with
+                                                                        TS.T tyd -> tyd 
+                                                                      | TS.S t ->  encodeSVar t)) in 
+                                    (*How we create a boolean type??*)
+                                    let boolTyD = TyD.makeTbool () in 
+                                    let relArgTyd = TyD.Ttuple (tydvec) in 
+                                    let relTyD = TyD.makeTarrow ((relArgTyd), (boolTyD)) in
+                                    let rtov = Var.fromString << RelId.toString in 
+                                    let relvid = rtov relId'
+                                    in 
+                                    (relvid,relTyD)
+                                 ) in 
 
   (* --- new tydbinds generation done --- *)
 
@@ -700,7 +704,7 @@ let layout (vcs : t list) =
 
   let laytTyDBinds tybinds = L.vector (Vector.map (tybinds,
                                                    fun (v,tyd) -> L.str ((Var.toString v) ^ " : " ^ 
-                                                                         (TyD.toString tyd)))) in 
+                                                                         (TyD.toString tyd) ^ "\n"))) in 
 
   let laytSimplePred sp = match sp with 
       True -> L.str "true"
@@ -712,7 +716,7 @@ let layout (vcs : t list) =
   let rec laytVCPred vcpred = match vcpred with 
       Simple p -> laytSimplePred p
     | Conj vcv -> L.align (Vector.toListMap (vcv,
-                                             laytVCPred))
+                                             fun vc -> L.seq [laytVCPred vc ; L.str "\n"]))
     | Disj vcv -> L.align ( Vector.toListMap (vcv,
                                               fun vc -> L.seq [L.str "OR [";laytVCPred vc; L.str "]"]))
     | Not vc -> L.seq [L.str "NOT ["; laytVCPred vc; L.str "]"]
@@ -728,18 +732,19 @@ let layout (vcs : t list) =
 
     (*         Pretty.nest ("bindings",
     *)       let t1 = L.seq[
-      T {length = L.length_tree (laytTyDBinds tybinds); tree =laytTyDBinds tybinds}; 
-      PRE.layout pre] in 
-    let t2 = L.seq[
+            laytTyDBinds tybinds;
+    (*   T {length = L.length_tree (laytTyDBinds tybinds); tree =laytTyDBinds tybinds}; 
+     *)  PRE.layout pre] in 
+    let t2 = L.seq[ L.str "\n";
         L.indent(laytVCPred vcp1,3);
-        L.str "->";
-        L.indent (laytVCPred vcp2,3)] in 
+        L.str "=>";
+        L.indent (laytVCPred vcp2,3) ; L.str "\n"] in 
 
     L.seq [t1;t2]  
   in
   L.align (Vector.toListMap (vcs, layoutVC))
 
-let layouts (vcs,output) =
-  (output (L.str "Verification Conditions:\n" ; output ( layout vcs)))
+let layouts (vcs) =
+  L.seq [(L.str "Verification Conditions:\n") ; (layout vcs)]
 
 
