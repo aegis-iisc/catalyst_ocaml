@@ -82,6 +82,7 @@ struct
 
   let newSVar () = Ident.create_persistent "'a"
 
+
   (* fun _ ->
     let id = symbase ^ string_of_int !count in 
     let _ = count := !count + 1

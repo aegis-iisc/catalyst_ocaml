@@ -24,6 +24,12 @@ module TypeSpec = RelSpec.TypeSpec
 module PR = PrimitiveRelation
 module SR = StructuralRelation
 
+(*comment this out to print  Printf messages*)
+module Printf = struct
+  let printf f s = ()
+
+end 
+
 
 module SPSBValue = struct
   type t = {dom : TyD.t option ref; range : SVar.t}

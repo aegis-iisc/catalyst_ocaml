@@ -22,6 +22,15 @@ open Arithmetic
 open FuncDecl
 open Integer
 open Quantifier
+ 
+module Printf = struct 
+  let printf f s = ()
+
+
+end  
+ 
+
+
 
 exception Z3ex of string 
 (*Local types used for encoding*)

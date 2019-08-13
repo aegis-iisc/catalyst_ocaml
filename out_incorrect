@@ -1,0 +1,1972 @@
+WARNING: unknown parameter 'smt.macro_finder'
+Legal parameters are:
+  auto_config (bool) (default: true)
+  debug_ref_count (bool) (default: false)
+  dot_proof_file (string) (default: proof.dot)
+  dump_models (bool) (default: false)
+  model (bool) (default: true)
+  model_validate (bool) (default: false)
+  proof (bool) (default: false)
+  rlimit (unsigned int) (default: 0)
+  smtlib2_compliant (bool) (default: false)
+  timeout (unsigned int) (default: 4294967295)
+  trace (bool) (default: false)
+  trace_file_name (string) (default: z3.log)
+  type_check (bool) (default: true)
+  unsat_core (bool) (default: false)
+  well_sorted_check (bool) (default: false)
+
+
+mlfile :: rev.ml
+specfile :: rev.specHIrelation Rhd (cons(x,xs)) = {(x)} | nil = {()};
+relation Rmem = Rhd*;
+relation Rob (cons(x,xs)) = {(x)} X Rmem(xs) | nil = {()};
+relation Roa (cons(x,xs)) = Rmem(xs) X {(x)} | nil = {()};
+relation Robs = Rob*;
+relation Roas = Roa*;
+
+concat : l1 -> l2 -> { l | Rmem(l) = Rmem(l1) U Rmem(l2) /\
+               Robs(l) = Robs(l1) U Robs(l2) U (Rmem(l1) X Rmem(l2))};
+rev : l3 -> { l4 | Rmem(l4) = Rmem(l3) /\ Robs(l4) = Roas(l3)};
+
+relationwhitespacevar: Rhd
+whitespacelparen
+var: cons
+lparen
+var: x
+comma
+var: xs
+rparen
+rparen
+whitespaceequalopwhitespacelcurly
+lparen
+var: x
+rparen
+rcurly
+whitespacepipe
+whitespacevar: nil
+whitespaceequalopwhitespacelcurly
+lparen
+rparen
+rcurly
+semicolon
+relationwhitespacevar: Rmem
+whitespaceequalopwhitespacevar: Rhd
+star
+semicolon
+relationwhitespacevar: Rob
+whitespacelparen
+var: cons
+lparen
+var: x
+comma
+var: xs
+rparen
+rparen
+whitespaceequalopwhitespacelcurly
+lparen
+var: x
+rparen
+rcurly
+whitespacecrossprdwhitespacevar: Rmem
+lparen
+var: xs
+rparen
+whitespacepipe
+whitespacevar: nil
+whitespaceequalopwhitespacelcurly
+lparen
+rparen
+rcurly
+semicolon
+relationwhitespacevar: Roa
+whitespacelparen
+var: cons
+lparen
+var: x
+comma
+var: xs
+rparen
+rparen
+whitespaceequalopwhitespacevar: Rmem
+lparen
+var: xs
+rparen
+whitespacecrossprdwhitespacelcurly
+lparen
+var: x
+rparen
+rcurly
+whitespacepipe
+whitespacevar: nil
+whitespaceequalopwhitespacelcurly
+lparen
+rparen
+rcurly
+semicolon
+relationwhitespacevar: Robs
+whitespaceequalopwhitespacevar: Rob
+star
+semicolon
+relationwhitespacevar: Roas
+whitespaceequalopwhitespacevar: Roa
+star
+semicolon
+var: concat
+whitespacecolon
+whitespacevar: l1
+whitespacearrow
+whitespacevar: l2
+whitespacearrow
+whitespacelcurly
+whitespacevar: l
+whitespacepipe
+whitespacevar: Rmem
+lparen
+var: l
+rparen
+whitespaceequalopwhitespacevar: Rmem
+lparen
+var: l1
+rparen
+whitespaceunionwhitespacevar: Rmem
+lparen
+var: l2
+rparen
+whitespaceconjwhitespacevar: Robs
+lparen
+var: l
+rparen
+whitespaceequalopwhitespacevar: Robs
+lparen
+var: l1
+rparen
+whitespaceunionwhitespacevar: Robs
+lparen
+var: l2
+rparen
+whitespaceunionwhitespacelparen
+var: Rmem
+lparen
+var: l1
+rparen
+whitespacecrossprdwhitespacevar: Rmem
+lparen
+var: l2
+rparen
+rparen
+rcurly
+semicolon
+var: rev
+whitespacecolon
+whitespacevar: l3
+whitespacearrow
+whitespacelcurly
+whitespacevar: l4
+whitespacepipe
+whitespacevar: Rmem
+lparen
+var: l4
+rparen
+whitespaceequalopwhitespacevar: Rmem
+lparen
+var: l3
+rparen
+whitespaceconjwhitespacevar: Robs
+lparen
+var: l4
+rparen
+whitespaceequalopwhitespacevar: Roas
+lparen
+var: l3
+rparen
+rcurly
+semicolon
+rev :  : : {l3:<?> |  true } -> {l4:<?> |  /\  (Robs)(l4) = (Roas)(l3)   (Rmem)(l4) = (Rmem)(l3) }   concat :  : : {l1:<?> |  true } -> : {l2:<?> |  true } -> {l:<?> |  /\  (Robs)(l) = ((Robs)(l1) U ((Robs)(l2) U ((Rmem)(l1) X (Rmem)(l2))))   (Rmem)(l) = ((Rmem)(l1) U (Rmem)(l2)) }   :   :relation (Rhd) = {::::xxs => {(x)}[] => {()}}
+relation (Rmem) = {::: => (Rhd)*}
+relation (Rob) = {::::xxs => ({(x)} X (Rmem)(xs))[] => {()}}
+relation (Roa) = {::::xxs => ((Rmem)(xs) X {(x)})[] => {()}}
+relation (Robs) = {::: => (Rob)*}
+relation (Roas) = {::: => (Roa)*}
+TyMod 1TyMod Pstr_value TyMod Pstr_value -2 TyCore tybidns  TyMod Pstr_value -3 TyMod 1TyMod Pstr_value TyMod Pstr_value -2 TyCore tybidns  TyMod Pstr_value -3 Print the AST
+found var 
+concat : 'a list -> 'a list -> 'a list
+ size   0 	 found Tlink  	  'a list -> 'a list -> 'a list 	 
+ arguments  ::   	 
+ res  ::  
+'a list -> 'a list -> 'a list
+found var 
+l1 : 'a list
+ size   0 	 found Tlink  	  'a list 	 
+ arguments  ::   	 
+ res  ::  'a list
+found var 
+
+l2 : 'a list
+ size   0 	 found Tlink  	  'a list 	 
+ arguments  ::   	 
+ res  ::  'a listfound constructor 
+const name []
+'b listfound constructor 
+const name ::'b->'b list->'b list
+found var 
+
+x : 'a
+ size   0 	 found Tlink  	  'a 	 
+ arguments  ::   	 
+ res  ::  'a
+found var 
+
+xs : 'a list
+Not a Tlink  
+ 
+found var 
+temp : 'a list
+ size   0 	 found Tlink  	  'a list 	 
+ arguments  ::   	 
+ res  ::  'a list
+found var 
+
+rev : 'c list -> 'c list
+ size   0 	 found Tlink  	  'c list -> 'c list 	 
+ arguments  ::   	 
+ res  ::  
+'c list -> 'c list
+found var 
+l3 : 'c list
+ size   0 	 found Tlink  	  'c list 	 
+ arguments  ::   	 
+ res  ::  'c listfound constructor 
+const name []
+'b listfound constructor 
+const name ::'b->'b list->'b list
+found var 
+
+x : 'c
+ size   0 	 found Tlink  	  'c 	 
+ arguments  ::   	 
+ res  ::  'c
+found var 
+
+xs : 'c list
+Not a Tlink  
+ 
+found var 
+temp1 : 'c list
+ size   0 	 found Tlink  	  'c list 	 
+ arguments  ::   	 
+ res  ::  'c list
+found var 
+
+temp2 : 'd list
+ size   0: @ss: :.   'a list :-> {TupleSort 'a}_______10@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a}_______10@PTSInst1@Var Env:
+---------
+[[] : .  .  {v_0:  'a list |  /\  (Rhd)(v_0) = {()}   /\  (Rmem)(v_0) = {()}   /\  (Rob)(v_0) = {()}   /\  (Roa)(v_0) = {()}   /\  (Robs)(v_0) = {()}   /\  (Roas)(v_0) = {()}   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  /\  (Rhd)(v_1) = {(x)}   /\  (Rmem)(v_1) = ({(x)} U ({()} U (Rmem)(xs)))   /\  (Rob)(v_1) = ({(x)} X (Rmem :'a)(xs))   /\  (Roa)(v_1) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(v_1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(v_1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true }
+[] : .  .  {v_0:  'a list |  /\  (Rmem)(v_0) = {()}   /\  (Rob)(v_0) = {()}   /\  (Roa)(v_0) = {()}   /\  (Robs)(v_0) = {()}   /\  (Roas)(v_0) = {()}   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  /\  (Rmem)(v_1) = ({(x)} U ({()} U (Rmem)(xs)))   /\  (Rob)(v_1) = ({(x)} X (Rmem :'a)(xs))   /\  (Roa)(v_1) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(v_1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(v_1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true }
+[] : .  .  {v_0:  'a list |  /\  (Rob)(v_0) = {()}   /\  (Roa)(v_0) = {()}   /\  (Robs)(v_0) = {()}   /\  (Roas)(v_0) = {()}   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  /\  (Rob)(v_1) = ({(x)} X (Rmem :'a)(xs))   /\  (Roa)(v_1) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(v_1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(v_1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true }
+[] : .  .  {v_0:  'a list |  /\  (Roa)(v_0) = {()}   /\  (Robs)(v_0) = {()}   /\  (Roas)(v_0) = {()}   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  /\  (Roa)(v_1) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(v_1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(v_1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true }
+[] : .  .  {v_0:  'a list |  /\  (Robs)(v_0) = {()}   /\  (Roas)(v_0) = {()}   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  /\  (Robs)(v_1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(v_1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true }
+[] : .  .  {v_0:  'a list |  /\  (Roas)(v_0) = {()}   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  /\  (Roas)(v_1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  true }
+[] : .  .  {v_0:  'a list |  true }
+rev : .  .  : {l3:  'a list |  true } -> {l4:  'a list |  /\  (Robs)(l4) = (Roas)(l3)   (Rmem)(l4) = (Rmem)(l3) }
+concat : .  .  : {l1:  'a list |  true } -> : {l2:  'a list |  true } -> {l:  'a list |  /\  (Robs)(l) = ((Robs)(l1) U ((Robs)(l2) U ((Rmem)(l1) X (Rmem)(l2))))   (Rmem)(l) = ((Rmem)(l1) U (Rmem)(l2)) }
+rev : .  .  : {l3:<?> |  true } -> {l4:<?> |  /\  (Robs)(l4) = (Roas)(l3)   (Rmem)(l4) = (Rmem)(l3) }
+concat : .  .  : {l1:<?> |  true } -> : {l2:<?> |  true } -> {l:<?> |  /\  (Robs)(l) = ((Robs)(l1) U ((Robs)(l2) U ((Rmem)(l1) X (Rmem)(l2))))   (Rmem)(l) = ((Rmem)(l1) U (Rmem)(l2)) }
+]
+@Rel Env:
+-----------
+
+ Rhd  ::  {type = : @ss: :.   'a list :-> {TupleSort 'a}; map = {::::xxs => {(x)}[] => {()}}} 
+   
+ Rmem  ::  {type = : @ss: :.   'a list :-> {TupleSort 'a}; map = {::::xxs => ({(x)} U ({()} U (Rmem)(xs)))[] => {()}}} 
+   
+ Rob  ::  {type = : @ss: :.   'a list :-> {TupleSort 'a'a}; map = {::::xxs => ({(x)} X (Rmem :'a)(xs))[] => {()}}} 
+   
+ Roa  ::  {type = : @ss: :.   'a list :-> {TupleSort 'a'a}; map = {::::xxs => ((Rmem :'a)(xs) X {(x)})[] => {()}}} 
+   
+ Robs  ::  {type = : @ss: :.   'a list :-> {TupleSort 'a'a}; map = {::::xxs => (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))[] => {()}}} 
+   
+ Roas  ::  {type = : @ss: :.   'a list :-> {TupleSort 'a'a}; map = {::::xxs => (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))[] => {()}}} 
+
+@Param Rel Env:
+--------------
+
+ Rhd  ::  {typescheme = : @ss: :.   'a list :-> {TupleSort 'a}, def = \v_1. bind (Rhd : (v_1),\:v_0. {(v_0)})} 
+   
+ Rmem  ::  {typescheme = : @ss: :.   'a list :-> {TupleSort 'a}, def = \v_3. bind (Rmem : (v_3),\:v_2. {(v_2)})} 
+   
+ Rob  ::  {typescheme = : @ss: :.   'a list :-> {TupleSort 'a'a}, def = \v_6. bind (Rob : (v_6),\:v_4v_5. ({(v_4)} X {(v_5)}))} 
+   
+ Roa  ::  {typescheme = : @ss: :.   'a list :-> {TupleSort 'a'a}, def = \v_9. bind (Roa : (v_9),\:v_7v_8. ({(v_7)} X {(v_8)}))} 
+   
+ Robs  ::  {typescheme = : @ss: :.   'a list :-> {TupleSort 'a'a}, def = \v_12. bind (Robs : (v_12),\:v_10v_11. ({(v_10)} X {(v_11)}))} 
+   
+ Roas  ::  {typescheme = : @ss: :.   'a list :-> {TupleSort 'a'a}, def = \v_15. bind (Roas : (v_15),\:v_13v_14. ({(v_13)} X {(v_14)}))} 
+
+doIt sruct Items@Var Env:
+---------
+[[] : .  .  {v_0:  'a list |  /\  (Rhd)(v_0) = {()}   /\  (Rmem)(v_0) = {()}   /\  (Rob)(v_0) = {()}   /\  (Roa)(v_0) = {()}   /\  (Robs)(v_0) = {()}   /\  (Roas)(v_0) = {()}   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  /\  (Rhd)(v_1) = {(x)}   /\  (Rmem)(v_1) = ({(x)} U ({()} U (Rmem)(xs)))   /\  (Rob)(v_1) = ({(x)} X (Rmem :'a)(xs))   /\  (Roa)(v_1) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(v_1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(v_1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true }
+[] : .  .  {v_0:  'a list |  /\  (Rmem)(v_0) = {()}   /\  (Rob)(v_0) = {()}   /\  (Roa)(v_0) = {()}   /\  (Robs)(v_0) = {()}   /\  (Roas)(v_0) = {()}   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  /\  (Rmem)(v_1) = ({(x)} U ({()} U (Rmem)(xs)))   /\  (Rob)(v_1) = ({(x)} X (Rmem :'a)(xs))   /\  (Roa)(v_1) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(v_1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(v_1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true }
+[] : .  .  {v_0:  'a list |  /\  (Rob)(v_0) = {()}   /\  (Roa)(v_0) = {()}   /\  (Robs)(v_0) = {()}   /\  (Roas)(v_0) = {()}   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  /\  (Rob)(v_1) = ({(x)} X (Rmem :'a)(xs))   /\  (Roa)(v_1) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(v_1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(v_1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true }
+[] : .  .  {v_0:  'a list |  /\  (Roa)(v_0) = {()}   /\  (Robs)(v_0) = {()}   /\  (Roas)(v_0) = {()}   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  /\  (Roa)(v_1) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(v_1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(v_1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true }
+[] : .  .  {v_0:  'a list |  /\  (Robs)(v_0) = {()}   /\  (Roas)(v_0) = {()}   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  /\  (Robs)(v_1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(v_1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true }
+[] : .  .  {v_0:  'a list |  /\  (Roas)(v_0) = {()}   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  /\  (Roas)(v_1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  true }
+[] : .  .  {v_0:  'a list |  true }
+rev : .  .  : {l3:  'a list |  true } -> {l4:  'a list |  /\  (Robs)(l4) = (Roas)(l3)   (Rmem)(l4) = (Rmem)(l3) }
+concat : .  .  : {l1:  'a list |  true } -> : {l2:  'a list |  true } -> {l:  'a list |  /\  (Robs)(l) = ((Robs)(l1) U ((Robs)(l2) U ((Rmem)(l1) X (Rmem)(l2))))   (Rmem)(l) = ((Rmem)(l1) U (Rmem)(l2)) }
+rev : .  .  : {l3:<?> |  true } -> {l4:<?> |  /\  (Robs)(l4) = (Roas)(l3)   (Rmem)(l4) = (Rmem)(l3) }
+concat : .  .  : {l1:<?> |  true } -> : {l2:<?> |  true } -> {l:<?> |  /\  (Robs)(l) = ((Robs)(l1) U ((Robs)(l2) U ((Rmem)(l1) X (Rmem)(l2))))   (Rmem)(l) = ((Rmem)(l1) U (Rmem)(l2)) }
+]
+ Case Tstr_value 
+ doIt_value_bindings:: fexp 
+Function concat being typechecked 
+.  .  : {l1:  'a list |  true } -> : {l2:  'a list |  true } -> {l:  'a list |  /\  (Robs)(l) = ((Robs)(l1) U ((Robs)(l2) U ((Rmem)(l1) X (Rmem)(l2))))   (Rmem)(l) = ((Rmem)(l1) U (Rmem)(l2)) }concat will be checked
+$$ArgTy {l1:  'a list |  true }$$resRefTy : {l2:  'a list |  true } -> {l:  'a list |  /\  (Robs)(l) = ((Robs)(l1) U ((Robs)(l2) U ((Rmem)(l1) X (Rmem)(l2))))   (Rmem)(l) = ((Rmem)(l1) U (Rmem)(l2)) } 
+ Arg :: l1
+Base RefinementType $$resRefTy' : {l2:  'a list |  true } -> {l:  'a list |  /\  (Robs)(l) = ((Robs)(l1) U ((Robs)(l2) U ((Rmem)(l1) X (Rmem)(l2))))   (Rmem)(l) = ((Rmem)(l1) U (Rmem)(l2)) }Typechecking the body of the function in extendedVE 
+Expression :: Texp_function 
+$$ArgTy {l2:  'a list |  true }$$resRefTy {l:  'a list |  /\  (Robs)(l) = ((Robs)(l1) U ((Robs)(l2) U ((Rmem)(l1) X (Rmem)(l2))))   (Rmem)(l) = ((Rmem)(l1) U (Rmem)(l2)) } 
+ Arg :: l2
+Base RefinementType $$resRefTy' {l:  'a list |  /\  (Robs)(l) = ((Robs)(l1) U ((Robs)(l2) U ((Rmem)(l1) X (Rmem)(l2))))   (Rmem)(l) = ((Rmem)(l1) U (Rmem)(l2)) }Typechecking the body of the function in extendedVE 
+Expression :: Not a Texp_function 
+
+######### synthesis:match  
+
+@Var Env:
+---------
+[dummy0 : .  .  {v_0:  'a list |  /\  (Rhd)(l1) = {()}   /\  (Rmem)(l1) = {()}   /\  (Rob)(l1) = {()}   /\  (Roa)(l1) = {()}   /\  (Robs)(l1) = {()}   /\  (Roas)(l1) = {()}   true }
+_mark_4097 : .  .  {v_7:<?> |  true }
+xs : .  .  {v_6:  'a list |  true }
+x : .  .  {v_5:'a |  true }
+l2 : .  .  {l2:  'a list |  true }
+l1 : .  .  {l1:  'a list |  true }
+concat : .  .  : {l1:  'a list |  true } -> : {l2:  'a list |  true } -> {l:  'a list |  /\  (Robs)(l) = ((Robs)(l1) U ((Robs)(l2) U ((Rmem)(l1) X (Rmem)(l2))))   (Rmem)(l) = ((Rmem)(l1) U (Rmem)(l2)) }
+[] : .  .  {v_0:  'a list |  /\  (Rhd)(v_0) = {()}   /\  (Rmem)(v_0) = {()}   /\  (Rob)(v_0) = {()}   /\  (Roa)(v_0) = {()}   /\  (Robs)(v_0) = {()}   /\  (Roas)(v_0) = {()}   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  /\  (Rhd)(v_1) = {(x)}   /\  (Rmem)(v_1) = ({(x)} U ({()} U (Rmem)(xs)))   /\  (Rob)(v_1) = ({(x)} X (Rmem :'a)(xs))   /\  (Roa)(v_1) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(v_1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(v_1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true }
+[] : .  .  {v_0:  'a list |  /\  (Rmem)(v_0) = {()}   /\  (Rob)(v_0) = {()}   /\  (Roa)(v_0) = {()}   /\  (Robs)(v_0) = {()}   /\  (Roas)(v_0) = {()}   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  /\  (Rmem)(v_1) = ({(x)} U ({()} U (Rmem)(xs)))   /\  (Rob)(v_1) = ({(x)} X (Rmem :'a)(xs))   /\  (Roa)(v_1) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(v_1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(v_1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true }
+[] : .  .  {v_0:  'a list |  /\  (Rob)(v_0) = {()}   /\  (Roa)(v_0) = {()}   /\  (Robs)(v_0) = {()}   /\  (Roas)(v_0) = {()}   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  /\  (Rob)(v_1) = ({(x)} X (Rmem :'a)(xs))   /\  (Roa)(v_1) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(v_1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(v_1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true }
+[] : .  .  {v_0:  'a list |  /\  (Roa)(v_0) = {()}   /\  (Robs)(v_0) = {()}   /\  (Roas)(v_0) = {()}   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  /\  (Roa)(v_1) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(v_1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(v_1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true }
+[] : .  .  {v_0:  'a list |  /\  (Robs)(v_0) = {()}   /\  (Roas)(v_0) = {()}   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  /\  (Robs)(v_1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(v_1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true }
+[] : .  .  {v_0:  'a list |  /\  (Roas)(v_0) = {()}   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  /\  (Roas)(v_1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  true }
+[] : .  .  {v_0:  'a list |  true }
+rev : .  .  : {l3:  'a list |  true } -> {l4:  'a list |  /\  (Robs)(l4) = (Roas)(l3)   (Rmem)(l4) = (Rmem)(l3) }
+rev : .  .  : {l3:<?> |  true } -> {l4:<?> |  /\  (Robs)(l4) = (Roas)(l3)   (Rmem)(l4) = (Rmem)(l3) }
+concat : .  .  : {l1:<?> |  true } -> : {l2:<?> |  true } -> {l:<?> |  /\  (Robs)(l) = ((Robs)(l1) U ((Robs)(l2) U ((Rmem)(l1) X (Rmem)(l2))))   (Rmem)(l) = ((Rmem)(l1) U (Rmem)(l2)) }
+]
+######### synthesis:ident 
+ident l2
+Macth Exp Ty:
+{l2:  'a list |  true }
+@Var Env:
+---------
+[dummy0 : .  .  {v_1:  'a list |  /\  (Rhd)(l1) = {(x)}   /\  (Rmem)(l1) = ({(x)} U ({()} U (Rmem)(xs)))   /\  (Rob)(l1) = ({(x)} X (Rmem :'a)(xs))   /\  (Roa)(l1) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(l1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(l1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true }
+_mark_4098 : .  .  {v_8:<?> |  true }
+xs : .  .  {v_6:  'a list |  true }
+x : .  .  {v_5:'a |  true }
+l2 : .  .  {l2:  'a list |  true }
+l1 : .  .  {l1:  'a list |  true }
+concat : .  .  : {l1:  'a list |  true } -> : {l2:  'a list |  true } -> {l:  'a list |  /\  (Robs)(l) = ((Robs)(l1) U ((Robs)(l2) U ((Rmem)(l1) X (Rmem)(l2))))   (Rmem)(l) = ((Rmem)(l1) U (Rmem)(l2)) }
+[] : .  .  {v_0:  'a list |  /\  (Rhd)(v_0) = {()}   /\  (Rmem)(v_0) = {()}   /\  (Rob)(v_0) = {()}   /\  (Roa)(v_0) = {()}   /\  (Robs)(v_0) = {()}   /\  (Roas)(v_0) = {()}   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  /\  (Rhd)(v_1) = {(x)}   /\  (Rmem)(v_1) = ({(x)} U ({()} U (Rmem)(xs)))   /\  (Rob)(v_1) = ({(x)} X (Rmem :'a)(xs))   /\  (Roa)(v_1) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(v_1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(v_1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true }
+[] : .  .  {v_0:  'a list |  /\  (Rmem)(v_0) = {()}   /\  (Rob)(v_0) = {()}   /\  (Roa)(v_0) = {()}   /\  (Robs)(v_0) = {()}   /\  (Roas)(v_0) = {()}   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  /\  (Rmem)(v_1) = ({(x)} U ({()} U (Rmem)(xs)))   /\  (Rob)(v_1) = ({(x)} X (Rmem :'a)(xs))   /\  (Roa)(v_1) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(v_1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(v_1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true }
+[] : .  .  {v_0:  'a list |  /\  (Rob)(v_0) = {()}   /\  (Roa)(v_0) = {()}   /\  (Robs)(v_0) = {()}   /\  (Roas)(v_0) = {()}   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  /\  (Rob)(v_1) = ({(x)} X (Rmem :'a)(xs))   /\  (Roa)(v_1) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(v_1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(v_1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true }
+[] : .  .  {v_0:  'a list |  /\  (Roa)(v_0) = {()}   /\  (Robs)(v_0) = {()}   /\  (Roas)(v_0) = {()}   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  /\  (Roa)(v_1) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(v_1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(v_1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true }
+[] : .  .  {v_0:  'a list |  /\  (Robs)(v_0) = {()}   /\  (Roas)(v_0) = {()}   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  /\  (Robs)(v_1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(v_1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true }
+[] : .  .  {v_0:  'a list |  /\  (Roas)(v_0) = {()}   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  /\  (Roas)(v_1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  true }
+[] : .  .  {v_0:  'a list |  true }
+rev : .  .  : {l3:  'a list |  true } -> {l4:  'a list |  /\  (Robs)(l4) = (Roas)(l3)   (Rmem)(l4) = (Rmem)(l3) }
+rev : .  .  : {l3:<?> |  true } -> {l4:<?> |  /\  (Robs)(l4) = (Roas)(l3)   (Rmem)(l4) = (Rmem)(l3) }
+concat : .  .  : {l1:<?> |  true } -> : {l2:<?> |  true } -> {l:<?> |  /\  (Robs)(l) = ((Robs)(l1) U ((Robs)(l2) U ((Rmem)(l1) X (Rmem)(l2))))   (Rmem)(l) = ((Rmem)(l1) U (Rmem)(l2)) }
+]
+######### synthesis:let 
+
+######### synthesis:apply 
+
+######### synthesis:ident 
+ident concat
+######### synthesis:ident 
+ident xs
+Base RefinementType 
+######### synthesis:ident 
+ident l2
+Base RefinementType 
+######### synthesis:constructor 
+T-con apply Constructor Name ::####### Arrow (Tuple , dest ) case 
+ty of argument const {v_12:'a |  true }ty of argument const {x:'a |  true }
+Base RefinementType ty of argument const {v_13:  'a list |  true }ty of argument const {xs:  'a list |  true }
+Base RefinementType 
+Macth Exp Ty:
+{v_1:  'a list |  Exists Key =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =l1 Value =   'a listKey =l2 Value =   'a listKey =x Value = 'aKey =xs Value =   'a listKey =_mark_4098 Value = <?>Key =dummy0 Value =   'a listKey =temp Value =   'a list  such that  /\  /\  (Rhd)(v_1) = {(x)}   /\  (Rmem)(v_1) = ({(x)} U ({()} U (Rmem)(temp)))   /\  (Rob)(v_1) = ({(x)} X (Rmem :'a)(temp))   /\  (Roa)(v_1) = ((Rmem :'a)(temp) X {(x)})   /\  (Robs)(v_1) = (({(x)} X (Rmem :'a)(temp)) U ({()} U (Robs)(temp)))   /\  (Roas)(v_1) = (((Rmem :'a)(temp) X {(x)}) U ({()} U (Roas)(temp)))   true   /\  true   /\  /\  (Roas)([]) = {()}   true   /\  /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Rob)([]) = {()}   /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Rmem)([]) = {()}   /\  (Rob)([]) = {()}   /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Rhd)([]) = {()}   /\  (Rmem)([]) = {()}   /\  (Rob)([]) = {()}   /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  true   /\  true   /\  true   /\  true   /\  true   /\  /\  (Rhd)(l1) = {(x)}   /\  (Rmem)(l1) = ({(x)} U ({()} U (Rmem)(xs)))   /\  (Rob)(l1) = ({(x)} X (Rmem :'a)(xs))   /\  (Roa)(l1) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(l1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(l1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true   /\  /\  (Robs)(temp) = ((Robs)(xs) U ((Robs)(xs) U ((Rmem)(xs) X (Rmem)(xs))))   (Rmem)(temp) = ((Rmem)(xs) U (Rmem)(xs))   true }
+*******Performing Unification with Disjunction *********
+
+*******Performing Base : Base with Disjunction *********
+
+ty of fst  {l2:  'a list |  Exists Key =dummy0 Value =   'a list  such that  /\  true   /\  /\  (Rhd)(l1) = {()}   /\  (Rmem)(l1) = {()}   /\  (Rob)(l1) = {()}   /\  (Roa)(l1) = {()}   /\  (Robs)(l1) = {()}   /\  (Roas)(l1) = {()}   true   true }
+ty of snd{v_1:  'a list |  Exists Key =dummy0 Value =   'a list  such that  /\  Exists Key =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =l1 Value =   'a listKey =l2 Value =   'a listKey =x Value = 'aKey =xs Value =   'a listKey =_mark_4098 Value = <?>Key =dummy0 Value =   'a listKey =temp Value =   'a list  such that  /\  /\  (Rhd)(v_1) = {(x)}   /\  (Rmem)(v_1) = ({(x)} U ({()} U (Rmem)(temp)))   /\  (Rob)(v_1) = ({(x)} X (Rmem :'a)(temp))   /\  (Roa)(v_1) = ((Rmem :'a)(temp) X {(x)})   /\  (Robs)(v_1) = (({(x)} X (Rmem :'a)(temp)) U ({()} U (Robs)(temp)))   /\  (Roas)(v_1) = (((Rmem :'a)(temp) X {(x)}) U ({()} U (Roas)(temp)))   true   /\  true   /\  /\  (Roas)([]) = {()}   true   /\  /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Rob)([]) = {()}   /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Rmem)([]) = {()}   /\  (Rob)([]) = {()}   /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Rhd)([]) = {()}   /\  (Rmem)([]) = {()}   /\  (Rob)([]) = {()}   /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  true   /\  true   /\  true   /\  true   /\  true   /\  /\  (Rhd)(l1) = {(x)}   /\  (Rmem)(l1) = ({(x)} U ({()} U (Rmem)(xs)))   /\  (Rob)(l1) = ({(x)} X (Rmem :'a)(xs))   /\  (Roa)(l1) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(l1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(l1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true   /\  /\  (Robs)(temp) = ((Robs)(xs) U ((Robs)(xs) U ((Rmem)(xs) X (Rmem)(xs))))   (Rmem)(temp) = ((Rmem)(xs) U (Rmem)(xs))   true   /\  /\  (Rhd)(l1) = {(x)}   /\  (Rmem)(l1) = ({(x)} U ({()} U (Rmem)(xs)))   /\  (Rob)(l1) = ({(x)} X (Rmem :'a)(xs))   /\  (Roa)(l1) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(l1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(l1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true   true }@Unified Type:
+
+ {v_1:  'a list |   o  /\  l2 = v_1   Exists Key =dummy0 Value =   'a list  such that  /\  Exists Key =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =l1 Value =   'a listKey =l2 Value =   'a listKey =x Value = 'aKey =xs Value =   'a listKey =_mark_4098 Value = <?>Key =dummy0 Value =   'a listKey =temp Value =   'a list  such that  /\  /\  (Rhd)(v_1) = {(x)}   /\  (Rmem)(v_1) = ({(x)} U ({()} U (Rmem)(temp)))   /\  (Rob)(v_1) = ({(x)} X (Rmem :'a)(temp))   /\  (Roa)(v_1) = ((Rmem :'a)(temp) X {(x)})   /\  (Robs)(v_1) = (({(x)} X (Rmem :'a)(temp)) U ({()} U (Robs)(temp)))   /\  (Roas)(v_1) = (((Rmem :'a)(temp) X {(x)}) U ({()} U (Roas)(temp)))   true   /\  true   /\  /\  (Roas)([]) = {()}   true   /\  /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Rob)([]) = {()}   /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Rmem)([]) = {()}   /\  (Rob)([]) = {()}   /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Rhd)([]) = {()}   /\  (Rmem)([]) = {()}   /\  (Rob)([]) = {()}   /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  true   /\  true   /\  true   /\  true   /\  true   /\  /\  (Rhd)(l1) = {(x)}   /\  (Rmem)(l1) = ({(x)} U ({()} U (Rmem)(xs)))   /\  (Rob)(l1) = ({(x)} X (Rmem :'a)(xs))   /\  (Roa)(l1) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(l1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(l1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true   /\  /\  (Robs)(temp) = ((Robs)(xs) U ((Robs)(xs) U ((Rmem)(xs) X (Rmem)(xs))))   (Rmem)(temp) = ((Rmem)(xs) U (Rmem)(xs))   true   /\  /\  (Rhd)(l1) = {(x)}   /\  (Rmem)(l1) = ({(x)} U ({()} U (Rmem)(xs)))   /\  (Rob)(l1) = ({(x)} X (Rmem :'a)(xs))   /\  (Roa)(l1) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(l1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(l1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true   true   /\  l2 = v_1   Exists Key =dummy0 Value =   'a list  such that  /\  true   /\  /\  (Rhd)(l1) = {()}   /\  (Rmem)(l1) = {()}   /\  (Rob)(l1) = {()}   /\  (Roa)(l1) = {()}   /\  (Robs)(l1) = {()}   /\  (Roas)(l1) = {()}   true   true }
+refinement Type for exp ::: {v_1:  'a list |   o  /\  l2 = v_1   Exists Key =dummy0 Value =   'a list  such that  /\  Exists Key =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =l1 Value =   'a listKey =l2 Value =   'a listKey =x Value = 'aKey =xs Value =   'a listKey =_mark_4098 Value = <?>Key =dummy0 Value =   'a listKey =temp Value =   'a list  such that  /\  /\  (Rhd)(v_1) = {(x)}   /\  (Rmem)(v_1) = ({(x)} U ({()} U (Rmem)(temp)))   /\  (Rob)(v_1) = ({(x)} X (Rmem :'a)(temp))   /\  (Roa)(v_1) = ((Rmem :'a)(temp) X {(x)})   /\  (Robs)(v_1) = (({(x)} X (Rmem :'a)(temp)) U ({()} U (Robs)(temp)))   /\  (Roas)(v_1) = (((Rmem :'a)(temp) X {(x)}) U ({()} U (Roas)(temp)))   true   /\  true   /\  /\  (Roas)([]) = {()}   true   /\  /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Rob)([]) = {()}   /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Rmem)([]) = {()}   /\  (Rob)([]) = {()}   /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Rhd)([]) = {()}   /\  (Rmem)([]) = {()}   /\  (Rob)([]) = {()}   /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  true   /\  true   /\  true   /\  true   /\  true   /\  /\  (Rhd)(l1) = {(x)}   /\  (Rmem)(l1) = ({(x)} U ({()} U (Rmem)(xs)))   /\  (Rob)(l1) = ({(x)} X (Rmem :'a)(xs))   /\  (Roa)(l1) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(l1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(l1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true   /\  /\  (Robs)(temp) = ((Robs)(xs) U ((Robs)(xs) U ((Rmem)(xs) X (Rmem)(xs))))   (Rmem)(temp) = ((Rmem)(xs) U (Rmem)(xs))   true   /\  /\  (Rhd)(l1) = {(x)}   /\  (Rmem)(l1) = ({(x)} U ({()} U (Rmem)(xs)))   /\  (Rob)(l1) = ({(x)} X (Rmem :'a)(xs))   /\  (Roa)(l1) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(l1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(l1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true   true   /\  l2 = v_1   Exists Key =dummy0 Value =   'a list  such that  /\  true   /\  /\  (Rhd)(l1) = {()}   /\  (Rmem)(l1) = {()}   /\  (Rob)(l1) = {()}   /\  (Roa)(l1) = {()}   /\  (Robs)(l1) = {()}   /\  (Roas)(l1) = {()}   true   true }
+refinement Type for tyexp :::{l:  'a list |  /\  (Robs)(l) = ((Robs)(l1) U ((Robs)(l2) U ((Rmem)(l1) X (Rmem)(l2))))   (Rmem)(l) = ((Rmem)(l1) U (Rmem)(l2)) }Γ ⊢ expRefTy <: ty-- new VCS --------------->
+Verification Conditions:
+ bindings 	 
+ temp :   'a list
+ dummy0 :   'a list
+ _mark_4098 : <?>
+ xs :   'a list
+ x : 'a
+ l2 :   'a list
+ l1 :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ dummy0 :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ l1 :   'a list
+ l2 :   'a list
+ v_1 :   'a list
+  in 	 
+ l2 = v_1 
+   (Rhd)(v_1) = {(x)} 
+   (Rmem)(v_1) = ({(x)} U ({()} U (Rmem)(temp))) 
+   (Rob)(v_1) = ({(x)} X (Rmem :'a)(temp)) 
+   (Roa)(v_1) = ((Rmem :'a)(temp) X {(x)}) 
+   (Robs)(v_1) = (({(x)} X (Rmem :'a)(temp)) U ({()} U (Robs)(temp))) 
+   (Roas)(v_1) = (((Rmem :'a)(temp) X {(x)}) U ({()} U (Roas)(temp))) 
+   (Roas)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rhd)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rhd)(l1) = {(x)} 
+   (Rmem)(l1) = ({(x)} U ({()} U (Rmem)(xs))) 
+   (Rob)(l1) = ({(x)} X (Rmem :'a)(xs)) 
+   (Roa)(l1) = ((Rmem :'a)(xs) X {(x)}) 
+   (Robs)(l1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs))) 
+   (Roas)(l1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs))) 
+   (Robs)(temp) = ((Robs)(xs) U ((Robs)(xs) U ((Rmem)(xs) X (Rmem)(xs)))) 
+   (Rmem)(temp) = ((Rmem)(xs) U (Rmem)(xs)) 
+   (Rhd)(l1) = {(x)} 
+   (Rmem)(l1) = ({(x)} U ({()} U (Rmem)(xs))) 
+   (Rob)(l1) = ({(x)} X (Rmem :'a)(xs)) 
+   (Roa)(l1) = ((Rmem :'a)(xs) X {(x)}) 
+   (Robs)(l1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs))) 
+   (Roas)(l1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs))) 
+   (Roas)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rhd)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+ => (Robs)(v_1) = ((Robs)(l1) U ((Robs)(l2) U ((Rmem)(l1) X (Rmem)(l2)))) 
+   bindings 	 
+ temp :   'a list
+ dummy0 :   'a list
+ _mark_4098 : <?>
+ xs :   'a list
+ x : 'a
+ l2 :   'a list
+ l1 :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ dummy0 :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ l1 :   'a list
+ l2 :   'a list
+ v_1 :   'a list
+  in 	 
+ l2 = v_1 
+   (Rhd)(v_1) = {(x)} 
+   (Rmem)(v_1) = ({(x)} U ({()} U (Rmem)(temp))) 
+   (Rob)(v_1) = ({(x)} X (Rmem :'a)(temp)) 
+   (Roa)(v_1) = ((Rmem :'a)(temp) X {(x)}) 
+   (Robs)(v_1) = (({(x)} X (Rmem :'a)(temp)) U ({()} U (Robs)(temp))) 
+   (Roas)(v_1) = (((Rmem :'a)(temp) X {(x)}) U ({()} U (Roas)(temp))) 
+   (Roas)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rhd)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rhd)(l1) = {(x)} 
+   (Rmem)(l1) = ({(x)} U ({()} U (Rmem)(xs))) 
+   (Rob)(l1) = ({(x)} X (Rmem :'a)(xs)) 
+   (Roa)(l1) = ((Rmem :'a)(xs) X {(x)}) 
+   (Robs)(l1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs))) 
+   (Roas)(l1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs))) 
+   (Robs)(temp) = ((Robs)(xs) U ((Robs)(xs) U ((Rmem)(xs) X (Rmem)(xs)))) 
+   (Rmem)(temp) = ((Rmem)(xs) U (Rmem)(xs)) 
+   (Rhd)(l1) = {(x)} 
+   (Rmem)(l1) = ({(x)} U ({()} U (Rmem)(xs))) 
+   (Rob)(l1) = ({(x)} X (Rmem :'a)(xs)) 
+   (Roa)(l1) = ((Rmem :'a)(xs) X {(x)}) 
+   (Robs)(l1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs))) 
+   (Roas)(l1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs))) 
+   (Roas)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rhd)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+ => (Rmem)(v_1) = ((Rmem)(l1) U (Rmem)(l2)) 
+   bindings 	 
+ dummy0 :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ l1 :   'a list
+ l2 :   'a list
+ v_1 :   'a list
+  in 	 
+ l2 = v_1 
+   (Rhd)(l1) = {()} 
+   (Rmem)(l1) = {()} 
+   (Rob)(l1) = {()} 
+   (Roa)(l1) = {()} 
+   (Robs)(l1) = {()} 
+   (Roas)(l1) = {()} 
+   (Roas)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rhd)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+ => (Robs)(v_1) = ((Robs)(l1) U ((Robs)(l2) U ((Rmem)(l1) X (Rmem)(l2)))) 
+   bindings 	 
+ dummy0 :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ l1 :   'a list
+ l2 :   'a list
+ v_1 :   'a list
+  in 	 
+ l2 = v_1 
+   (Rhd)(l1) = {()} 
+   (Rmem)(l1) = {()} 
+   (Rob)(l1) = {()} 
+   (Roa)(l1) = {()} 
+   (Robs)(l1) = {()} 
+   (Roas)(l1) = {()} 
+   (Roas)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rhd)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+ => (Rmem)(v_1) = ((Rmem)(l1) U (Rmem)(l2)) 
+Length of vcs 4@Var Env:
+---------
+[concat : .  .  : {l1:  'a list |  true } -> : {l2:  'a list |  true } -> {l:  'a list |  /\  (Robs)(l) = ((Robs)(l1) U ((Robs)(l2) U ((Rmem)(l1) X (Rmem)(l2))))   (Rmem)(l) = ((Rmem)(l1) U (Rmem)(l2)) }
+[] : .  .  {v_0:  'a list |  /\  (Rhd)(v_0) = {()}   /\  (Rmem)(v_0) = {()}   /\  (Rob)(v_0) = {()}   /\  (Roa)(v_0) = {()}   /\  (Robs)(v_0) = {()}   /\  (Roas)(v_0) = {()}   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  /\  (Rhd)(v_1) = {(x)}   /\  (Rmem)(v_1) = ({(x)} U ({()} U (Rmem)(xs)))   /\  (Rob)(v_1) = ({(x)} X (Rmem :'a)(xs))   /\  (Roa)(v_1) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(v_1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(v_1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true }
+[] : .  .  {v_0:  'a list |  /\  (Rmem)(v_0) = {()}   /\  (Rob)(v_0) = {()}   /\  (Roa)(v_0) = {()}   /\  (Robs)(v_0) = {()}   /\  (Roas)(v_0) = {()}   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  /\  (Rmem)(v_1) = ({(x)} U ({()} U (Rmem)(xs)))   /\  (Rob)(v_1) = ({(x)} X (Rmem :'a)(xs))   /\  (Roa)(v_1) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(v_1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(v_1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true }
+[] : .  .  {v_0:  'a list |  /\  (Rob)(v_0) = {()}   /\  (Roa)(v_0) = {()}   /\  (Robs)(v_0) = {()}   /\  (Roas)(v_0) = {()}   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  /\  (Rob)(v_1) = ({(x)} X (Rmem :'a)(xs))   /\  (Roa)(v_1) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(v_1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(v_1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true }
+[] : .  .  {v_0:  'a list |  /\  (Roa)(v_0) = {()}   /\  (Robs)(v_0) = {()}   /\  (Roas)(v_0) = {()}   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  /\  (Roa)(v_1) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(v_1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(v_1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true }
+[] : .  .  {v_0:  'a list |  /\  (Robs)(v_0) = {()}   /\  (Roas)(v_0) = {()}   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  /\  (Robs)(v_1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(v_1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true }
+[] : .  .  {v_0:  'a list |  /\  (Roas)(v_0) = {()}   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  /\  (Roas)(v_1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  true }
+[] : .  .  {v_0:  'a list |  true }
+rev : .  .  : {l3:  'a list |  true } -> {l4:  'a list |  /\  (Robs)(l4) = (Roas)(l3)   (Rmem)(l4) = (Rmem)(l3) }
+rev : .  .  : {l3:<?> |  true } -> {l4:<?> |  /\  (Robs)(l4) = (Roas)(l3)   (Rmem)(l4) = (Rmem)(l3) }
+concat : .  .  : {l1:<?> |  true } -> : {l2:<?> |  true } -> {l:<?> |  /\  (Robs)(l) = ((Robs)(l1) U ((Robs)(l2) U ((Rmem)(l1) X (Rmem)(l2))))   (Rmem)(l) = ((Rmem)(l1) U (Rmem)(l2)) }
+]
+ Case Tstr_value 
+ doIt_value_bindings:: fexp 
+Function rev being typechecked 
+.  .  : {l3:  'a list |  true } -> {l4:  'a list |  /\  (Robs)(l4) = (Roas)(l3)   (Rmem)(l4) = (Rmem)(l3) }rev will be checked
+$$ArgTy {l3:  'a list |  true }$$resRefTy {l4:  'a list |  /\  (Robs)(l4) = (Roas)(l3)   (Rmem)(l4) = (Rmem)(l3) } 
+ Arg :: l3
+Base RefinementType $$resRefTy' {l4:  'a list |  /\  (Robs)(l4) = (Roas)(l3)   (Rmem)(l4) = (Rmem)(l3) }Typechecking the body of the function in extendedVE 
+Expression :: Not a Texp_function 
+
+######### synthesis:match  
+
+@Var Env:
+---------
+[dummy0 : .  .  {v_0:  'a list |  /\  (Rhd)(l3) = {()}   /\  (Rmem)(l3) = {()}   /\  (Rob)(l3) = {()}   /\  (Roa)(l3) = {()}   /\  (Robs)(l3) = {()}   /\  (Roas)(l3) = {()}   true }
+_mark_4101 : .  .  {v_20:<?> |  true }
+xs : .  .  {v_19:  'a list |  true }
+x : .  .  {v_18:'a |  true }
+l3 : .  .  {l3:  'a list |  true }
+rev : .  .  : {l3:  'a list |  true } -> {l4:  'a list |  /\  (Robs)(l4) = (Roas)(l3)   (Rmem)(l4) = (Rmem)(l3) }
+concat : .  .  : {l1:  'a list |  true } -> : {l2:  'a list |  true } -> {l:  'a list |  /\  (Robs)(l) = ((Robs)(l1) U ((Robs)(l2) U ((Rmem)(l1) X (Rmem)(l2))))   (Rmem)(l) = ((Rmem)(l1) U (Rmem)(l2)) }
+[] : .  .  {v_0:  'a list |  /\  (Rhd)(v_0) = {()}   /\  (Rmem)(v_0) = {()}   /\  (Rob)(v_0) = {()}   /\  (Roa)(v_0) = {()}   /\  (Robs)(v_0) = {()}   /\  (Roas)(v_0) = {()}   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  /\  (Rhd)(v_1) = {(x)}   /\  (Rmem)(v_1) = ({(x)} U ({()} U (Rmem)(xs)))   /\  (Rob)(v_1) = ({(x)} X (Rmem :'a)(xs))   /\  (Roa)(v_1) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(v_1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(v_1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true }
+[] : .  .  {v_0:  'a list |  /\  (Rmem)(v_0) = {()}   /\  (Rob)(v_0) = {()}   /\  (Roa)(v_0) = {()}   /\  (Robs)(v_0) = {()}   /\  (Roas)(v_0) = {()}   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  /\  (Rmem)(v_1) = ({(x)} U ({()} U (Rmem)(xs)))   /\  (Rob)(v_1) = ({(x)} X (Rmem :'a)(xs))   /\  (Roa)(v_1) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(v_1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(v_1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true }
+[] : .  .  {v_0:  'a list |  /\  (Rob)(v_0) = {()}   /\  (Roa)(v_0) = {()}   /\  (Robs)(v_0) = {()}   /\  (Roas)(v_0) = {()}   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  /\  (Rob)(v_1) = ({(x)} X (Rmem :'a)(xs))   /\  (Roa)(v_1) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(v_1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(v_1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true }
+[] : .  .  {v_0:  'a list |  /\  (Roa)(v_0) = {()}   /\  (Robs)(v_0) = {()}   /\  (Roas)(v_0) = {()}   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  /\  (Roa)(v_1) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(v_1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(v_1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true }
+[] : .  .  {v_0:  'a list |  /\  (Robs)(v_0) = {()}   /\  (Roas)(v_0) = {()}   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  /\  (Robs)(v_1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(v_1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true }
+[] : .  .  {v_0:  'a list |  /\  (Roas)(v_0) = {()}   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  /\  (Roas)(v_1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  true }
+[] : .  .  {v_0:  'a list |  true }
+rev : .  .  : {l3:<?> |  true } -> {l4:<?> |  /\  (Robs)(l4) = (Roas)(l3)   (Rmem)(l4) = (Rmem)(l3) }
+concat : .  .  : {l1:<?> |  true } -> : {l2:<?> |  true } -> {l:<?> |  /\  (Robs)(l) = ((Robs)(l1) U ((Robs)(l2) U ((Rmem)(l1) X (Rmem)(l2))))   (Rmem)(l) = ((Rmem)(l1) U (Rmem)(l2)) }
+]
+######### synthesis:ident 
+ident l3
+Macth Exp Ty:
+{l3:  'a list |  true }
+@Var Env:
+---------
+[dummy0 : .  .  {v_1:  'a list |  /\  (Rhd)(l3) = {(x)}   /\  (Rmem)(l3) = ({(x)} U ({()} U (Rmem)(xs)))   /\  (Rob)(l3) = ({(x)} X (Rmem :'a)(xs))   /\  (Roa)(l3) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(l3) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(l3) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true }
+_mark_4102 : .  .  {v_21:<?> |  true }
+xs : .  .  {v_19:  'a list |  true }
+x : .  .  {v_18:'a |  true }
+l3 : .  .  {l3:  'a list |  true }
+rev : .  .  : {l3:  'a list |  true } -> {l4:  'a list |  /\  (Robs)(l4) = (Roas)(l3)   (Rmem)(l4) = (Rmem)(l3) }
+concat : .  .  : {l1:  'a list |  true } -> : {l2:  'a list |  true } -> {l:  'a list |  /\  (Robs)(l) = ((Robs)(l1) U ((Robs)(l2) U ((Rmem)(l1) X (Rmem)(l2))))   (Rmem)(l) = ((Rmem)(l1) U (Rmem)(l2)) }
+[] : .  .  {v_0:  'a list |  /\  (Rhd)(v_0) = {()}   /\  (Rmem)(v_0) = {()}   /\  (Rob)(v_0) = {()}   /\  (Roa)(v_0) = {()}   /\  (Robs)(v_0) = {()}   /\  (Roas)(v_0) = {()}   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  /\  (Rhd)(v_1) = {(x)}   /\  (Rmem)(v_1) = ({(x)} U ({()} U (Rmem)(xs)))   /\  (Rob)(v_1) = ({(x)} X (Rmem :'a)(xs))   /\  (Roa)(v_1) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(v_1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(v_1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true }
+[] : .  .  {v_0:  'a list |  /\  (Rmem)(v_0) = {()}   /\  (Rob)(v_0) = {()}   /\  (Roa)(v_0) = {()}   /\  (Robs)(v_0) = {()}   /\  (Roas)(v_0) = {()}   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  /\  (Rmem)(v_1) = ({(x)} U ({()} U (Rmem)(xs)))   /\  (Rob)(v_1) = ({(x)} X (Rmem :'a)(xs))   /\  (Roa)(v_1) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(v_1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(v_1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true }
+[] : .  .  {v_0:  'a list |  /\  (Rob)(v_0) = {()}   /\  (Roa)(v_0) = {()}   /\  (Robs)(v_0) = {()}   /\  (Roas)(v_0) = {()}   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  /\  (Rob)(v_1) = ({(x)} X (Rmem :'a)(xs))   /\  (Roa)(v_1) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(v_1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(v_1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true }
+[] : .  .  {v_0:  'a list |  /\  (Roa)(v_0) = {()}   /\  (Robs)(v_0) = {()}   /\  (Roas)(v_0) = {()}   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  /\  (Roa)(v_1) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(v_1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(v_1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true }
+[] : .  .  {v_0:  'a list |  /\  (Robs)(v_0) = {()}   /\  (Roas)(v_0) = {()}   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  /\  (Robs)(v_1) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(v_1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true }
+[] : .  .  {v_0:  'a list |  /\  (Roas)(v_0) = {()}   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  /\  (Roas)(v_1) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true }
+:: : .  .  : : {x:'a |  true } : {xs:  'a list |  true } -> {v_1:  'a list |  true }
+[] : .  .  {v_0:  'a list |  true }
+rev : .  .  : {l3:<?> |  true } -> {l4:<?> |  /\  (Robs)(l4) = (Roas)(l3)   (Rmem)(l4) = (Rmem)(l3) }
+concat : .  .  : {l1:<?> |  true } -> : {l2:<?> |  true } -> {l:<?> |  /\  (Robs)(l) = ((Robs)(l1) U ((Robs)(l2) U ((Rmem)(l1) X (Rmem)(l2))))   (Rmem)(l) = ((Rmem)(l1) U (Rmem)(l2)) }
+]
+######### synthesis:let 
+
+######### synthesis:apply 
+
+######### synthesis:ident 
+ident rev
+######### synthesis:ident 
+ident xs
+Base RefinementType 
+######### synthesis:let 
+
+######### synthesis:constructor 
+T-con apply Constructor Name []#######T-const-apply Other case 
+
+######### synthesis:ident 
+ident temp2
+Macth Exp Ty:
+{v_25:  'a list |  Exists Key =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =l3 Value =   'a listKey =x Value = 'aKey =xs Value =   'a listKey =_mark_4102 Value = <?>Key =dummy0 Value =   'a listKey =temp1 Value =   'a list  such that  /\  Exists Key =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =l3 Value =   'a listKey =x Value = 'aKey =xs Value =   'a listKey =_mark_4102 Value = <?>Key =dummy0 Value =   'a listKey =temp1 Value =   'a listKey =temp2 Value =   'a list  such that  /\  true   /\  true   /\  /\  (Roas)([]) = {()}   true   /\  /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Rob)([]) = {()}   /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Rmem)([]) = {()}   /\  (Rob)([]) = {()}   /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Rhd)([]) = {()}   /\  (Rmem)([]) = {()}   /\  (Rob)([]) = {()}   /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  true   /\  true   /\  true   /\  true   /\  /\  (Rhd)(l3) = {(x)}   /\  (Rmem)(l3) = ({(x)} U ({()} U (Rmem)(xs)))   /\  (Rob)(l3) = ({(x)} X (Rmem :'a)(xs))   /\  (Roa)(l3) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(l3) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(l3) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true   /\  /\  (Robs)(temp1) = (Roas)(xs)   (Rmem)(temp1) = (Rmem)(xs)   /\  true   true   /\  true   /\  /\  (Roas)([]) = {()}   true   /\  /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Rob)([]) = {()}   /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Rmem)([]) = {()}   /\  (Rob)([]) = {()}   /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Rhd)([]) = {()}   /\  (Rmem)([]) = {()}   /\  (Rob)([]) = {()}   /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  true   /\  true   /\  true   /\  true   /\  /\  (Rhd)(l3) = {(x)}   /\  (Rmem)(l3) = ({(x)} U ({()} U (Rmem)(xs)))   /\  (Rob)(l3) = ({(x)} X (Rmem :'a)(xs))   /\  (Roa)(l3) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(l3) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(l3) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true   /\  /\  (Robs)(temp1) = (Roas)(xs)   (Rmem)(temp1) = (Rmem)(xs)   true }
+*******Performing Unification with Disjunction *********
+
+*******Performing Base : Base with Disjunction *********
+
+ty of fst  {l3:  'a list |  Exists Key =dummy0 Value =   'a list  such that  /\  true   /\  /\  (Rhd)(l3) = {()}   /\  (Rmem)(l3) = {()}   /\  (Rob)(l3) = {()}   /\  (Roa)(l3) = {()}   /\  (Robs)(l3) = {()}   /\  (Roas)(l3) = {()}   true   true }
+ty of snd{v_25:  'a list |  Exists Key =dummy0 Value =   'a list  such that  /\  Exists Key =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =l3 Value =   'a listKey =x Value = 'aKey =xs Value =   'a listKey =_mark_4102 Value = <?>Key =dummy0 Value =   'a listKey =temp1 Value =   'a list  such that  /\  Exists Key =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =l3 Value =   'a listKey =x Value = 'aKey =xs Value =   'a listKey =_mark_4102 Value = <?>Key =dummy0 Value =   'a listKey =temp1 Value =   'a listKey =temp2 Value =   'a list  such that  /\  true   /\  true   /\  /\  (Roas)([]) = {()}   true   /\  /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Rob)([]) = {()}   /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Rmem)([]) = {()}   /\  (Rob)([]) = {()}   /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Rhd)([]) = {()}   /\  (Rmem)([]) = {()}   /\  (Rob)([]) = {()}   /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  true   /\  true   /\  true   /\  true   /\  /\  (Rhd)(l3) = {(x)}   /\  (Rmem)(l3) = ({(x)} U ({()} U (Rmem)(xs)))   /\  (Rob)(l3) = ({(x)} X (Rmem :'a)(xs))   /\  (Roa)(l3) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(l3) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(l3) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true   /\  /\  (Robs)(temp1) = (Roas)(xs)   (Rmem)(temp1) = (Rmem)(xs)   /\  true   true   /\  true   /\  /\  (Roas)([]) = {()}   true   /\  /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Rob)([]) = {()}   /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Rmem)([]) = {()}   /\  (Rob)([]) = {()}   /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Rhd)([]) = {()}   /\  (Rmem)([]) = {()}   /\  (Rob)([]) = {()}   /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  true   /\  true   /\  true   /\  true   /\  /\  (Rhd)(l3) = {(x)}   /\  (Rmem)(l3) = ({(x)} U ({()} U (Rmem)(xs)))   /\  (Rob)(l3) = ({(x)} X (Rmem :'a)(xs))   /\  (Roa)(l3) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(l3) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(l3) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true   /\  /\  (Robs)(temp1) = (Roas)(xs)   (Rmem)(temp1) = (Rmem)(xs)   true   /\  /\  (Rhd)(l3) = {(x)}   /\  (Rmem)(l3) = ({(x)} U ({()} U (Rmem)(xs)))   /\  (Rob)(l3) = ({(x)} X (Rmem :'a)(xs))   /\  (Roa)(l3) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(l3) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(l3) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true   true }@Unified Type:
+
+ {v_25:  'a list |   o  /\  l3 = v_25   Exists Key =dummy0 Value =   'a list  such that  /\  Exists Key =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =l3 Value =   'a listKey =x Value = 'aKey =xs Value =   'a listKey =_mark_4102 Value = <?>Key =dummy0 Value =   'a listKey =temp1 Value =   'a list  such that  /\  Exists Key =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =l3 Value =   'a listKey =x Value = 'aKey =xs Value =   'a listKey =_mark_4102 Value = <?>Key =dummy0 Value =   'a listKey =temp1 Value =   'a listKey =temp2 Value =   'a list  such that  /\  true   /\  true   /\  /\  (Roas)([]) = {()}   true   /\  /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Rob)([]) = {()}   /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Rmem)([]) = {()}   /\  (Rob)([]) = {()}   /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Rhd)([]) = {()}   /\  (Rmem)([]) = {()}   /\  (Rob)([]) = {()}   /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  true   /\  true   /\  true   /\  true   /\  /\  (Rhd)(l3) = {(x)}   /\  (Rmem)(l3) = ({(x)} U ({()} U (Rmem)(xs)))   /\  (Rob)(l3) = ({(x)} X (Rmem :'a)(xs))   /\  (Roa)(l3) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(l3) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(l3) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true   /\  /\  (Robs)(temp1) = (Roas)(xs)   (Rmem)(temp1) = (Rmem)(xs)   /\  true   true   /\  true   /\  /\  (Roas)([]) = {()}   true   /\  /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Rob)([]) = {()}   /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Rmem)([]) = {()}   /\  (Rob)([]) = {()}   /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Rhd)([]) = {()}   /\  (Rmem)([]) = {()}   /\  (Rob)([]) = {()}   /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  true   /\  true   /\  true   /\  true   /\  /\  (Rhd)(l3) = {(x)}   /\  (Rmem)(l3) = ({(x)} U ({()} U (Rmem)(xs)))   /\  (Rob)(l3) = ({(x)} X (Rmem :'a)(xs))   /\  (Roa)(l3) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(l3) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(l3) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true   /\  /\  (Robs)(temp1) = (Roas)(xs)   (Rmem)(temp1) = (Rmem)(xs)   true   /\  /\  (Rhd)(l3) = {(x)}   /\  (Rmem)(l3) = ({(x)} U ({()} U (Rmem)(xs)))   /\  (Rob)(l3) = ({(x)} X (Rmem :'a)(xs))   /\  (Roa)(l3) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(l3) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(l3) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true   true   /\  l3 = v_25   Exists Key =dummy0 Value =   'a list  such that  /\  true   /\  /\  (Rhd)(v_25) = {()}   /\  (Rmem)(v_25) = {()}   /\  (Rob)(v_25) = {()}   /\  (Roa)(v_25) = {()}   /\  (Robs)(v_25) = {()}   /\  (Roas)(v_25) = {()}   true   true }
+refinement Type for exp ::: {v_25:  'a list |   o  /\  l3 = v_25   Exists Key =dummy0 Value =   'a list  such that  /\  Exists Key =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =l3 Value =   'a listKey =x Value = 'aKey =xs Value =   'a listKey =_mark_4102 Value = <?>Key =dummy0 Value =   'a listKey =temp1 Value =   'a list  such that  /\  Exists Key =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =[] Value =   'a listKey =l3 Value =   'a listKey =x Value = 'aKey =xs Value =   'a listKey =_mark_4102 Value = <?>Key =dummy0 Value =   'a listKey =temp1 Value =   'a listKey =temp2 Value =   'a list  such that  /\  true   /\  true   /\  /\  (Roas)([]) = {()}   true   /\  /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Rob)([]) = {()}   /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Rmem)([]) = {()}   /\  (Rob)([]) = {()}   /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Rhd)([]) = {()}   /\  (Rmem)([]) = {()}   /\  (Rob)([]) = {()}   /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  true   /\  true   /\  true   /\  true   /\  /\  (Rhd)(l3) = {(x)}   /\  (Rmem)(l3) = ({(x)} U ({()} U (Rmem)(xs)))   /\  (Rob)(l3) = ({(x)} X (Rmem :'a)(xs))   /\  (Roa)(l3) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(l3) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(l3) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true   /\  /\  (Robs)(temp1) = (Roas)(xs)   (Rmem)(temp1) = (Rmem)(xs)   /\  true   true   /\  true   /\  /\  (Roas)([]) = {()}   true   /\  /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Rob)([]) = {()}   /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Rmem)([]) = {()}   /\  (Rob)([]) = {()}   /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  /\  (Rhd)([]) = {()}   /\  (Rmem)([]) = {()}   /\  (Rob)([]) = {()}   /\  (Roa)([]) = {()}   /\  (Robs)([]) = {()}   /\  (Roas)([]) = {()}   true   /\  true   /\  true   /\  true   /\  true   /\  /\  (Rhd)(l3) = {(x)}   /\  (Rmem)(l3) = ({(x)} U ({()} U (Rmem)(xs)))   /\  (Rob)(l3) = ({(x)} X (Rmem :'a)(xs))   /\  (Roa)(l3) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(l3) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(l3) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true   /\  /\  (Robs)(temp1) = (Roas)(xs)   (Rmem)(temp1) = (Rmem)(xs)   true   /\  /\  (Rhd)(l3) = {(x)}   /\  (Rmem)(l3) = ({(x)} U ({()} U (Rmem)(xs)))   /\  (Rob)(l3) = ({(x)} X (Rmem :'a)(xs))   /\  (Roa)(l3) = ((Rmem :'a)(xs) X {(x)})   /\  (Robs)(l3) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs)))   /\  (Roas)(l3) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs)))   true   true   /\  l3 = v_25   Exists Key =dummy0 Value =   'a list  such that  /\  true   /\  /\  (Rhd)(v_25) = {()}   /\  (Rmem)(v_25) = {()}   /\  (Rob)(v_25) = {()}   /\  (Roa)(v_25) = {()}   /\  (Robs)(v_25) = {()}   /\  (Roas)(v_25) = {()}   true   true }
+refinement Type for tyexp :::{l4:  'a list |  /\  (Robs)(l4) = (Roas)(l3)   (Rmem)(l4) = (Rmem)(l3) }Γ ⊢ expRefTy <: ty-- new VCS --------------->
+Verification Conditions:
+ bindings 	 
+ temp2 :   'a list
+ temp1 :   'a list
+ dummy0 :   'a list
+ _mark_4102 : <?>
+ xs :   'a list
+ x : 'a
+ l3 :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ temp1 :   'a list
+ dummy0 :   'a list
+ _mark_4102 : <?>
+ xs :   'a list
+ x : 'a
+ l3 :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ dummy0 :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ l3 :   'a list
+ v_25 :   'a list
+  in 	 
+ l3 = v_25 
+   (Roas)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rhd)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rhd)(l3) = {(x)} 
+   (Rmem)(l3) = ({(x)} U ({()} U (Rmem)(xs))) 
+   (Rob)(l3) = ({(x)} X (Rmem :'a)(xs)) 
+   (Roa)(l3) = ((Rmem :'a)(xs) X {(x)}) 
+   (Robs)(l3) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs))) 
+   (Roas)(l3) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs))) 
+   (Robs)(temp1) = (Roas)(xs) 
+   (Rmem)(temp1) = (Rmem)(xs) 
+   (Roas)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rhd)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rhd)(l3) = {(x)} 
+   (Rmem)(l3) = ({(x)} U ({()} U (Rmem)(xs))) 
+   (Rob)(l3) = ({(x)} X (Rmem :'a)(xs)) 
+   (Roa)(l3) = ((Rmem :'a)(xs) X {(x)}) 
+   (Robs)(l3) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs))) 
+   (Roas)(l3) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs))) 
+   (Robs)(temp1) = (Roas)(xs) 
+   (Rmem)(temp1) = (Rmem)(xs) 
+   (Rhd)(l3) = {(x)} 
+   (Rmem)(l3) = ({(x)} U ({()} U (Rmem)(xs))) 
+   (Rob)(l3) = ({(x)} X (Rmem :'a)(xs)) 
+   (Roa)(l3) = ((Rmem :'a)(xs) X {(x)}) 
+   (Robs)(l3) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs))) 
+   (Roas)(l3) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs))) 
+   (Roas)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rhd)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+ => (Robs)(v_25) = (Roas)(l3) 
+   bindings 	 
+ temp2 :   'a list
+ temp1 :   'a list
+ dummy0 :   'a list
+ _mark_4102 : <?>
+ xs :   'a list
+ x : 'a
+ l3 :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ temp1 :   'a list
+ dummy0 :   'a list
+ _mark_4102 : <?>
+ xs :   'a list
+ x : 'a
+ l3 :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ dummy0 :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ l3 :   'a list
+ v_25 :   'a list
+  in 	 
+ l3 = v_25 
+   (Roas)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rhd)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rhd)(l3) = {(x)} 
+   (Rmem)(l3) = ({(x)} U ({()} U (Rmem)(xs))) 
+   (Rob)(l3) = ({(x)} X (Rmem :'a)(xs)) 
+   (Roa)(l3) = ((Rmem :'a)(xs) X {(x)}) 
+   (Robs)(l3) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs))) 
+   (Roas)(l3) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs))) 
+   (Robs)(temp1) = (Roas)(xs) 
+   (Rmem)(temp1) = (Rmem)(xs) 
+   (Roas)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rhd)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rhd)(l3) = {(x)} 
+   (Rmem)(l3) = ({(x)} U ({()} U (Rmem)(xs))) 
+   (Rob)(l3) = ({(x)} X (Rmem :'a)(xs)) 
+   (Roa)(l3) = ((Rmem :'a)(xs) X {(x)}) 
+   (Robs)(l3) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs))) 
+   (Roas)(l3) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs))) 
+   (Robs)(temp1) = (Roas)(xs) 
+   (Rmem)(temp1) = (Rmem)(xs) 
+   (Rhd)(l3) = {(x)} 
+   (Rmem)(l3) = ({(x)} U ({()} U (Rmem)(xs))) 
+   (Rob)(l3) = ({(x)} X (Rmem :'a)(xs)) 
+   (Roa)(l3) = ((Rmem :'a)(xs) X {(x)}) 
+   (Robs)(l3) = (({(x)} X (Rmem :'a)(xs)) U ({()} U (Robs)(xs))) 
+   (Roas)(l3) = (((Rmem :'a)(xs) X {(x)}) U ({()} U (Roas)(xs))) 
+   (Roas)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rhd)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+ => (Rmem)(v_25) = (Rmem)(l3) 
+   bindings 	 
+ dummy0 :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ l3 :   'a list
+ v_25 :   'a list
+  in 	 
+ l3 = v_25 
+   (Rhd)(v_25) = {()} 
+   (Rmem)(v_25) = {()} 
+   (Rob)(v_25) = {()} 
+   (Roa)(v_25) = {()} 
+   (Robs)(v_25) = {()} 
+   (Roas)(v_25) = {()} 
+   (Roas)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rhd)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+ => (Robs)(v_25) = (Roas)(l3) 
+   bindings 	 
+ dummy0 :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ l3 :   'a list
+ v_25 :   'a list
+  in 	 
+ l3 = v_25 
+   (Rhd)(v_25) = {()} 
+   (Rmem)(v_25) = {()} 
+   (Rob)(v_25) = {()} 
+   (Roa)(v_25) = {()} 
+   (Robs)(v_25) = {()} 
+   (Roas)(v_25) = {()} 
+   (Roas)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rhd)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+ => (Rmem)(v_25) = (Rmem)(l3) 
+Length of vcs 4: @ss: :.   'a list :-> {TupleSort 'a'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a'a}_______00@PTSInst1: @ss: :.   'a list :-> {TuWARNING: unknown parameter 'smt.macro_finder'
+Legal parameters are:
+  auto_config (bool) (default: true)
+  debug_ref_count (bool) (default: false)
+  dot_proof_file (string) (default: proof.dot)
+  dump_models (bool) (default: false)
+  model (bool) (default: true)
+  model_validate (bool) (default: false)
+  proof (bool) (default: false)
+  rlimit (unsigned int) (default: 0)
+  smtlib2_compliant (bool) (default: false)
+  timeout (unsigned int) (default: 4294967295)
+  trace (bool) (default: false)
+  trace_file_name (string) (default: z3.log)
+  type_check (bool) (default: true)
+  unsat_core (bool) (default: false)
+  well_sorted_check (bool) (default: false)
+
+WARNING: unknown parameter 'smt.macro_finder'
+Legal parameters are:
+  auto_config (bool) (default: true)
+  debug_ref_count (bool) (default: false)
+  dot_proof_file (string) (default: proof.dot)
+  dump_models (bool) (default: false)
+  model (bool) (default: true)
+  model_validate (bool) (default: false)
+  proof (bool) (default: false)
+  rlimit (unsigned int) (default: 0)
+  smtlib2_compliant (bool) (default: false)
+  timeout (unsigned int) (default: 4294967295)
+  trace (bool) (default: false)
+  trace_file_name (string) (default: z3.log)
+  type_check (bool) (default: true)
+  unsat_core (bool) (default: false)
+  well_sorted_check (bool) (default: false)
+
+WARNING: unknown parameter 'smt.macro_finder'
+Legal parameters are:
+  auto_config (bool) (default: true)
+  debug_ref_count (bool) (default: false)
+  dot_proof_file (string) (default: proof.dot)
+  dump_models (bool) (default: false)
+  model (bool) (default: true)
+  model_validate (bool) (default: false)
+  proof (bool) (default: false)
+  rlimit (unsigned int) (default: 0)
+  smtlib2_compliant (bool) (default: false)
+  timeout (unsigned int) (default: 4294967295)
+  trace (bool) (default: false)
+  trace_file_name (string) (default: z3.log)
+  type_check (bool) (default: true)
+  unsat_core (bool) (default: false)
+  well_sorted_check (bool) (default: false)
+
+WARNING: unknown parameter 'smt.macro_finder'
+Legal parameters are:
+  auto_config (bool) (default: true)
+  debug_ref_count (bool) (default: false)
+  dot_proof_file (string) (default: proof.dot)
+  dump_models (bool) (default: false)
+  model (bool) (default: true)
+  model_validate (bool) (default: false)
+  proof (bool) (default: false)
+  rlimit (unsigned int) (default: 0)
+  smtlib2_compliant (bool) (default: false)
+  timeout (unsigned int) (default: 4294967295)
+  trace (bool) (default: false)
+  trace_file_name (string) (default: z3.log)
+  type_check (bool) (default: true)
+  unsat_core (bool) (default: false)
+  well_sorted_check (bool) (default: false)
+
+WARNING: unknown parameter 'smt.macro_finder'
+Legal parameters are:
+  auto_config (bool) (default: true)
+  debug_ref_count (bool) (default: false)
+  dot_proof_file (string) (default: proof.dot)
+  dump_models (bool) (default: false)
+  model (bool) (default: true)
+  model_validate (bool) (default: false)
+  proof (bool) (default: false)
+  rlimit (unsigned int) (default: 0)
+  smtlib2_compliant (bool) (default: false)
+  timeout (unsigned int) (default: 4294967295)
+  trace (bool) (default: false)
+  trace_file_name (string) (default: z3.log)
+  type_check (bool) (default: true)
+  unsat_core (bool) (default: false)
+  well_sorted_check (bool) (default: false)
+
+WARNING: unknown parameter 'smt.macro_finder'
+Legal parameters are:
+  auto_config (bool) (default: true)
+  debug_ref_count (bool) (default: false)
+  dot_proof_file (string) (default: proof.dot)
+  dump_models (bool) (default: false)
+  model (bool) (default: true)
+  model_validate (bool) (default: false)
+  proof (bool) (default: false)
+  rlimit (unsigned int) (default: 0)
+  smtlib2_compliant (bool) (default: false)
+  timeout (unsigned int) (default: 4294967295)
+  trace (bool) (default: false)
+  trace_file_name (string) (default: z3.log)
+  type_check (bool) (default: true)
+  unsat_core (bool) (default: false)
+  well_sorted_check (bool) (default: false)
+
+WARNING: unknown parameter 'smt.macro_finder'
+Legal parameters are:
+  auto_config (bool) (default: true)
+  debug_ref_count (bool) (default: false)
+  dot_proof_file (string) (default: proof.dot)
+  dump_models (bool) (default: false)
+  model (bool) (default: true)
+  model_validate (bool) (default: false)
+  proof (bool) (default: false)
+  rlimit (unsigned int) (default: 0)
+  smtlib2_compliant (bool) (default: false)
+  timeout (unsigned int) (default: 4294967295)
+  trace (bool) (default: false)
+  trace_file_name (string) (default: z3.log)
+  type_check (bool) (default: true)
+  unsat_core (bool) (default: false)
+  well_sorted_check (bool) (default: false)
+
+WARNING: unknown parameter 'smt.macro_finder'
+Legal parameters are:
+  auto_config (bool) (default: true)
+  debug_ref_count (bool) (default: false)
+  dot_proof_file (string) (default: proof.dot)
+  dump_models (bool) (default: false)
+  model (bool) (default: true)
+  model_validate (bool) (default: false)
+  proof (bool) (default: false)
+  rlimit (unsigned int) (default: 0)
+  smtlib2_compliant (bool) (default: false)
+  timeout (unsigned int) (default: 4294967295)
+  trace (bool) (default: false)
+  trace_file_name (string) (default: z3.log)
+  type_check (bool) (default: true)
+  unsat_core (bool) (default: false)
+  well_sorted_check (bool) (default: false)
+
+pleSort 'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a}_______10@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a}_______10@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a}_______10@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a}_______00@PTSInst1: @ss: :.   'a list :-> {TupleSort 'a}_______10@PTSInst1----------
+Elaborated VCS8
+Verification Conditions:
+ bindings 	 
+ Roas : ({'a'a  'a list,,,}) -> (bool)
+ Robs : ({'a'a  'a list,,,}) -> (bool)
+ Roa : ({'a'a  'a list,,,}) -> (bool)
+ Rob : ({'a'a  'a list,,,}) -> (bool)
+ Rmem : ({'a  'a list,,}) -> (bool)
+ Rhd : ({'a  'a list,,}) -> (bool)
+ Rmem : ({'a  'a list,,}) -> (bool)
+ temp2 :   'a list
+ temp1 :   'a list
+ dummy0 :   'a list
+ _mark_4102 : <?>
+ xs :   'a list
+ x : 'a
+ l3 :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ temp1 :   'a list
+ dummy0 :   'a list
+ _mark_4102 : <?>
+ xs :   'a list
+ x : 'a
+ l3 :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ dummy0 :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ l3 :   'a list
+ v_25 :   'a list
+  in 	 
+ l3 = v_25 
+   (Roas)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rhd)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rhd)(l3) = {(x)} 
+   (Rmem)(l3) = ({(x)} U ({()} U (Rmem)(xs))) 
+   (Rob)(l3) = ({(x)} X (Rmem)(xs)) 
+   (Roa)(l3) = ((Rmem)(xs) X {(x)}) 
+   (Robs)(l3) = (({(x)} X (Rmem)(xs)) U ({()} U (Robs)(xs))) 
+   (Roas)(l3) = (((Rmem)(xs) X {(x)}) U ({()} U (Roas)(xs))) 
+   (Robs)(temp1) = (Roas)(xs) 
+   (Rmem)(temp1) = (Rmem)(xs) 
+   (Roas)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rhd)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rhd)(l3) = {(x)} 
+   (Rmem)(l3) = ({(x)} U ({()} U (Rmem)(xs))) 
+   (Rob)(l3) = ({(x)} X (Rmem)(xs)) 
+   (Roa)(l3) = ((Rmem)(xs) X {(x)}) 
+   (Robs)(l3) = (({(x)} X (Rmem)(xs)) U ({()} U (Robs)(xs))) 
+   (Roas)(l3) = (((Rmem)(xs) X {(x)}) U ({()} U (Roas)(xs))) 
+   (Robs)(temp1) = (Roas)(xs) 
+   (Rmem)(temp1) = (Rmem)(xs) 
+   (Rhd)(l3) = {(x)} 
+   (Rmem)(l3) = ({(x)} U ({()} U (Rmem)(xs))) 
+   (Rob)(l3) = ({(x)} X (Rmem)(xs)) 
+   (Roa)(l3) = ((Rmem)(xs) X {(x)}) 
+   (Robs)(l3) = (({(x)} X (Rmem)(xs)) U ({()} U (Robs)(xs))) 
+   (Roas)(l3) = (((Rmem)(xs) X {(x)}) U ({()} U (Roas)(xs))) 
+   (Roas)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rhd)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+ => (Robs)(v_25) = (Roas)(l3) 
+   bindings 	 
+ Roas : ({'a'a  'a list,,,}) -> (bool)
+ Robs : ({'a'a  'a list,,,}) -> (bool)
+ Roa : ({'a'a  'a list,,,}) -> (bool)
+ Rob : ({'a'a  'a list,,,}) -> (bool)
+ Rmem : ({'a  'a list,,}) -> (bool)
+ Rhd : ({'a  'a list,,}) -> (bool)
+ Rmem : ({'a  'a list,,}) -> (bool)
+ temp2 :   'a list
+ temp1 :   'a list
+ dummy0 :   'a list
+ _mark_4102 : <?>
+ xs :   'a list
+ x : 'a
+ l3 :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ temp1 :   'a list
+ dummy0 :   'a list
+ _mark_4102 : <?>
+ xs :   'a list
+ x : 'a
+ l3 :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ dummy0 :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ l3 :   'a list
+ v_25 :   'a list
+  in 	 
+ l3 = v_25 
+   (Roas)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rhd)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rhd)(l3) = {(x)} 
+   (Rmem)(l3) = ({(x)} U ({()} U (Rmem)(xs))) 
+   (Rob)(l3) = ({(x)} X (Rmem)(xs)) 
+   (Roa)(l3) = ((Rmem)(xs) X {(x)}) 
+   (Robs)(l3) = (({(x)} X (Rmem)(xs)) U ({()} U (Robs)(xs))) 
+   (Roas)(l3) = (((Rmem)(xs) X {(x)}) U ({()} U (Roas)(xs))) 
+   (Robs)(temp1) = (Roas)(xs) 
+   (Rmem)(temp1) = (Rmem)(xs) 
+   (Roas)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rhd)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rhd)(l3) = {(x)} 
+   (Rmem)(l3) = ({(x)} U ({()} U (Rmem)(xs))) 
+   (Rob)(l3) = ({(x)} X (Rmem)(xs)) 
+   (Roa)(l3) = ((Rmem)(xs) X {(x)}) 
+   (Robs)(l3) = (({(x)} X (Rmem)(xs)) U ({()} U (Robs)(xs))) 
+   (Roas)(l3) = (((Rmem)(xs) X {(x)}) U ({()} U (Roas)(xs))) 
+   (Robs)(temp1) = (Roas)(xs) 
+   (Rmem)(temp1) = (Rmem)(xs) 
+   (Rhd)(l3) = {(x)} 
+   (Rmem)(l3) = ({(x)} U ({()} U (Rmem)(xs))) 
+   (Rob)(l3) = ({(x)} X (Rmem)(xs)) 
+   (Roa)(l3) = ((Rmem)(xs) X {(x)}) 
+   (Robs)(l3) = (({(x)} X (Rmem)(xs)) U ({()} U (Robs)(xs))) 
+   (Roas)(l3) = (((Rmem)(xs) X {(x)}) U ({()} U (Roas)(xs))) 
+   (Roas)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rhd)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+ => (Rmem)(v_25) = (Rmem)(l3) 
+   bindings 	 
+ Roas : ({'a'a  'a list,,,}) -> (bool)
+ Robs : ({'a'a  'a list,,,}) -> (bool)
+ Roa : ({'a'a  'a list,,,}) -> (bool)
+ Rob : ({'a'a  'a list,,,}) -> (bool)
+ Rmem : ({'a  'a list,,}) -> (bool)
+ Rhd : ({'a  'a list,,}) -> (bool)
+ dummy0 :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ l3 :   'a list
+ v_25 :   'a list
+  in 	 
+ l3 = v_25 
+   (Rhd)(v_25) = {()} 
+   (Rmem)(v_25) = {()} 
+   (Rob)(v_25) = {()} 
+   (Roa)(v_25) = {()} 
+   (Robs)(v_25) = {()} 
+   (Roas)(v_25) = {()} 
+   (Roas)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rhd)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+ => (Robs)(v_25) = (Roas)(l3) 
+   bindings 	 
+ Roas : ({'a'a  'a list,,,}) -> (bool)
+ Robs : ({'a'a  'a list,,,}) -> (bool)
+ Roa : ({'a'a  'a list,,,}) -> (bool)
+ Rob : ({'a'a  'a list,,,}) -> (bool)
+ Rmem : ({'a  'a list,,}) -> (bool)
+ Rhd : ({'a  'a list,,}) -> (bool)
+ dummy0 :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ l3 :   'a list
+ v_25 :   'a list
+  in 	 
+ l3 = v_25 
+   (Rhd)(v_25) = {()} 
+   (Rmem)(v_25) = {()} 
+   (Rob)(v_25) = {()} 
+   (Roa)(v_25) = {()} 
+   (Robs)(v_25) = {()} 
+   (Roas)(v_25) = {()} 
+   (Roas)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rhd)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+ => (Rmem)(v_25) = (Rmem)(l3) 
+   bindings 	 
+ Roas : ({'a'a  'a list,,,}) -> (bool)
+ Robs : ({'a'a  'a list,,,}) -> (bool)
+ Roa : ({'a'a  'a list,,,}) -> (bool)
+ Rob : ({'a'a  'a list,,,}) -> (bool)
+ Rmem : ({'a  'a list,,}) -> (bool)
+ Rhd : ({'a  'a list,,}) -> (bool)
+ Rmem : ({'a  'a list,,}) -> (bool)
+ temp :   'a list
+ dummy0 :   'a list
+ _mark_4098 : <?>
+ xs :   'a list
+ x : 'a
+ l2 :   'a list
+ l1 :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ dummy0 :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ l1 :   'a list
+ l2 :   'a list
+ v_1 :   'a list
+  in 	 
+ l2 = v_1 
+   (Rhd)(v_1) = {(x)} 
+   (Rmem)(v_1) = ({(x)} U ({()} U (Rmem)(temp))) 
+   (Rob)(v_1) = ({(x)} X (Rmem)(temp)) 
+   (Roa)(v_1) = ((Rmem)(temp) X {(x)}) 
+   (Robs)(v_1) = (({(x)} X (Rmem)(temp)) U ({()} U (Robs)(temp))) 
+   (Roas)(v_1) = (((Rmem)(temp) X {(x)}) U ({()} U (Roas)(temp))) 
+   (Roas)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rhd)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rhd)(l1) = {(x)} 
+   (Rmem)(l1) = ({(x)} U ({()} U (Rmem)(xs))) 
+   (Rob)(l1) = ({(x)} X (Rmem)(xs)) 
+   (Roa)(l1) = ((Rmem)(xs) X {(x)}) 
+   (Robs)(l1) = (({(x)} X (Rmem)(xs)) U ({()} U (Robs)(xs))) 
+   (Roas)(l1) = (((Rmem)(xs) X {(x)}) U ({()} U (Roas)(xs))) 
+   (Robs)(temp) = ((Robs)(xs) U ((Robs)(xs) U ((Rmem)(xs) X (Rmem)(xs)))) 
+   (Rmem)(temp) = ((Rmem)(xs) U (Rmem)(xs)) 
+   (Rhd)(l1) = {(x)} 
+   (Rmem)(l1) = ({(x)} U ({()} U (Rmem)(xs))) 
+   (Rob)(l1) = ({(x)} X (Rmem)(xs)) 
+   (Roa)(l1) = ((Rmem)(xs) X {(x)}) 
+   (Robs)(l1) = (({(x)} X (Rmem)(xs)) U ({()} U (Robs)(xs))) 
+   (Roas)(l1) = (((Rmem)(xs) X {(x)}) U ({()} U (Roas)(xs))) 
+   (Roas)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rhd)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+ => (Robs)(v_1) = ((Robs)(l1) U ((Robs)(l2) U ((Rmem)(l1) X (Rmem)(l2)))) 
+   bindings 	 
+ Roas : ({'a'a  'a list,,,}) -> (bool)
+ Robs : ({'a'a  'a list,,,}) -> (bool)
+ Roa : ({'a'a  'a list,,,}) -> (bool)
+ Rob : ({'a'a  'a list,,,}) -> (bool)
+ Rmem : ({'a  'a list,,}) -> (bool)
+ Rhd : ({'a  'a list,,}) -> (bool)
+ Rmem : ({'a  'a list,,}) -> (bool)
+ temp :   'a list
+ dummy0 :   'a list
+ _mark_4098 : <?>
+ xs :   'a list
+ x : 'a
+ l2 :   'a list
+ l1 :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ dummy0 :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ l1 :   'a list
+ l2 :   'a list
+ v_1 :   'a list
+  in 	 
+ l2 = v_1 
+   (Rhd)(v_1) = {(x)} 
+   (Rmem)(v_1) = ({(x)} U ({()} U (Rmem)(temp))) 
+   (Rob)(v_1) = ({(x)} X (Rmem)(temp)) 
+   (Roa)(v_1) = ((Rmem)(temp) X {(x)}) 
+   (Robs)(v_1) = (({(x)} X (Rmem)(temp)) U ({()} U (Robs)(temp))) 
+   (Roas)(v_1) = (((Rmem)(temp) X {(x)}) U ({()} U (Roas)(temp))) 
+   (Roas)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rhd)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rhd)(l1) = {(x)} 
+   (Rmem)(l1) = ({(x)} U ({()} U (Rmem)(xs))) 
+   (Rob)(l1) = ({(x)} X (Rmem)(xs)) 
+   (Roa)(l1) = ((Rmem)(xs) X {(x)}) 
+   (Robs)(l1) = (({(x)} X (Rmem)(xs)) U ({()} U (Robs)(xs))) 
+   (Roas)(l1) = (((Rmem)(xs) X {(x)}) U ({()} U (Roas)(xs))) 
+   (Robs)(temp) = ((Robs)(xs) U ((Robs)(xs) U ((Rmem)(xs) X (Rmem)(xs)))) 
+   (Rmem)(temp) = ((Rmem)(xs) U (Rmem)(xs)) 
+   (Rhd)(l1) = {(x)} 
+   (Rmem)(l1) = ({(x)} U ({()} U (Rmem)(xs))) 
+   (Rob)(l1) = ({(x)} X (Rmem)(xs)) 
+   (Roa)(l1) = ((Rmem)(xs) X {(x)}) 
+   (Robs)(l1) = (({(x)} X (Rmem)(xs)) U ({()} U (Robs)(xs))) 
+   (Roas)(l1) = (((Rmem)(xs) X {(x)}) U ({()} U (Roas)(xs))) 
+   (Roas)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rhd)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+ => (Rmem)(v_1) = ((Rmem)(l1) U (Rmem)(l2)) 
+   bindings 	 
+ Roas : ({'a'a  'a list,,,}) -> (bool)
+ Robs : ({'a'a  'a list,,,}) -> (bool)
+ Roa : ({'a'a  'a list,,,}) -> (bool)
+ Rob : ({'a'a  'a list,,,}) -> (bool)
+ Rmem : ({'a  'a list,,}) -> (bool)
+ Rhd : ({'a  'a list,,}) -> (bool)
+ dummy0 :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ l1 :   'a list
+ l2 :   'a list
+ v_1 :   'a list
+  in 	 
+ l2 = v_1 
+   (Rhd)(l1) = {()} 
+   (Rmem)(l1) = {()} 
+   (Rob)(l1) = {()} 
+   (Roa)(l1) = {()} 
+   (Robs)(l1) = {()} 
+   (Roas)(l1) = {()} 
+   (Roas)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rhd)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+ => (Robs)(v_1) = ((Robs)(l1) U ((Robs)(l2) U ((Rmem)(l1) X (Rmem)(l2)))) 
+   bindings 	 
+ Roas : ({'a'a  'a list,,,}) -> (bool)
+ Robs : ({'a'a  'a list,,,}) -> (bool)
+ Roa : ({'a'a  'a list,,,}) -> (bool)
+ Rob : ({'a'a  'a list,,,}) -> (bool)
+ Rmem : ({'a  'a list,,}) -> (bool)
+ Rhd : ({'a  'a list,,}) -> (bool)
+ dummy0 :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ [] :   'a list
+ l1 :   'a list
+ l2 :   'a list
+ v_1 :   'a list
+  in 	 
+ l2 = v_1 
+   (Rhd)(l1) = {()} 
+   (Rmem)(l1) = {()} 
+   (Rob)(l1) = {()} 
+   (Roa)(l1) = {()} 
+   (Robs)(l1) = {()} 
+   (Roas)(l1) = {()} 
+   (Roas)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+   (Rhd)([]) = {()} 
+   (Rmem)([]) = {()} 
+   (Rob)([]) = {()} 
+   (Roa)([]) = {()} 
+   (Robs)([]) = {()} 
+   (Roas)([]) = {()} 
+ => (Rmem)(v_1) = ((Rmem)(l1) U (Rmem)(l2)) 
+Discharging VCS 1 of 8
+VC# 0 discharged
+Discharging VCS 2 of 8
+VC# 1 discharged
+Discharging VCS 3 of 8
+VC# 2 discharged
+Discharging VCS 4 of 8
+VC# 3 discharged
+Discharging VCS 5 of 8
+VC# 4 discharged
+Discharging VCS 6 of 8
+VC# 5 discharged
+Discharging VCS 7 of 8
+VC# 6 discharged
+Discharging VCS 8 of 8
+VC# 7 discharged
+is correct w.r.t given specification!
+ 	 found Tlink  	  'd list 	 
+ arguments  ::   	 
+ res  ::  'd list

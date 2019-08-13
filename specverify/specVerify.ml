@@ -16,6 +16,15 @@ module VE = VarEnv
 module VC = VerificationCondition
 module PRE = ParamRelEnv 
 
+
+(*comment this out to print  Printf messages*)
+(* module Printf = struct
+  let printf f s = ()
+
+end 
+ *)
+
+
 module Tyvar =
 struct
   open Tyvar
@@ -119,11 +128,11 @@ let rec unifyArgs ((argv ,argTy) as argBind,
 
   match (argTy, arg) with
   | (RefTy.Base (argName,_,_),_) -> 
-      let () = Printf.printf "%s" "Base RefinementType " in 
-      let () = Printf.printf "%s" ("argv  "^Var.toString argName)   in 
+       let () = Printf.printf "%s" "\nBase RefinementType " in 
+     (* let () = Printf.printf "%s" ("argv  "^Var.toString argName)   in 
       let () = Printf.printf "%s" ("Arg  "^Var.toString arg)   in 
       
-      (Vector.new1 (arg,argTy), Vector.new1 (arg,argName))
+      *) (Vector.new1 (arg,argTy), Vector.new1 (arg,argName))
   |(RefTy.Tuple argBinds', _) -> 
 
       (* Unifying v0:{x0:T0,x1:T1} with v1 would return
@@ -147,8 +156,8 @@ let rec unifyArgs ((argv ,argTy) as argBind,
       in
       (binds,substs)
   | (RefTy.Arrow _, _) -> 
-    let () = Printf.printf "%s" "Arrow RefinementType " in 
-    
+    (* let () = Printf.printf "%s" "Arrow RefinementType " in 
+     *)
       (Vector.new1 (arg,argTy), 
        Vector.new1 (arg,argv))
   | _ -> raise (SpecVerifyExc "Invalid argTy-argExpVal pair encountered")
@@ -158,8 +167,8 @@ let rec unifyArgs ((argv ,argTy) as argBind,
 
 (*Takes two refinement types and returns a unified type*)
 let  rec unifyWithDisj refTy1  refTy2  =
-  let () = Printf.printf "\n*******Performing Unification with Disjunction *********\n" in 
-      
+   let () = Printf.printf "\n*******Performing Unification with Disjunction *********\n" in 
+       
   let open RefTy in 
   match (refTy1, refTy2) with
     (Base (_, TyD.Tunknown, _),_) -> refTy2
@@ -167,11 +176,11 @@ let  rec unifyWithDisj refTy1  refTy2  =
   (*Disjunction of Predicates*)
   |(Base (bv1,td1,pred1),Base (bv2,td2,pred2)) ->
 
-     let () = Printf.printf "\n*******Performing Base : Base with Disjunction *********\n" in 
+      let () = Printf.printf "\n*******Performing Base : Base with Disjunction *********\n" in 
 
        let () = Printf.printf "%s" ("\nty of fst  "^RefTy.toString refTy1) in      
       let () = Printf.printf "%s" ("\nty of snd"^RefTy.toString refTy2) in      
-            
+           
    let _ = assert (TyD.sametype td1 td2) in 
       let pred_unify_result_vars = Predicate.Base (BP.varEq (bv1, bv2)) in 
       let pred1 = Predicate.Conj (pred1, pred_unify_result_vars) in 
@@ -181,8 +190,8 @@ let  rec unifyWithDisj refTy1  refTy2  =
       Base (bv2,td2,Predicate.dot (pred1',pred2))
   | (Tuple t1,Tuple t2) -> 
 
-     let () = Printf.printf "\n*******Performing Tuple  : Tuple with Disjunction *********\n" in 
-      let tuFun = fun l -> Tuple l 
+      let () = Printf.printf "\n*******Performing Tuple  : Tuple with Disjunction *********\n" in 
+     let tuFun = fun l -> Tuple l 
       in 
       (tuFun
          (List.map2  
@@ -267,14 +276,9 @@ let rec  type_synth_exp (ve, pre, exp) =
   match exp_desc with 
 
   | Texp_apply (fexp, arg_label_exp_list) ->
-      let () = Printf.printf "%s" "######### synthesis:apply \n" in 
-      let (vcs1,fty) = type_synth_exp (ve, pre, fexp) in 
-      (*Type of the function will be curried form 
-          concat :-> (){l1:<?> | true}
-               -> {l2:<?> | true} -> {l:<?> | Rmem(l) = (Rmem(l1) U Rmem(l2))}
-
-      *)
-
+       let () = Printf.printf "%s" "\n######### synthesis:apply \n" in 
+       let (vcs1,fty) = type_synth_exp (ve, pre, fexp) in 
+      
       (*uncurry the type*)
       let (parametersTyBind, resRefTy) =
         match fty with 
@@ -300,8 +304,8 @@ let rec  type_synth_exp (ve, pre, exp) =
              *  Γ ⊢ argTy <: fargty
              *)
 
-        let () = Printf.printf "%s" "@@@Here " in       
-        let vcs3 = VC.fromTypeCheck (ve,pre,argTy,fargty) in         
+     (*    let () = Printf.printf "%s" "@@@Here " in       
+      *)   let vcs3 = VC.fromTypeCheck (ve,pre,argTy,fargty) in         
 
          
        (*
@@ -344,8 +348,8 @@ let rec  type_synth_exp (ve, pre, exp) =
 
   | Texp_ident (p, l, vd) ->
 
-      let () = Printf.printf "%s" "######### synthesis:ident \n" in
-
+       let () = Printf.printf "%s" "\n######### synthesis:ident \n" in
+ 
       let ident_var = match p with 
           Pident id -> id
         | _ -> raise (SpecVerifyExc "Only Pident handled ")in 
@@ -355,25 +359,16 @@ let rec  type_synth_exp (ve, pre, exp) =
       ([], idRefTy)
   | Texp_constant c -> 
 
-      let () = Printf.printf "%s" "######### synthesis:constant \n" in
-      trivialAns ()
-  (* let constRefTyS = 
-     try 
-      VE.find ve c with 
-        | VarNotFound k -> Format.printf ("Constant "^(Var.toString k)^" not found"); 
-                        trivialAns  
-     in 
-     let consRefTy = RefTyS.specializeRefTy (constRefTyS) in 
-     ([], consRefTy) 
-  *)  
+       let () = Printf.printf "%s" "\n######### synthesis:constant \n" in
+       trivialAns ()
 
 
   | Texp_let (rf, vbl, exp) ->
       (*T-let rule from the paper*)
 
 
-      let () = Printf.printf "%s" "######### synthesis:let \n" in
-
+       let () = Printf.printf "%s" "\n######### synthesis:let \n" in
+ 
       let (marker, markedVE) = markVE ve in 
       let (vcs1 , refTys_bind) = 
         type_synth_value_bindings (ve, pre, vbl) in 
@@ -399,8 +394,8 @@ let rec  type_synth_exp (ve, pre, exp) =
   (*patlist is a list of pattern and expression, i.e. list of cases *)
   (*TODO :: Correct  this using the rules*)
   | Texp_match (testexp, case_list, explist, p) ->
-      let () = Printf.printf "%s" "\n######### synthesis:match  \n" in
-
+       let () = Printf.printf "%s" "\n######### synthesis:match  \n" in
+ 
       (*\Gamma *)
       let (marker, markedVE) = markVE ve in 
       (*Extend the environment*)
@@ -421,19 +416,19 @@ let rec  type_synth_exp (ve, pre, exp) =
         
         let extendedVE = doIt_pat_testexp_bind(markedVE, pre, valbind) in 
         
-        let  _ = Printf.printf "@Var Env:\n" in 
+         let  _ = Printf.printf "\n@Var Env:\n" in 
         let  _ = Printf.printf "---------\n" in 
       
         let  _ = Printf.printf "%s" ((VE.layout extendedVE)) in 
-    
+     
         let (vcs1,ty) = type_synth_exp (extendedVE,pre,expr) in 
         (*add red to vcs*)
         
         let wftype = wellFormedType (marker,extendedVE,ty)
         in
-        let  _ = Printf.printf  "\nMacth Exp Ty:\n" in 
+         let  _ = Printf.printf  "\nMacth Exp Ty:\n" in 
         let  _ = Printf.printf "%s" (RefTy.toString ty) in 
-      
+       
         (List.concat [vcs;vcs1], wftype :: wftypes)
       in  
 
@@ -445,10 +440,10 @@ let rec  type_synth_exp (ve, pre, exp) =
 
       let unifiedType = List.fold_left unifyWithDisj wftype wftypes in 
 
-        let  _ = Printf.printf "@Unified Type:\n" in 
+         let  _ = Printf.printf "@Unified Type:\n" in 
         let  _ = Printf.printf "%s" ("\n "^(RefTy.toString unifiedType)) in 
     
-
+ 
          (*
              * 1. alphaRename boundvars forall wfTypes to a single var
              * 2. assert that tyd is same for all
@@ -461,31 +456,31 @@ let rec  type_synth_exp (ve, pre, exp) =
 
 
   | Texp_tuple ( lsexp) ->
-      let () = Printf.printf "%s" "######### synthesis:tuple \n" in
-      let vcs_type_list = List.map (fun e -> type_synth_exp (ve, pre, e)) lsexp in 
+       let () = Printf.printf "%s" "######### synthesis:tuple \n" in
+       let vcs_type_list = List.map (fun e -> type_synth_exp (ve, pre, e)) lsexp in 
       let (vcs_final, types_final) = List.fold_left (fun (accvcs, types) (vcs, ty) -> (List.concat [accvcs;vcs], ty::types))
           ([],[]) vcs_type_list in 
       (vcs_final, List.hd (List.rev types_final) )                   
   (*TDOD Tconst must return non trivial value *)    
   | Texp_construct (lc, cd, lexp) ->
 
-      let () = Printf.printf "%s" "######### synthesis:constructor \n" in
-      let  (vcs, constructor_resTy ) = type_synth_constructor_apply (ve , pre, cd, lexp)  
+       let () = Printf.printf "%s" "\n######### synthesis:constructor \n" in
+       let  (vcs, constructor_resTy ) = type_synth_constructor_apply (ve , pre, cd, lexp)  
       in 
       
       (vcs, constructor_resTy )
 
   | Texp_function (lab, csl, part) ->
-      let () = Printf.printf "%s" "######### synthesis:function  \n" in
-      type_synth_function (ve, pre, exp_desc)
+   (*    let () = Printf.printf "%s" "######### synthesis:function  \n" in
+    *)   type_synth_function (ve, pre, exp_desc)
 
   | Texp_sequence (exp1 , exp2) -> 
-      let () = Printf.printf "%s" "######### synthesis:seq \n" in
-      type_synth_exp (ve,pre,exp2) 
+       let () = Printf.printf "%s" "\n######### synthesis:seq \n" in
+       type_synth_exp (ve,pre,exp2) 
 
   | _ -> 
-      let () = Printf.printf "%s" "######### synthesis:Other \n" in
-      trivialAns ()   
+       let () = Printf.printf "%s" "\n######### synthesis:Other \n" in
+       trivialAns ()   
 
 and type_synth_constructor_apply (ve, pre, const_desc, list_exp) = 
   (*T-apply rule for the constructor rather than function , Ocaml constrcutors are treated differently than functions*)
@@ -494,7 +489,7 @@ and type_synth_constructor_apply (ve, pre, const_desc, list_exp) =
     const_desc.cstr_name 
   in 
 
-  let () = Printf.printf "%s" ("T-con apply Constructor Name "^constructorName) in 
+   let () = Printf.printf "%s" ("T-con apply Constructor Name "^constructorName) in 
   let constrTyS = 
     try
       VE.find ve (Var.fromString constructorName)  
@@ -510,8 +505,8 @@ and type_synth_constructor_apply (ve, pre, const_desc, list_exp) =
   ( match constrRefTy with 
 
       | Arrow ( (_, (Tuple tdl)) as par, fResTy ) -> 
-        let () = Printf.printf "%s" ("####### Arrow (Tuple , dest ) case \n") in 
-        let list_fargTyBinds = tdl in 
+         let () = Printf.printf "%s" ("####### Arrow (Tuple , dest ) case \n") in 
+         let list_fargTyBinds = tdl in 
         let () = assert ((List.length list_fargTyBinds) = (List.length list_exp)) in 
 
         let folding_fun = fun (vcs, substs) (fargBind) (actual_arg_exp) ->
@@ -571,11 +566,11 @@ and type_synth_constructor_apply (ve, pre, const_desc, list_exp) =
         (finalvcs, resTy)
 
         | Arrow (tdsrcBind, fResTy) -> 
-        let () = Printf.printf "%s" ("####### Arrow (src , dest ) case \n") in
-        let list_fargTyBinds = [tdsrcBind] in
+         let () = Printf.printf "%s" ("####### Arrow (src , dest ) case \n") in
+         let list_fargTyBinds = [tdsrcBind] in
         let () = Printf.printf "%s" ("length left "^ (string_of_int (List.length list_fargTyBinds))) in
         let () = Printf.printf "%s" ("length right "^ (string_of_int (List.length list_exp))) in
-         
+          
         let () = assert ((List.length list_fargTyBinds) = (List.length list_exp)) in 
 
         let folding_fun = fun (vcs, substs) (fargBind) (actual_arg_exp) ->
@@ -622,8 +617,8 @@ and type_synth_constructor_apply (ve, pre, const_desc, list_exp) =
 
 
         | Base (var, tyd, pr) -> 
-        let () = Printf.printf "%s" ("#######T-const-apply Other case \n") in
-        ([], RefTy.fromTyD (tyd))
+         let () = Printf.printf "%s" ("#######T-const-apply Other case \n") in
+         ([], RefTy.fromTyD (tyd))
 
     )
 
@@ -709,8 +704,8 @@ and type_check_function (ve, pre, fexp, ty)  =
       in
       ( c_lhs, c_rhs) 
      in  
-    let () = Printf.printf "%s" (" \n Arg :: "^(Var.toString (get_var_from_pattern arg)))    
-    in 
+     let () = Printf.printf "%s" (" \n Arg :: "^(Var.toString (get_var_from_pattern arg)))    
+     in 
     let extendedVE = VE.add ve ((get_var_from_pattern arg), toRefTyS argRefTy) in
    
     let (binds, substs) = unifyArgs (argBind, (get_var_from_pattern arg)) in 
@@ -733,8 +728,8 @@ and type_check_function (ve, pre, fexp, ty)  =
 and type_check_exp (ve, pre, exp, tyexp)  = 
     match exp.exp_desc with 
     | Texp_function (_,_,_) -> 
-        let () = Printf.printf "%s" "Expression :: Texp_function \n" in 
-        type_check_function(ve, pre, exp.exp_desc, tyexp)
+         let () = Printf.printf "%s" "Expression :: Texp_function \n" in 
+         type_check_function(ve, pre, exp.exp_desc, tyexp)
     | _ -> 
         let () = Printf.printf "%s" "Expression :: Not a Texp_function \n" in 
 
@@ -871,13 +866,19 @@ and  doIt_exp (ve, pre, exp) : (VC.t list * VE.t) =
                                | _ -> ([], ve)
 
 
-let doIt_struct_items (ve, pre, tstr) = 
+let doIt_struct_items (ve_init, pre, tstr) = 
   let () = Printf.printf "%s" "doIt sruct Items" in 
 
   (*Set the initial environment*)
   let struct_items = tstr.str_items  in 
 
-  let doIt_struct_item  struct_item  = 
+  let doIt_struct_item (vcs, ve) struct_item  = 
+    let  _ = Printf.printf "@Var Env:\n" in 
+    let  _ = Printf.printf "---------\n" in 
+      
+    let  _ = Printf.printf "%s" ((VE.layout ve)) in 
+    
+    let vcs_ve = 
     match  struct_item.str_desc with 
     (*These are different Expressions which will generated an expression *) 
       Tstr_eval (exp , attr) ->  (*Any let expression at the top level  *)
@@ -889,15 +890,19 @@ let doIt_struct_items (ve, pre, tstr) =
     | Tstr_value (rec_flag , value_bindings) -> (* and Tfun*)
         let () = Printf.printf "%s" "\n Case Tstr_value \n " in 
         let vcs_vb = doIt_value_bindings (ve, pre, value_bindings) in
-
-        let  _ = Printf.printf "\n Final VCS after TC Tstr_value ---------------\n" in 
-        let _ = Printf.printf "%s" (L.toString (VC.layouts (fst vcs_vb))) in 
         vcs_vb
-
     | _ -> ([], ve) in 
 
-  
-  let vcslist = 
+    (List.concat [vcs; (fst vcs_ve)] , snd (vcs_ve))
+
+  in 
+  let vcs_ve_pair = List.fold_left (doIt_struct_item) ([], ve_init) struct_items
+   in
+  fst vcs_ve_pair 
+
+
+
+(*   let vcslist = 
 
     let listof_vcs_ve = 
       List.map (fun (st_item) -> doIt_struct_item (st_item)) struct_items in 
@@ -907,6 +912,6 @@ let doIt_struct_items (ve, pre, tstr) =
       List.fold_left (folding_function) [] listof_vcs_ve
   in 
   vcslist  
-
+ *)
 
 let doIt (ve, pre, tstr) = doIt_struct_items (ve, pre, tstr)

@@ -19,11 +19,14 @@ module RE = RelEnv
 module PRE = ParamRelEnv
 module VC = VerificationCondition
 module VCE = Vcencode 
-
- 
+ (* 
+ let spec_file = "rev.spec"
+let ml_file = "rev.ml"
+ *)
+(*    
 let spec_file = "concat.spec"
 let ml_file = "concat.ml"
-
+ *)
 (*   
 let spec_file = "identity.spec"
 let ml_file = "identity.ml"
@@ -35,7 +38,7 @@ exception CompilerEx of string
 exception CantDischargeVC
 let ppf = Format.err_formatter 
 
-let elaborateSMLWithSpec =
+let elaborateSMLWithSpec  =
       fun spec -> 
         (*work on just one file*)
          try  
@@ -52,7 +55,7 @@ let env =
   | e -> raise e
   
 
-let get_abstract_syntax_tree  = 
+let get_abstract_syntax_tree ml_file  = 
  let ast = 
   SpecFrontEnd.load_file ml_file  
   |> Lexing.from_string 
@@ -150,18 +153,30 @@ let catalyst_elaborate_envs relspecs typedtree =
     
  
 let () = 
-  let () = Printf.printf "%s" "HI" in 
-	let rel_ast = elaborateSMLWithSpec spec_file in 
-	let string_ast = RelSpec.toString rel_ast in 		
-		Printf.printf "%s" string_ast;
 
-  let (tstr, _, _) =  get_abstract_syntax_tree in 
-  let () = Printf.printf "%s" "Print the AST" in 
-  let _ = Mytreeiter.Iterator.iter_structure  tstr in 
+  let ml_file = Sys.argv.(1) in 
+  let spec_file = Sys.argv.(2) in 
 
-  catalyst_elaborate_envs rel_ast tstr; 
+  let _ = Printf.printf "%s" ("\nmlfile :: "^ml_file) in 
 
+  let _ = Printf.printf "%s" ("\nspecfile :: "^spec_file) in 
+      
 
+     let () = Printf.printf "%s" "HI" in 
+  	let rel_ast = elaborateSMLWithSpec spec_file in 
+  	let string_ast = RelSpec.toString rel_ast in 		
+  		Printf.printf "%s" string_ast;
+
+    let (tstr, _, _) =  get_abstract_syntax_tree ml_file in 
+    let () = Printf.printf "%s" "Print the AST" in 
+    let _ = Mytreeiter.Iterator.iter_structure  tstr in 
+
+    catalyst_elaborate_envs rel_ast tstr; 
+   
+(*  else
+    raise (CompilerEx "Usage :: ./compile mlfile specfile" )
+ *)
+  
 
        	  
 (* 

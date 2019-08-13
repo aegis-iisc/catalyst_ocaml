@@ -35,14 +35,14 @@ let discharge (VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP)) =
   let relMap = RelMap.empty in 
 
   (*Adding missing tydbinds*)
-    let bnew = (Var.fromString "temp4099", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
+  let bnew = (Var.fromString "temp4099", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
   let bnew_x = (Var.fromString "x", TyD.Tvar (Tyvar.fromString "'a") ) in 
   let bnew_xs = (Var.fromString "xs", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
   
    let tydbinds = bnew_xs::bnew_x::  (* bnew ::  *) tydbinds in 
  
  
-  let relIdRmem = RelId.fromString "Rmem" in 
+(*   let relIdRmem = RelId.fromString "Rmem" in 
   let rmemInst = RelLang.instOfRel relIdRmem in 
   
   let rmem_4099= Simple (Rel (RP.Eq ( RelLang.R (rmemInst, Var.fromString "temp4099"), RelLang.U((RelLang.R (rmemInst, Var.fromString "xs")),
@@ -62,15 +62,10 @@ let discharge (VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP)) =
 
   let anteP_extra = Conj anteP_extra_list in 
   let anteP = Conj [anteP;anteP_extra] in 
-
+  *)
    
   let newVC = VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP) in 
   
-
-  let _ = Printf.printf "%s" ("discharged VCS") in 
-  let _ = Printf.printf "%s" (L.toString (VC.layouts [newVC])) in 
-  let _ = Printf.printf  "\n"  in 
-
 
   let sanitizeVC inVC  = 
       let VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP) = inVC in 
