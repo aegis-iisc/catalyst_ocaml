@@ -37,29 +37,22 @@ let discharge pre=
 *)
 
 
-  let b1 = (Var.fromString "true", TyD.Tbool)  in
-  let b2 = (Var.fromString "false", TyD.Tbool)  in
-  let b3 = (Var.fromString "[]", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
-let b4 = (Var.fromString "l1", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
-let b5 = (Var.fromString "l2", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
-let b6 = (Var.fromString "v_3", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
-let b7 = (Var.fromString "xs", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
-let b8 = (Var.fromString "x", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
-let b9 = (Var.fromString "temp4099", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
-let bnew_x = (Var.fromString "x", TyD.Tvar (Tyvar.fromString "'a") ) in 
-
-
-
-(*   let b1 = (Var.fromString "x_1", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "a_4285")]) ) in 
+  let b1 = (Var.fromString "x_1", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "a_4285")]) ) in 
 let b2 = (Var.fromString "x_0", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "a_4285")]) ) in 
-let b3 = (Var.fromString "nil", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "a_2")]) ) in
+let b3 = (Var.fromString "nil", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "a_4285")]) ) in
 let b4 = (Var.fromString "anc_1024", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "a_4285")]) ) in 
 let b5 = (Var.fromString "anc_1025", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "a_4285")]) ) in 
 let b6 = (Var.fromString "l1", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "a_4285")]) ) in 
 let b7 = (Var.fromString "l2", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "a_4285")]) ) in 
+let bnew_x = (Var.fromString "x", TyD.Tvar (Tyvar.fromString "a_4285") ) in 
+let b71 = (Var.fromString "xs", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "a_4285")]) ) in 
+let b72 = (Var.fromString "sv_1027", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "a_4285")]) ) in 
+let b_1027 = (Var.fromString "anc_1027", TyD.Tvar (Tyvar.fromString "a_4285") ) in 
+let b_1030 = (Var.fromString "anc_1030", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "a_4285")]) ) in 
+
 let b8 = (Var.fromString "v_6", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "a_4285")]) ) in 
- *)
-let tdbinds = [b1;b2;b3;b4;b5;b6;b7;b8;b9;bnew_x] in 
+
+let tdbinds = [b1;b2;b3;b4;b5;b6;b7;bnew_x;b71;b72;b_1027;b_1030;b8] in 
 let rbinds = PRE.empty in 
 
 let bindings = {tbinds = tdbinds; rbinds = rbinds}  in
@@ -74,23 +67,24 @@ let bindings = {tbinds = tdbinds; rbinds = rbinds}  in
  Robs  ::  {typescheme = : @ss: :.   _ list :-> {Tuple __}, def = \v_9. bind (Robs : (v_9),\:v_7v_8. ({(v_7)} X {(v_8)}))} 
 
 *)
-let rhD_domain = (TyD.Tconstr(Tycon.fromString "list" , [TyD.Tvar (Tyvar.fromString "_")])) in
-let rhD_range =  (TupSort.Tuple [TupSort.T (rhD_domain)]) in
+let tyd_a4285 = TupSort.T (TyD.Tvar (Tyvar.fromString "a_4285")) in 
+let rhD_domain = (TyD.Tconstr(Tycon.fromString "list" , [TyD.Tvar (Tyvar.fromString "a_4285")])) in
+let rhD_range =  (TupSort.Tuple [tyd_a4285]) in
 let rhDSpS = SimpleProjSort.ColonArrow (rhD_domain, rhD_range) in 
 
-let rob_domain = (TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "_")])) in
-let rob_range =  (TupSort.Tuple [TupSort.T (rob_domain); TupSort.T (rob_domain)]) in
+let rob_domain = (TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "a_4285")])) in
+let rob_range =  (TupSort.Tuple [tyd_a4285; tyd_a4285]) in
 let robSpS = SimpleProjSort.ColonArrow (rob_domain, rob_range) in 
 
 
-let robs_domain = (TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "_")])) in
-let robs_range =  (TupSort.Tuple [TupSort.T (robs_domain); TupSort.T (robs_domain)]) in
+let robs_domain = (TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "a_4285")])) in
+let robs_range =  (TupSort.Tuple [tyd_a4285; tyd_a4285]) in
 let robsSpS = SimpleProjSort.ColonArrow (robs_domain, robs_range) in 
 
 
 
-let rmem_domain = (TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "_")])) in
-let rmem_range =  (TupSort.Tuple [TupSort.T (rmem_domain); TupSort.T (rmem_domain)]) in
+let rmem_domain = (TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "a_4285")])) in
+let rmem_range =  (TupSort.Tuple [tyd_a4285]) in
 let rmemSpS = SimpleProjSort.ColonArrow (rmem_domain, rmem_range) in 
 
 
@@ -124,6 +118,9 @@ let newtydbinds = List.map
 
 
 let tdbinds = List.concat [tdbinds;newtydbinds] in 
+
+let bindings = {tbinds = tdbinds; rbinds = rbinds}  in
+
 
 (*iterate *)
 
@@ -188,16 +185,110 @@ let pre_vc_predList = [] in
   let pred10 =Simple (Base (BP.Eq ( 
                               (Var (Var.fromString "l1")), (Var (Var.fromString "anc_1024") ))))  in 
 
+ let pred101 =Simple (Base (BP.Eq ( 
+                              (Var (Var.fromString "anc_1027")), (Var (Var.fromString "x") ))))  in 
 
 
 
-
+(* 
 
   let pred11 = Simple (Rel (RP.Eq (R (robsInst, Var.fromString "l1"), T []))) in 
   let pred12= Simple (Rel (RP.Eq (R (robInst, Var.fromString "l1"), T []))) in 
   let pred13= Simple (Rel (RP.Eq (R (rmemInst, Var.fromString "l1"), T []))) in 
 
   let pred14 = Simple (Rel (RP.Eq (R (rhdInst, Var.fromString "l1"), T []))) in 
+ *)
+(*
+
+* Rhd(l1) = {(x)}
+  
+ *)  
+  let rhd_l1 =  Simple (
+        Rel ( RP.Eq ( RelLang.R (rhdInst, Var.fromString "l1"), RelLang.T [ (RelLang.Var (Var.fromString ("x")))]))) in 
+  
+  let rmem_xs = RelLang.R (rmemInst, Var.fromString "xs") in 
+  let tuple_x =  RelLang.T [(RelLang.Var (Var.fromString ("x")))] in 
+  
+
+(*  Rmem(l1) = ({(x)} U (Rmem(xs) U {()}))
+*)
+  let rmem_l1= Simple (Rel (RP.Eq ( RelLang.R (rmemInst, Var.fromString "l1"), RelLang.U( tuple_x,  (RelLang.U (rmem_xs, RelLang.T []) )) ))) in 
+  (*Robs(l3) = (({(x)} X Rmem(xs)) U (Robs(xs) U {()}))
+*)
+
+
+  (*Rob(l1) = ({(x)} X Rmem(xs))
+  *)
+  let rob_l1 = Simple (Rel (RP.Eq ( RelLang.R (robInst, Var.fromString "l1"), 
+                                    RelLang.X (tuple_x, rmem_xs))
+                            )
+                      ) in 
+
+  
+  let robs_xs = RelLang.R (robsInst, Var.fromString "xs") in 
+  let robs_l1 = Simple (Rel (RP.Eq (RelLang.R (robsInst, Var.fromString "l1"), 
+                                    (RelLang.U ( (RelLang.X( tuple_x, rmem_xs)),                 
+                                                         
+                                                (RelLang.U (robs_xs, RelLang.T []))
+                                              )
+                                    )
+                                  ))) in 
+  
+   
+
+  let rmem_anc1030= Simple (Rel (RP.Eq ( RelLang.R (rmemInst, Var.fromString "anc_1030"), RelLang.U((RelLang.R (rmemInst, Var.fromString "xs")),
+                                                                                                (RelLang.R (rmemInst, Var.fromString "l2")) ) ) )) in 
+
+
+
+
+
+(*
+
+* Rhd(v_6) = {(anc_1027)}
+  
+ *) 
+
+(*  Rmem(v_6) = ({(anc_1027)} U (Rmem(anc_1030) U {()}))
+
+*)
+(*Robs(l3) = (({(x)} X Rmem(xs)) U (Robs(xs) U {()}))
+*)
+
+
+  (*Rob(v_6) = ({anc_1027} X Rmem(anc_1030))
+  *)
+
+(* Robs(v_6) = (({(anc_1027)} X Rmem(anc_1030)) U (Robs(anc_1030) U {()}))
+ *)  
+  let rhd_v6 =  Simple (
+        Rel ( RP.Eq ( RelLang.R (rhdInst, Var.fromString "v_6"), RelLang.T [ (RelLang.Var (Var.fromString ("anc_1027")))]))) in 
+  
+  let rmem_anc1030_exp = RelLang.R (rmemInst, Var.fromString "anc_1030") in 
+  
+   let tuple_anc1027 =  RelLang.T [(RelLang.Var (Var.fromString ("anc_1027")))] in 
+  
+
+  let rmem_v6= Simple (Rel (RP.Eq ( RelLang.R (rmemInst, Var.fromString "v_6"), RelLang.U( tuple_anc1027,  (RelLang.U (rmem_anc1030_exp, RelLang.T []) )) ))) in 
+  
+  let rob_v6 = Simple (Rel (RP.Eq ( RelLang.R (robInst, Var.fromString "v_6"), 
+                                    RelLang.X (tuple_anc1027, rmem_anc1030_exp))
+                            )
+                      ) in 
+
+ 
+  let robs_anc1030 = RelLang.R (robsInst, Var.fromString "anc_1030") in 
+  let robs_v6 = Simple (Rel (RP.Eq (RelLang.R (robsInst, Var.fromString "v_6"), 
+                                    (RelLang.U ( (RelLang.X( tuple_anc1027, rmem_anc1030_exp)),                 
+                                                         
+                                                (RelLang.U (robs_anc1030, RelLang.T []))
+                                              )
+                                    )
+                                  ))) in 
+  
+   
+
+   (* 
 
   let pred15 = Simple (Base (BP.Eq ( 
                               (Var (Var.fromString "v_6")), (Var (Var.fromString "x_1") ))))  in 
@@ -208,8 +299,13 @@ let pre_vc_predList = [] in
   let pred17 = Simple (Base (BP.Eq ( 
                               (Var (Var.fromString "v_6")), (Var (Var.fromString "l2") ))))  in 
 
+ *)
 
-  let pre_vc_predList = [pred1;pred2;pred3;pred4;pred5;pred6;pred7;pred8;pred9;pred10;pred11;pred12;pred13;pred14;pred15;pred16;pred17] in 
+
+
+  let pre_vc_predList = [pred1;pred2;pred3;pred4;pred5;pred6;pred7;pred8;pred9;pred10;pred101; rhd_l1; rmem_l1; rob_l1; robs_l1;
+                                          rhd_v6;rmem_v6;robs_v6;rob_v6 ;rmem_anc1030
+                                          (* pred11;pred12;pred13;pred14;pred15;pred16;pred17 *)] in 
 
 
 
@@ -241,22 +337,18 @@ let pre_vc_predList = [] in
   let  post_condition = Simple (Rel (RP.Eq (elhs, erhs)))  in 
   let vcs = VC.T (bindings, pre_condition, post_condition) in 
 
-  let _ = Printf.printf "%s" ("Verification Conditions \n") in 
+  let _ = Printf.printf "%s" ("discharged VCS") in 
   let _ = Printf.printf "%s" (L.toString (VC.layouts [vcs])) in 
-     
+  let _ = Printf.printf  "\n"  in 
+
 
   let anteP = pre_condition in 
   let conseqP = post_condition in 
   let tydbinds = tdbinds in 
   let pre = rbinds in 
 
-  let ctx = ref @@ Z3_encode.mkDefaultContext ()  in 
-  let solver = ref @@ Solver.mk_solver !ctx None in   
-   
-  let constMap = ConstMap.empty in  
-  let relMap = RelMap.empty in 
-     
-        (*
+    
+         (*
        * Maps to keep track of encoded values
        *)
       
@@ -264,18 +356,20 @@ let pre_vc_predList = [] in
         check how to encode MSFOL in Z3*)
        let tyMap = TyMap.empty  in 
 
-       let () = Printf.printf "%s" ("TyMap size"^(string_of_int (List.length tyMap))) in 
-   
+      
       let tyMap = TyMap.add tyMap (TyD.Tint) (Int (Z3_encode.mk_int_sort ())) in 
       let tyMap = TyMap.add tyMap (TyD.Tbool) (Bool (Z3_encode.mk_bool_sort ())) in 
 
-      let addTyD tyMap tyd = (fun sort -> 
-                                (let tyMap = TyMap.add tyMap tyd sort in  
-                                      (tyMap, sort) )
-                                                      ) 
-                (T ("T", Z3_encode.mk_uninterpreted_s ("T"))) in 
-      let () = Printf.printf "%s" ("TyMap size"^(string_of_int (List.length tyMap))) in 
-   
+
+      let addTyD tyMap tyd = 
+                let sortToUninterpretedSort = 
+                   fun sort -> 
+                       (let tyMap = TyMap.add tyMap tyd sort in  
+                            (tyMap, sort) )
+                      in 
+                  let tyName = Z3_encode.genTypeName () in        
+                sortToUninterpretedSort (T (tyName, Z3_encode.mk_uninterpreted_s (tyName))) in 
+      
       
        (*
        * bootStrapBools for constMap
@@ -324,61 +418,72 @@ let pre_vc_predList = [] in
 
       let encodeTyD (tyMap, constMap, relMap) tyD  = 
         try 
-         (tyMap, (TyMap.find tyMap tyD))  
+         (tyMap, constMap, relMap, (TyMap.find tyMap tyD))  
         with 
         | TyMap.TyDNotFound _ -> 
-           let () = Printf.printf "%s" ("@@@@@"^(TyD.toString tyD)) in 
-   
-          (match tyD with 
+            let () = Printf.printf "%s" ("@@@@@"^(TyD.toString tyD)) in 
+      
+          let sortfortyD = (match tyD with 
              TyD.Tvar _ ->  addTyD tyMap tyD 
             | TyD.Tconstr _ -> addTyD tyMap tyD
             | _ -> 
 
-            failwith "Unexpected type") in 
+            failwith "Unexpected type")
+
+           in
+           (*add to the tyMap*)
+          let tyMap = TyMap.add tyMap tyD (snd (sortfortyD)) in 
+         (tyMap, constMap, relMap, (snd (sortfortyD))) 
+       in      
 
       let encodeConst (tyMap, constMap, relMap) (v,tyd)  = 
+                
         let vstr = Var.toString v in 
-        let (tyMap, sort) = encodeTyD (tyMap, constMap, relMap) tyd in 
-           let () = Printf.printf "%s" (" @@@@@@@@encoding const >"^vstr) in 
-   
-         let  const = mkConst (vstr,sort) in 
+        let () = Printf.printf "%s" ("\n encodeConst "^vstr^ "\n ") in 
+             
+        let (tyMap, constMap, relMap, sort) = encodeTyD (tyMap, constMap, relMap) tyd in 
+      
+        let  const = mkConst (vstr,sort) in 
         let constMap = ConstMap.add constMap vstr const
         in
-          (constMap, const)
+          (tyMap, constMap, relMap, const)
          in 
-        
+        (**ERROR*)
         let encodeStrucRel (tyMap, constMap, relMap) (rid ,TyD.Tarrow (t1,_))  =
           let open TyD in 
           let  rstr = RI.toString rid in 
-            let sorts = match t1 with 
-              TyD.Ttuple tydr -> List.map (fun tyD -> 
-                                  let (tyMap, sort) = encodeTyD (tyMap, constMap, relMap) tyD in 
-                                      sort) (tydr) 
-            | _ ->  
-                    let (_, sort) = encodeTyD (tyMap,constMap,relMap) t1 in  
-                    Vector.new1 (sort) in 
-          let  sr = mkStrucRel (rstr,sorts) in 
+          let (tyMap, constMap, relMap,sorts) = 
+            match t1 with 
+              TyD.Ttuple tydr -> 
+                let () = Printf.printf "%s" "\n encodeSTR case Tuple \n " in
+                List.fold_left (fun (tyMap, constMap, relMap, sortsList) tyD -> 
+                  let (tyMap, constMap, relMap, sort) = encodeTyD (tyMap, constMap, relMap) tyD in 
+                  (tyMap, constMap, relMap, (sort::sortsList))   
+                ) (tyMap, constMap, relMap, []) (tydr)  
+              (*   List.map (fun tyD -> 
+                                  let (tyMap, constMap, relMap, sort) = encodeTyD (tyMap, constMap, relMap) tyD in 
+                                      sort) (tydr)  *)
+              | _ ->  
+                    let () = Printf.printf "%s" "\n encodeSTR case Other \n " in 
+                    let (tyMap, constMap, relMap, sort) = encodeTyD (tyMap,constMap,relMap) t1 in  
+                    (tyMap, constMap, relMap,Vector.new1 (sort))
+          in 
+          let () = Printf.printf "%s" "\n encodeSTR case sorts \n " in
+                      
+          let  sr = mkStrucRel (rstr, (List.rev sorts)) in
+
           let relMap = RelMap.add relMap rstr sr
         in
-          (relMap, sr)
+          (tyMap, constMap,relMap, sr)
        
       in 
 
-  (*   val _ = Vector.foreach (tydbinds, processTyDBind)
-      (* pre is rbinds of elaborated VC.t. Maps newRelNames to
-         instantiated definitions.*)
-      val _ = Vector.foreach (PRE.toVector pre, 
-        fn (r,{def,...}) => case def of
-            PRE.Bind bdef => processBindEq (r,bdef)
-          | PRE.Prim pdef => processPrimEq (r,pdef))
- *)
-
+  
        (* ---- Encoding TyD binds and relations ---- *)
       let open TyD in 
       let processTyDBind (tyMap, constMap, relMap) (v,tyd) = 
-          let () = Printf.printf "%s" ("PTY ##########"^(Var.toString v)) in 
           
-
+          let () = Printf.printf "%s" (" \nprocessTyDBind VCE "^(Var.toString v)) in 
           ( match tyd with  
         (*
          * Currently, the only values with function types
@@ -386,17 +491,19 @@ let pre_vc_predList = [] in
          * a let or tuple of vals to bool.
          *)
           |Tarrow (t1,t2)   ->
-              let () = Printf.printf "%s" ("Case Tarrow  "^(Var.toString v)) in 
                 (match t2 with 
                   | Tbool ->                       
-                        let (relMap, sorts) = encodeStrucRel (tyMap, constMap, relMap) (RI.fromString (Var.toString v), tyd) in 
+                        let (tyMap, constMap, relMap, sorts) = encodeStrucRel (tyMap, constMap, relMap) (RI.fromString (Var.toString v), tyd) in 
                         (tyMap, constMap, relMap)
-                  | _ -> let (constMap, _) = encodeConst (tyMap, constMap, relMap) (v,tyd) in 
+                  | _ -> let (tyMap, constMap, relMap, _) = encodeConst (tyMap, constMap, relMap) (v,tyd) in 
                          (tyMap, constMap, relMap) 
                 )         
           |_ -> 
-              let () = Printf.printf "%s" ("Case other"^(Var.toString v)) in 
-              let (constMap, _) = encodeConst (tyMap, constMap, relMap) (v,tyd) in 
+              let () = Printf.printf "%s" (" \nprocessTyDBind consEncoding Case ") in 
+          
+              let (tyMap, constMap, relMap, _) = encodeConst (tyMap, constMap, relMap) (v,tyd) in 
+            let () = Printf.printf "%s" (" \nprocessTyDBind consEncoding done ") in 
+          
             (tyMap, constMap, relMap)
           ) 
            
@@ -513,13 +620,14 @@ let pre_vc_predList = [] in
             (tyMap, constMap, relMap)
      
       in  
-      let () = Printf.printf "%s" "Location-------%%%%%%%%%%%>" in 
-      let () = Printf.printf "%s" ("tydnidns size "^(string_of_int (List.length tydbinds))) in 
       
      (*  let _ = List.iter processTyDBind tydbinds in 
       *) (* pre is rbinds of elaborated VC.t. Maps newRelNames to
          instantiated definitions.*)
+      let () = Printf.printf "%s" (" \n ******processTyDBind starting *****") in 
+             
       let (tyMap, constMap, relMap) = List.fold_left (processTyDBind) (tyMap, constMap, relMap) tydbinds in  
+      let () = Printf.printf "%s" (" \n ******** processTyDBind finished ********") in 
       
     
       let open PRE in 
@@ -531,22 +639,28 @@ let pre_vc_predList = [] in
       *) 
       let (init_tyMap, init_constMap, init_relMap) = (tyMap, constMap, relMap) in    
 
+    let () = Printf.printf "%s" (" \n ******PRE processing starting *****") in 
+     
       let (tyMap, constMap, relMap) = 
-      let () = Printf.printf "%s" "@reached here" in 
         List.fold_left (fun (tyMap, constMap, relMap) (r,{def;_}) -> 
-            match def with
+              match def with
               PRE.Bind bdef -> processBindEq (tyMap, constMap, relMap) (r,bdef)
             | PRE.Prim pdef -> processPrimEq (tyMap, constMap, relMap) (r,pdef)
           ) (init_tyMap, init_constMap, init_relMap) (PRE.toVector pre)
-  
+
       in
 
+  let () = Printf.printf "%s" (" \n ******PRE processing finished *****") in 
+    
       (* pre is rbinds of elaborated VC.t. Maps newRelNames to
          instantiated definitions.*)
         
    (* ---- Type refinement encoding begins ---- *)
 
-      let rec encodeBasePred (tyMap, constMap, relMap) (bp)  = 
+    let rec encodeBasePred (tyMap, constMap, relMap) (bp)  = 
+        
+      let () = Printf.printf "%s" (" \n ******encodeBasePred *****") in 
+    
         let
           open BP in 
           let encodeBaseExpr bexp = 
@@ -564,6 +678,9 @@ let pre_vc_predList = [] in
         in 
         
      let rec encodeRelExpr (tyMap, constMap, relMap) (e) =
+    
+      let () = Printf.printf "%s" (" \n ******encodeRelExpr *****") in 
+    
         let open RelLang in 
         let encodeRelElem (tyMap, constMap, relMap) = fun x -> 
           match x with 
@@ -572,24 +689,47 @@ let pre_vc_predList = [] in
             | Bool false -> const_false
             | Var v -> getConstForVar constMap v
         in
+          let () = Printf.printf "%s" (" \n ******encodeRelExpr here *****") in 
+    
          match e with 
-            T els -> (
+            T els -> 
+                let () = Printf.printf "%s" (" \n ******encodeRelExpr T *****") in 
+      
+                (
                 match Vector.length els with 
                     0 -> mkNullSet ()
                     | _ -> mkSingletonSet(Vector.map (els,(encodeRelElem (tyMap, constMap, relMap)))))
-            | X (e1,e2) -> mkCrossPrd ( (encodeRelExpr (tyMap, constMap, relMap) e1), 
+            | X (e1,e2) -> 
+              let () = Printf.printf "%s" (" \n ******encodeRelExpr X *****") in 
+      
+              mkCrossPrd ( (encodeRelExpr (tyMap, constMap, relMap) e1), 
                 (encodeRelExpr (tyMap, constMap, relMap) e2))
-            | U (e1,e2) -> mkUnion ( (encodeRelExpr (tyMap, constMap, relMap) e1), 
+            | U (e1,e2) -> 
+              let () = Printf.printf "%s" (" \n ******encodeRelExpr U *****") in 
+      
+                mkUnion ( (encodeRelExpr (tyMap, constMap, relMap) e1), 
                 (encodeRelExpr (tyMap, constMap, relMap) e2))
-            | D (e1,e2) -> mkDiff ( (encodeRelExpr (tyMap, constMap, relMap) e1), 
+            | D (e1,e2) -> 
+              let () = Printf.printf "%s" (" \n ******encodeRelExpr D *****") in 
+      
+              mkDiff ( (encodeRelExpr (tyMap, constMap, relMap) e1), 
                 (encodeRelExpr (tyMap, constMap, relMap) e2))
-            | R (RInst {rel=rid;_},v) -> mkStrucRelApp (
+            | R (RInst {rel=rid;_},v) -> 
+              let () = Printf.printf "%s" (" \n ******encodeRelExpr R *****") in 
+              
+              (* try 
+               *)mkStrucRelApp (
                 (getStrucRelForRelId relMap rid), (getConstForVar constMap v))
-        
+              (*  with 
+              | _ -> raise (VCEex "failed at mkStrucRel")
+ *)
         in 
 
+        
       let encodeRelPred (tyMap, constMap, relMap) (rp:RP.t)  =
-        let  open RelLang in 
+                let () = Printf.printf "%s" (" \n ******encodeRelPred *****") in 
+
+          let  open RelLang in 
         let f = (encodeRelExpr (tyMap, constMap, relMap)) in 
         let  open RP in 
         
@@ -602,13 +742,20 @@ let pre_vc_predList = [] in
         in 
         
        let encodeSimplePred (tyMap, constMap, relMap) (sp ) =
+                let () = Printf.printf "%s" (" \n ******encodeSimplePred *****") in 
+
          match  sp with  
           (Base bp) -> encodeBasePred (tyMap, constMap, relMap) bp
         | (Rel rp) -> encodeRelPred (tyMap, constMap, relMap) rp in 
 
       let assertSimplePred  (tyMap, constMap, relMap) = dischargeAssertion << encodeSimplePred (tyMap, constMap, relMap) in 
 
-      let rec encodeVCPred (tyMap, constMap, relMap) vcp = match vcp with 
+      let rec encodeVCPred (tyMap, constMap, relMap) vcp = 
+
+      let () = Printf.printf "%s" (" \n ******encodeVCPred *****") in 
+
+      match vcp with 
+
           VC.Simple sp -> encodeSimplePred (tyMap, constMap, relMap) sp
         | VC.Conj vcps -> mkAnd (Vector.map (vcps, (encodeVCPred (tyMap, constMap, relMap)) ))
         | VC.Disj vcps -> mkOr (Vector.map (vcps, (encodeVCPred (tyMap, constMap, relMap)  )))
@@ -618,7 +765,10 @@ let pre_vc_predList = [] in
         | VC.Iff (vcp1,vcp2) -> mkIff ((encodeVCPred (tyMap, constMap, relMap) vcp1), 
               (encodeVCPred (tyMap, constMap, relMap) vcp2)) in 
 
-      let rec assertVCPred  (tyMap, constMap, relMap) vcp = match vcp with 
+      let rec assertVCPred  (tyMap, constMap, relMap) vcp = 
+       let () = Printf.printf "%s" (" \n ******assertVCPred *****") in 
+
+      match vcp with 
           VC.Simple sp -> assertSimplePred (tyMap, constMap, relMap) sp
         | VC.Conj spv -> List.iter (assertVCPred (tyMap, constMap, relMap)) spv
         | _ -> dischargeAssertion (encodeVCPred (tyMap, constMap, relMap) vcp) in 
@@ -642,3 +792,7 @@ let pre_vc_predList = [] in
          | UNKNOWN -> Undef 
          | UNSATISFIABLE -> Failure
         | _ -> failwith "Integer received when Z3_lbool expected"
+
+
+ 
+    

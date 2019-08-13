@@ -24,10 +24,10 @@ module VCE = Vcencode
 let spec_file = "concat.spec"
 let ml_file = "concat.ml"
 
-(*  
+(*   
 let spec_file = "identity.spec"
 let ml_file = "identity.ml"
-*)
+ *)
 (*let spec_file= "head.spec"
 let ml_file = "head.ml"   
 *)
@@ -125,8 +125,8 @@ let catalyst_elaborate_envs relspecs typedtree =
       let  dischargeVC i vc = 
       let _ = Printf.printf "%s" ("Discharging VCS "^(string_of_int (i+1))^" of "^(string_of_int (List.length elaborated_vcs))^"\n") in 
           
-          if (i = 0) then () else 
-
+         (*  if (i = 0) then Printf.printf "Skipping VC1 " else 
+ *)
           match VCE.discharge vc with
           VCE.Success -> 
             Printf.printf  "%s" ("VC# "^(string_of_int i)^" discharged\n")
@@ -134,7 +134,7 @@ let catalyst_elaborate_envs relspecs typedtree =
                   \discharge VC #"^(string_of_int i)); 
                   ();
                   (* z3_log_close (); *)
-        raise CantDischargeVC)
+          raise CantDischargeVC)
         |VCE.Failure -> (Printf.printf "%s" ("VC # " ^(string_of_int i)^
                 " is invalid!"); 
                   ();

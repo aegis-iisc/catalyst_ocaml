@@ -1,4 +1,5 @@
-let rec concat l3 l4 = 
-match l3 with
-    [] -> l4
-  | x::xs -> x::(concat xs l4)
+let rec concat l1 l2 = 
+match l1 with
+    [] -> l2
+  | x::xs -> let temp1 = concat xs l2 in 
+                x :: temp1

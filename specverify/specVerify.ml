@@ -158,17 +158,30 @@ let rec unifyArgs ((argv ,argTy) as argBind,
 
 (*Takes two refinement types and returns a unified type*)
 let  rec unifyWithDisj refTy1  refTy2  =
+  let () = Printf.printf "\n*******Performing Unification with Disjunction *********\n" in 
+      
   let open RefTy in 
   match (refTy1, refTy2) with
     (Base (_, TyD.Tunknown, _),_) -> refTy2
   | (_,Base (_, TyD.Tunknown, _)) -> refTy1
   (*Disjunction of Predicates*)
   |(Base (bv1,td1,pred1),Base (bv2,td2,pred2)) ->
-      let _ = assert (TyD.sametype td1 td2) in 
+
+     let () = Printf.printf "\n*******Performing Base : Base with Disjunction *********\n" in 
+
+       let () = Printf.printf "%s" ("\nty of fst  "^RefTy.toString refTy1) in      
+      let () = Printf.printf "%s" ("\nty of snd"^RefTy.toString refTy2) in      
+            
+   let _ = assert (TyD.sametype td1 td2) in 
+      let pred_unify_result_vars = Predicate.Base (BP.varEq (bv1, bv2)) in 
+      let pred1 = Predicate.Conj (pred1, pred_unify_result_vars) in 
+      let pred2 = Predicate.Conj (pred2, pred_unify_result_vars) in 
       let pred1' = Predicate.applySubst (bv2,bv1) pred1
-      in
+       in
       Base (bv2,td2,Predicate.dot (pred1',pred2))
   | (Tuple t1,Tuple t2) -> 
+
+     let () = Printf.printf "\n*******Performing Tuple  : Tuple with Disjunction *********\n" in 
       let tuFun = fun l -> Tuple l 
       in 
       (tuFun
@@ -431,6 +444,11 @@ let rec  type_synth_exp (ve, pre, exp) =
       let (wftypes, wftype) = Vector.split_last wftypes in
 
       let unifiedType = List.fold_left unifyWithDisj wftype wftypes in 
+
+        let  _ = Printf.printf "@Unified Type:\n" in 
+        let  _ = Printf.printf "%s" ("\n "^(RefTy.toString unifiedType)) in 
+    
+
          (*
              * 1. alphaRename boundvars forall wfTypes to a single var
              * 2. assert that tyd is same for all
@@ -546,7 +564,7 @@ and type_synth_constructor_apply (ve, pre, const_desc, list_exp) =
               let  (_,substs') = unifyArgs (fargBind,tempVar)  
               in
               (List.concat[vcs;vcs0;vcs1],List.concat[substs;substs'])
-      in 
+        in 
          let (finalvcs, finalsubsts) = List.fold_left2 (folding_fun) ([],[]) list_fargTyBinds list_exp in
           let resTy = RefTy.applySubsts finalsubsts fResTy in 
    
@@ -604,7 +622,7 @@ and type_synth_constructor_apply (ve, pre, const_desc, list_exp) =
 
 
         | Base (var, tyd, pr) -> 
-        let () = Printf.printf "%s" ("####### Other case \n") in
+        let () = Printf.printf "%s" ("#######T-const-apply Other case \n") in
         ([], RefTy.fromTyD (tyd))
 
     )

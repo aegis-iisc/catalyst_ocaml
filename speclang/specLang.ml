@@ -967,6 +967,8 @@ module TyDBinds = struct
   let empty = TydMap.empty
 
 
+
+
   exception KeyNotFound = TydMap.KeyNotFound
 
 end
@@ -1092,7 +1094,9 @@ let rec  layout t = match t with
       | False -> L.str "false" 
       | Base bp -> L.str (BasePredicate.toString bp)
       | Rel rp -> L.str (RelPredicate.toString rp )
-      | Exists (binds,t) -> L.str "exist"   
+      | Exists (binds,t) -> let bindstr = List.fold_left (fun acc (k,v) -> (acc^ "Key ="^(Var.toString k)^" Value = "^(TyD.toString v))) "" binds in 
+                                    L.seq [L.str "Exists";L.str bindstr ; L.str " such that ";layout t] 
+
       | Not t -> L.seq [L.str "not ("; layout t; L.str ")"]
       | Conj (e1,e2) -> L.align (L.separateLeft ([(layout e1); (
           layout e2)],"/\\ "))

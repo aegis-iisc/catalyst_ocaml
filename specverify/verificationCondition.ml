@@ -731,11 +731,11 @@ let layout (vcs : t list) =
 
 
     (*         Pretty.nest ("bindings",
-    *)       let t1 = L.seq[
+    *)       let t1 = L.seq[ L.str "bindings \t \n";
             laytTyDBinds tybinds;
     (*   T {length = L.length_tree (laytTyDBinds tybinds); tree =laytTyDBinds tybinds}; 
      *)  PRE.layout pre] in 
-    let t2 = L.seq[ L.str "\n";
+    let t2 = L.seq[ L.str " in \t \n";
         L.indent(laytVCPred vcp1,3);
         L.str "=>";
         L.indent (laytVCPred vcp2,3) ; L.str "\n"] in 

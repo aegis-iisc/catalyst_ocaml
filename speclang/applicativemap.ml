@@ -22,6 +22,7 @@ struct
 
 	exception KeyNotFound of Key.t
   type t = (Key.t * Val.t) list
+
   let empty = []
 
   	let mem map k  = List.exists (fun (k', v) -> Key.equal (k, k')) map
@@ -32,18 +33,16 @@ struct
         snd (found)
   		with  
   		| Not_found -> raise (KeyNotFound k)
-
   	let add map k v = (k,v) :: map 
-
   	let remove map k = List.remove_assoc k map
 
   	let map f t = List.map f t
 
   	
     let toVector map:t = map
-    (*let layout map = L.align (List.map (map, fn (k,v) =>
-    L.seq [Key.layout k, L.str " :-> ", Val.layout v]))*)
-
+   (*  let layout map = L.align (List.map (fun (k,v) ->
+    L.seq [Key.layout k; L.str " :-> "; Val.layout v]) map)
+ *)
 
 
 end 
