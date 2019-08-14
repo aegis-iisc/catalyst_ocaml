@@ -6,11 +6,10 @@ let rec concat l1 l2 =
 
 let rec rev l3 =
   match l3 with 
-    [] -> let temp1 = [] in 
-            temp1    
+    [] ->  []
   | x::xs -> let temp2 = rev xs in
               let temp3 = [] in 
-             let temp4 = x::temp2 in 
+                let temp4 = x::temp2 in 
                  concat temp2 temp4
-
+                
 

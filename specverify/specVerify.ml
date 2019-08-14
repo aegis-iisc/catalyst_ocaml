@@ -279,6 +279,9 @@ let rec  type_synth_exp (ve, pre, exp) =
        let () = Printf.printf "%s" "\n######### synthesis:apply \n" in 
        let (vcs1,fty) = type_synth_exp (ve, pre, fexp) in 
       
+      let () = Printf.printf "%s" "\n######### F type \n" in 
+      let () = Printf.printf "%s" (RefTy.toString fty) in 
+       
       (*uncurry the type*)
       let (parametersTyBind, resRefTy) =
         match fty with 
@@ -465,6 +468,7 @@ let rec  type_synth_exp (ve, pre, exp) =
   | Texp_construct (lc, cd, lexp) ->
 
        let () = Printf.printf "%s" "\n######### synthesis:constructor \n" in
+
        let  (vcs, constructor_resTy ) = type_synth_constructor_apply (ve , pre, cd, lexp)  
       in 
       
@@ -489,7 +493,7 @@ and type_synth_constructor_apply (ve, pre, const_desc, list_exp) =
     const_desc.cstr_name 
   in 
 
-   let () = Printf.printf "%s" ("T-con apply Constructor Name "^constructorName) in 
+  let () = Printf.printf "%s" ("T-con apply Constructor Name "^constructorName) in 
   let constrTyS = 
     try
       VE.find ve (Var.fromString constructorName)  
@@ -498,129 +502,132 @@ and type_synth_constructor_apply (ve, pre, const_desc, list_exp) =
   in 
   let constrRefTy = RefTyS.specializeRefTy constrTyS in 
 
-  (*update the type of the argument in the variable environment*)
-  let args_types = const_desc.cstr_args in 
-  let localTyDBind = List.map2 (fun exp ty -> (exp, (RefTy.fromTyD (TyD.normalizeTypes ty)))) list_exp args_types in  
+  match constructorName with 
+   
+   |"::" -> (*cons constructor expression case*)
 
-  ( match constrRefTy with 
+      (*update the type of the argument in the variable environment*)
+      let args_types = const_desc.cstr_args in 
+      let localTyDBind = List.map2 (fun exp ty -> (exp, (RefTy.fromTyD (TyD.normalizeTypes ty)))) list_exp args_types in  
 
-      | Arrow ( (_, (Tuple tdl)) as par, fResTy ) -> 
-         let () = Printf.printf "%s" ("####### Arrow (Tuple , dest ) case \n") in 
-         let list_fargTyBinds = tdl in 
-        let () = assert ((List.length list_fargTyBinds) = (List.length list_exp)) in 
+      ( match constrRefTy with 
 
-        let folding_fun = fun (vcs, substs) (fargBind) (actual_arg_exp) ->
-          let (_, fargty) = fargBind in 
-          let exp_from_valExp = actual_arg_exp in 
+          | Arrow ( (_, (Tuple tdl)) as par, fResTy ) -> 
+             let () = Printf.printf "%s" ("####### Arrow (Tuple , dest ) case \n") in 
+             let list_fargTyBinds = tdl in 
+            let () = assert ((List.length list_fargTyBinds) = (List.length list_exp)) in 
 
-          (*Two componets , if identity then use the local environment, else get the type by synthesizing type *) 
-          let exp_desc_from_exp = exp_from_valExp.exp_desc in 
+            let folding_fun = fun (vcs, substs) (fargBind) (actual_arg_exp) ->
+              let (_, fargty) = fargBind in 
+              let exp_from_valExp = actual_arg_exp in 
 
-          match exp_desc_from_exp with 
-          | Texp_ident (p,_,_) ->
+              (*Two componets , if identity then use the local environment, else get the type by synthesizing type *) 
+              let exp_desc_from_exp = exp_from_valExp.exp_desc in 
 
-              let argId = match p with 
+              match exp_desc_from_exp with 
+              | Texp_ident (p,_,_) ->
+
+                  let argId = match p with 
+                      Pident id -> id
+                    | _ -> raise (SpecVerifyExc "Only Pident handled ")in 
+
+                 
+                  let argTy = List.assoc exp_from_valExp localTyDBind in  
+                  (*
+                  *  Γ ⊢ argTy <: fargty
+                  *)
+                  let () = Printf.printf "%s" ("ty of argument const "^RefTy.toString argTy) in      
+                  let () = Printf.printf "%s" ("ty of argument const "^RefTy.toString fargty) in      
+                  let vcs1 = VC.fromTypeCheck (ve,pre,argTy,fargty) in         
+                  (*unify the actual argument with the type of the formal*) 
+                  let  (_,substs') = unifyArgs (fargBind,argId)  
+                  in
+                  (List.concat[vcs;vcs1],List.concat[substs;substs'])
+                  
+
+              (*If an expression*)
+              | _ ->  
+
+                  let (vcs0,argTy) = type_synth_exp (ve,pre,exp_from_valExp) in 
+                  (*Create a local tempVar with this type
+                  This is required as the AST is not a-normalized, in an anormalized form this will always be a Val*)
+                  let tempVar = getUniqueId "temp" in 
+                  let extendedVE = VE.add ve (tempVar, (toRefTyS argTy)) in  
+                  let ve = VE.add ve (tempVar, (toRefTyS argTy)) in  
+                      (*
+                       *  Γ ⊢ argTy <: fargty
+                       *)
+                  let () = Printf.printf "%s" ("ty of argument const "^RefTy.toString argTy) in      
+                  let () = Printf.printf "%s" ("ty of argument const "^RefTy.toString fargty) in      
+                  
+                  let vcs1 = VC.fromTypeCheck (extendedVE,pre,argTy,fargty) in         
+
+                  let  (_,substs') = unifyArgs (fargBind,tempVar)  
+                  in
+                  (List.concat[vcs;vcs0;vcs1],List.concat[substs;substs'])
+            in 
+             let (finalvcs, finalsubsts) = List.fold_left2 (folding_fun) ([],[]) list_fargTyBinds list_exp in
+              let resTy = RefTy.applySubsts finalsubsts fResTy in 
+       
+            (finalvcs, resTy)
+
+            | Arrow (tdsrcBind, fResTy) -> 
+             let () = Printf.printf "%s" ("####### Arrow (src , dest ) case \n") in
+             let list_fargTyBinds = [tdsrcBind] in
+            let () = Printf.printf "%s" ("length left "^ (string_of_int (List.length list_fargTyBinds))) in
+            let () = Printf.printf "%s" ("length right "^ (string_of_int (List.length list_exp))) in
+              
+            let () = assert ((List.length list_fargTyBinds) = (List.length list_exp)) in 
+
+            let folding_fun = fun (vcs, substs) (fargBind) (actual_arg_exp) ->
+              let (_, fargty) = fargBind in 
+              let exp_from_valExp = actual_arg_exp in
+              let open Typedtree in 
+
+              let (_,argTy) = type_synth_exp (ve,pre,exp_from_valExp) in 
+                        (*
+                         *  Γ ⊢ argTy <: fargty
+                         *)
+
+              let vcs1 = VC.fromTypeCheck (ve,pre,argTy,fargty) in         
+
+
+              (* let get the pattern for the id   *) 
+              let exp_desc_from_exp = exp_from_valExp.exp_desc in 
+              let argPId  = match exp_desc_from_exp with 
+                | Texp_ident (p,_,_) -> p
+
+              in 
+              let argId = match argPId with 
                   Pident id -> id
                 | _ -> raise (SpecVerifyExc "Only Pident handled ")in 
 
-              (*The identity will be local and will not be present in the environment, create its type from the list *)
-              (*  let (_,argTy) = type_synth_exp (ve,pre,exp_from_valExp) in 
-              *) 
-              let argTy = List.assoc exp_from_valExp localTyDBind in  
-            (*
-             *  Γ ⊢ argTy <: fargty
-             *)
-              let () = Printf.printf "%s" ("ty of argument const "^RefTy.toString argTy) in      
-              let () = Printf.printf "%s" ("ty of argument const "^RefTy.toString fargty) in      
-              let vcs1 = VC.fromTypeCheck (ve,pre,argTy,fargty) in         
-              (*unify the actual argument with the type of the formal*) 
               let  (_,substs') = unifyArgs (fargBind,argId)  
               in
               (List.concat[vcs;vcs1],List.concat[substs;substs'])
-              
+            in 
+            let (finalvcs, finalsubsts) = List.fold_left2 (folding_fun) ([],[]) list_fargTyBinds list_exp in
+            let resTy = RefTy.applySubsts finalsubsts fResTy in 
+            (finalvcs, resTy)
 
-          (*If an expression*)
-          | _ ->  
 
-              let (vcs0,argTy) = type_synth_exp (ve,pre,exp_from_valExp) in 
-              (*Create a local tempVar with this type
-              This is required as the AST is not a-normalized, in an anormalized form this will always be a Val*)
-              let tempVar = getUniqueId "temp" in 
-              let extendedVE = VE.add ve (tempVar, (toRefTyS argTy)) in  
-              let ve = VE.add ve (tempVar, (toRefTyS argTy)) in  
-                  (*
-                   *  Γ ⊢ argTy <: fargty
-                   *)
-              let () = Printf.printf "%s" ("ty of argument const "^RefTy.toString argTy) in      
-              let () = Printf.printf "%s" ("ty of argument const "^RefTy.toString fargty) in      
-              
-              let vcs1 = VC.fromTypeCheck (extendedVE,pre,argTy,fargty) in         
+            | Base (var, tyd, pr) -> 
+             let () = Printf.printf "%s" ("#######T-const-apply Other case \n") in
+             ([], RefTy.fromTyD (tyd))
 
-              let  (_,substs') = unifyArgs (fargBind,tempVar)  
-              in
-              (List.concat[vcs;vcs0;vcs1],List.concat[substs;substs'])
-        in 
-         let (finalvcs, finalsubsts) = List.fold_left2 (folding_fun) ([],[]) list_fargTyBinds list_exp in
-          let resTy = RefTy.applySubsts finalsubsts fResTy in 
+        )
+  | "[]" -> (*nil constuctor constnat case*)
+        let () = Printf.printf "%s" "Texp-const case for nilconstant" in 
+        let nilVid = Var.fromString "nil" in  
+        let resRefTyS = 
+            try
+              VE.find ve nilVid 
+            with
+            | _ -> failwith "nil constant not defined" 
+         in 
+         let resRefTy = RefTyS.specializeRefTy resRefTyS in 
    
-        (finalvcs, resTy)
-
-        | Arrow (tdsrcBind, fResTy) -> 
-         let () = Printf.printf "%s" ("####### Arrow (src , dest ) case \n") in
-         let list_fargTyBinds = [tdsrcBind] in
-        let () = Printf.printf "%s" ("length left "^ (string_of_int (List.length list_fargTyBinds))) in
-        let () = Printf.printf "%s" ("length right "^ (string_of_int (List.length list_exp))) in
-          
-        let () = assert ((List.length list_fargTyBinds) = (List.length list_exp)) in 
-
-        let folding_fun = fun (vcs, substs) (fargBind) (actual_arg_exp) ->
-          let (_, fargty) = fargBind in 
-          let exp_from_valExp = actual_arg_exp in
-          let open Typedtree in 
-
-          let (_,argTy) = type_synth_exp (ve,pre,exp_from_valExp) in 
-                    (*
-                     *  Γ ⊢ argTy <: fargty
-                     *)
-
-          let vcs1 = VC.fromTypeCheck (ve,pre,argTy,fargty) in         
-
-
-          (* let get the pattern for the id   *) 
-          let exp_desc_from_exp = exp_from_valExp.exp_desc in 
-          let argPId  = match exp_desc_from_exp with 
-            | Texp_ident (p,_,_) -> p
-
-          in 
-          let argId = match argPId with 
-              Pident id -> id
-            | _ -> raise (SpecVerifyExc "Only Pident handled ")in 
-
-          let  (_,substs') = unifyArgs (fargBind,argId)  
-          in
-          (List.concat[vcs;vcs1],List.concat[substs;substs'])
-        in 
-        let (finalvcs, finalsubsts) = List.fold_left2 (folding_fun) ([],[]) list_fargTyBinds list_exp in
-        let resTy = RefTy.applySubsts finalsubsts fResTy in 
-          (* Do we need to check this 
-                   *  Γ ⊢ resTy <: fresTy
-                   *)
-    (*  
-             let () = Printf.printf "%s" ("\nty of return Value "^RefTy.toString resTy) in      
-              let () = Printf.printf "%s" ("\nty of res const "^RefTy.toString fResTy) in      
-                    
-      let vcsRes = VC.fromTypeCheck (ve, pre, resTy, fResTy) in 
-       let finalvcs = List.concat [vcsRes;finalvcs] in            
- *)
-
-        (finalvcs, resTy)
-
-
-        | Base (var, tyd, pr) -> 
-         let () = Printf.printf "%s" ("#######T-const-apply Other case \n") in
-         ([], RefTy.fromTyD (tyd))
-
-    )
+      ([], resRefTy)
 
 (*The v/\mu [\phi_c] v/\mu [phi_n]*)
 and doIt_pat_testexp_bind (ve, pre, pat_exp_bind)  = 
@@ -747,10 +754,7 @@ and type_check_exp (ve, pre, exp, tyexp)  =
         let () = Printf.printf "%s" "Γ ⊢ expRefTy <: ty" in    
 
         let new_vcs = VC.fromTypeCheck (ve, pre, expRefTy, tyexp)  in 
-        let  _ = Printf.printf "-- new VCS --------------->\n" in 
-        let _ = Printf.printf "%s" (L.toString (VC.layouts new_vcs)) in 
-   
-        List.concat [expvcs;new_vcs]
+       List.concat [expvcs;new_vcs]
 
 
 and doIt_lambda (ve, pre, lambda) =

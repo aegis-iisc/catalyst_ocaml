@@ -1,6 +1,7 @@
 %{
 open SpecLang
 open RelLang
+open Printf
 module TypeSpec = SpecLang.RelSpec.TypeSpec
 module RefTy = SpecLang.RefinementType
 let defaultCons = SpecLang.Con.default
@@ -13,6 +14,8 @@ let genVar = fun _ ->
       Var.fromString id 
 let ($) (f,arg) = f arg
 let  empty = fun _ -> Vector.new0 ()
+let print msg = let () = Printf.printf "%s" msg in ()
+
 %}
 
 %token   PRIMITIVE 
@@ -35,7 +38,7 @@ let  empty = fun _ -> Vector.new0 ()
  %token CONJ  
  %token  DISJ
  %token  EOL
-%token    COLON  
+%token  COLON  
 %token SEMICOLON 
 %token  COMMA  
 %token  STAR  
@@ -61,7 +64,9 @@ start:
   | EOF       {RelSpec.mk_empty_relspec ()}
 
 spec:   
-  |d = decsandtys  {d}
+  |d = decsandtys  {
+                  let () = Printf.printf "%s" "spec***********" in 
+                  d}
 
 decsandtys: 
    | r=reldec SEMICOLON d=decsandtys 
@@ -81,7 +86,10 @@ decsandtys:
                               typespecs = typespecs}
                 }
   | t=typespec SEMICOLON d=decsandtys
-                {match d with
+
+                {
+                  let () = Printf.printf "%s" "typespec case &&&&&&&&" in 
+                  match d with
                  RelSpec.T {reldecs; primdecs; 
                   typespecs} -> 
                     RelSpec.T {reldecs = reldecs; primdecs=primdecs;
@@ -174,35 +182,52 @@ elem : ii=INT {Int(ii)}
 
 
 
-typespec : ASSUME i=ID COLON rt=refty {TypeSpec.T {isAssume = true;
+typespec : ASSUME i=ID COLON rt=refty {
+                                          print "case 1";
+                                          TypeSpec.T {isAssume = true;
                                               name = (Var.fromString i);
                                               params = empty ();
                                               refty = rt}}
-         | i=ID COLON rt=refty {TypeSpec.T {isAssume = false;
+         | i=ID COLON rt=refty {      let () = Printf.printf "%s" "case 2" in 
+                                      TypeSpec.T {isAssume = false;
                                        name = (Var.fromString i);
                                        params = empty ();
                                        refty = rt}}
          | LPAREN ps=paramseq RPAREN i=ID COLON rt=refty {
-                    TypeSpec.T {isAssume = false;
+                                  let () = Printf.printf "%s" "case 3" in 
+                                  TypeSpec.T {isAssume = false;
                                 name = Var.fromString i;
                                 params = Vector.fromList ps; 
                                 refty = rt}};
 
-refty : rta=reftyatom {rta}
-      | vrta=vartyatom ARROW rt=refty {RefTy.Arrow ((Var.noName , (snd vrta)), rt)};
+refty : rta=reftyatom { let () = Printf.printf "%s" " case 4-1" in rta}
+      | vrta=vartyatom ARROW rt=refty {  let () = Printf.printf "%s" " case 4-2" in 
+                                
+                                          RefTy.Arrow ((Var.noName , (snd vrta)), rt)};
 
-reftyatom : bt=basety {bt}
-          | LPAREN vas=vartyseq RPAREN  {match vas with
-                          
+reftyatom : bt=basety {let () = Printf.printf "%s" "case  reftyAtom base" in 
+                         
+                        bt}
+          | LPAREN vas=vartyseq RPAREN  {
+                          let () = Printf.printf "%s" "case  reftyAtom other" in 
+                         
+                          match vas with
+                                 
                           [(v, (RefTy.Base (_, _, _) as refty))] -> 
                               RefTy.alphaRenameToVar (refty) v
                         | [(v,refty)] -> refty
                         | _ -> RefTy.Tuple (Vector.fromList vas)};
 
-vartyatom : bt=basety {match bt with 
+vartyatom : bt=basety {
+                      let () = Printf.printf "%s" " case  vartyatom base" in 
+                         
+                      match bt with 
                       RefTy.Base (v,_,_) -> (v,bt)
                     | _ -> raise (Failure "Impossible case of basety")}
-           | LPAREN vas=vartyseq RPAREN  {match vas with
+           | LPAREN vas=vartyseq RPAREN  {
+                       let () = Printf.printf "%s" " case  vartyatom other" in 
+                     
+                      match vas with
                           [x] -> x 
                         | _ -> (genVar (), RefTy.Tuple 
                             (Vector.fromList vas))

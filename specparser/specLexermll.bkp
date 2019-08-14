@@ -42,7 +42,7 @@ let id = ['a'-'z' 'A'-'Z' '_'] ['a'-'z' 'A'-'Z' '0'-'9' '_']*
 
 rule token = parse
 | eol {line := (!line)+1; token lexbuf}
-|(ws)+  {debug "whitespace"; token lexbuf}
+|(ws)+  {debug "whitespace "; token lexbuf}
 |("primitive")  {debug "primitive" ; Tokens.PRIMITIVE}
 |("relation")  {debug "relation"; Tokens.RELATION}
 |("true") {debug "true"; Tokens.TRUE}

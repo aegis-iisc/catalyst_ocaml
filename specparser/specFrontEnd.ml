@@ -15,13 +15,20 @@ let lex_and_parse s=
   
     
     let lexbuf = 
-      Lexing.from_string s  in 
+      try 
+      Lexing.from_string s  
+      with 
+      | _ -> raise (ParserError "Error in Lexing ")
+    in   
+    let v = Lexing.lexeme lexbuf in 
+    let () = Printf.printf "%s" ("\nThe lexeme "^(v)) in 
+    let () = Printf.printf "%s" ("\n*****Lexeme ends *********") in 
     
-     let ast = 
+    let ast = 
       try 
        SpecParser.start SpecLexer.token lexbuf 
       with 
-      | e -> raise (ParserError ("test")) 
+      | e -> raise (e) 
     in
     ast 
 

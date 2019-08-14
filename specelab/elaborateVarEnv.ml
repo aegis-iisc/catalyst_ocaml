@@ -25,11 +25,11 @@ module PR = PrimitiveRelation
 module SR = StructuralRelation
 
 (*comment this out to print  Printf messages*)
-module Printf = struct
+(* module Printf = struct
   let printf f s = ()
 
 end 
-
+ *)
 
 module SPSBValue = struct
   type t = {dom : TyD.t option ref; range : SVar.t}
@@ -130,6 +130,7 @@ let bootStrapBools ve =
 let bootStrapCons ve = 
   (*create nil*)
   let nilvid = Var.fromString "[]" in 
+  let nilcosntantvid = Var.fromString "nil" in 
   let consvid = Var.fromString "::" in 
   let conparam = TyD.Tvar (Tyvar.fromString "'a") in 
   let list_cons = Tycon.fromString "list" in 
@@ -147,13 +148,18 @@ let bootStrapCons ve =
   let consArgsRefTy = RefTy.Tuple (paramTuple) in  
   let consResRefTy = RefTy.fromTyD listTyD in 
 
-let consRefTy = RefTy.Arrow ((Var.noName, consArgsRefTy),  consResRefTy) in 
+  let consRefTy = RefTy.Arrow ((Var.noName, consArgsRefTy),  consResRefTy) in 
 
   let consRefTyS = toRefTyS consRefTy in 
   let ve' = VE.add ve (nilvid,nilRefTyS) in 
   let ve'' = VE.add ve' (consvid,consRefTyS)
-  in
-  ve''
+  in 
+  let type_nil_constant = RefTy.fromTyD listTyD in
+  let typeS_nil_constant = toRefTyS type_nil_constant in  
+  let ve''' = VE.add ve'' (nilcosntantvid, typeS_nil_constant) in 
+
+  
+  ve'''
 
 (* let  elabDatBind  ve (cons,tyvars,tycon) =
    let destTyD = TyD.makeTconstr (tycon, tyvars) in 
@@ -899,10 +905,14 @@ let elab_vbs (ve) (vb_list) =
         
         let funTyD = TyD.makeTarrow(normalargTyD, normalbodyTyD) in 
         let fun_name =get_name_for_pat vb_pat in
-        let () = Printf.printf "%s" (Var.toString (fun_name)^"\n") in 
-        let funTyS = VE.find ve fun_name in 
+        (*if the function type is being provided by the programmer use it, else create a simlple RefTY from the ocaml types*)
+        let funTyS = 
+          try 
+            VE.find ve fun_name  
+           with 
+           | e ->  raise (e)
 
-
+         in   
 
         let funRefTy = mergeTypes (funTyD, RefTyS.specializeRefTy 
                                      funTyS) in 
@@ -1104,10 +1114,7 @@ let elaborate (tstr) (RelSpec.T {reldecs;primdecs;
                                 fun ((id,{ty;map}),ve) -> Vector.fold (map, ve, 
            
                                                                        fun (conPatBind,ve) -> addRelToConTy ve conPatBind id)) in 
-  (*  let  _ = Printf.printf "\n@Var Env After Refinement:\n" in
-  let  _ = Printf.printf "%s" ((VE.layout refinedVE)) in
- *)
-
+  (*The variable environment population using the user provided specifications*)
   let  protoVE = List.fold_left          
       (fun ve (TypeSpec.T {isAssume;name;params;refty}) -> 
          

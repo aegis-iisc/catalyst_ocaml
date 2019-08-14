@@ -35,11 +35,20 @@ let discharge (VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP)) =
   let relMap = RelMap.empty in 
 
   (*Adding missing tydbinds*)
-  let bnew = (Var.fromString "temp4099", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
   let bnew_x = (Var.fromString "x", TyD.Tvar (Tyvar.fromString "'a") ) in 
   let bnew_xs = (Var.fromString "xs", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
-  
-   let tydbinds = bnew_xs::bnew_x::  (* bnew ::  *) tydbinds in 
+   let bnew_v_2 = (Var.fromString "v_2", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
+   let bnew_accum = (Var.fromString "accum", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
+   let bnew_v = (Var.fromString "v", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
+   let bnew_temp1 = (Var.fromString "temp1", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
+let bnew_temp2 = (Var.fromString "temp2", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
+    
+
+  (*let bnew_v_22 = (Var.fromString "v_22", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
+  let bnew_v_21 = (Var.fromString "v_21", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
+  let bnew_v_7 = (Var.fromString "v_7", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
+  *) 
+   let tydbinds = bnew_temp1 :: bnew_temp2:: bnew_v:: bnew_accum::  bnew_xs::bnew_x::   bnew_v_2 :: (*bnew_v_22 :: bnew_v_21:: bnew_v_7 :: *) (* bnew ::  *) tydbinds in 
  
  
 (*   let relIdRmem = RelId.fromString "Rmem" in 

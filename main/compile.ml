@@ -146,14 +146,14 @@ let catalyst_elaborate_envs relspecs typedtree =
     in  
     let unit_lists = List.mapi dischargeVC elaborated_vcs in   
 
-   (*  let _ = z3_log_close () in 
+    (* let _ = z3_log_close () in 
     *)
       
     Printf.printf "%s" "is correct w.r.t given specification!\n"
     
  
 let () = 
-
+  
   let ml_file = Sys.argv.(1) in 
   let spec_file = Sys.argv.(2) in 
 
@@ -162,7 +162,6 @@ let () =
   let _ = Printf.printf "%s" ("\nspecfile :: "^spec_file) in 
       
 
-     let () = Printf.printf "%s" "HI" in 
   	let rel_ast = elaborateSMLWithSpec spec_file in 
   	let string_ast = RelSpec.toString rel_ast in 		
   		Printf.printf "%s" string_ast;
