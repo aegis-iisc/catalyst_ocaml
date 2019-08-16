@@ -182,10 +182,10 @@ let  rec unifyWithDisj refTy1  refTy2  =
       let () = Printf.printf "%s" ("\nty of snd"^RefTy.toString refTy2) in      
            
    let _ = assert (TyD.sametype td1 td2) in 
-      let pred_unify_result_vars = Predicate.Base (BP.varEq (bv1, bv2)) in 
-      let pred1 = Predicate.Conj (pred1, pred_unify_result_vars) in 
-      let pred2 = Predicate.Conj (pred2, pred_unify_result_vars) in 
-      let pred1' = Predicate.applySubst (bv2,bv1) pred1
+        let pred_unify_result_vars = Predicate.Base (BP.varEq (bv1, bv2)) in 
+       let pred1 = Predicate.Conj (pred1, pred_unify_result_vars) in 
+       (*let pred2 = Predicate.Conj (pred2, pred_unify_result_vars) in 
+      *)  let pred1' = Predicate.applySubst (bv2,bv1) pred1
        in
       Base (bv2,td2,Predicate.dot (pred1',pred2))
   | (Tuple t1,Tuple t2) -> 
@@ -208,8 +208,11 @@ let  rec unifyWithDisj refTy1  refTy2  =
  (*
    * Invariant : bv and td of ty is unchanged.
    *)
-let  wellFormedType (marker, markedVE , ty) 
-  =
+let  wellFormedType (marker, markedVE , ty) =
+   let () = Printf.printf "\n*******Checking |Gamma |- tau *********\n" in 
+   let () = Printf.printf "%s" ((RefTy.toString ty)^"\n") in 
+
+  
   let velist = VE.toVector markedVE in 
   let indx = Vector.index velist (fun (v,_) -> varEq (v,marker)) in 
   let i = match indx with 
@@ -293,7 +296,10 @@ let rec  type_synth_exp (ve, pre, exp) =
 
       (*The a-normal  form will have just one argument*)   
       let () = assert ((List.length arg_label_exp_list) = (List.length parametersTyBind)) in 
+    (*Also assert the type of the arguments *)   
+      let () = List.iter (fun (x,y) -> Printf.printf "%s" ("\n[ "^(Var.toString x)^" :: "^(RefTy.toString y)^" ] \n"))  parametersTyBind in  
 
+  
       let folding_fun = fun (vcs, substs) (fargBind) (actual_arg_exp) ->
         let argValExp =  actual_arg_exp in
         let (_, fargty) = fargBind in 
@@ -334,18 +340,8 @@ let rec  type_synth_exp (ve, pre, exp) =
       let (finalvcs, finalsubsts) = List.fold_left2 (folding_fun) (vcs1,[]) parametersTyBind arg_label_exp_list
       in 
       let resTy = RefTy.applySubsts finalsubsts resRefTy in 
-
- (*
-                   *  Γ ⊢ resTy <: fresTy
-                   *)
-(* 
-             let () = Printf.printf "%s" ("\nty of return Value "^RefTy.toString resTy) in      
-              let () = Printf.printf "%s" ("\nty of res const "^RefTy.toString fResTy) in      
-                    
-             
-       let vcsRes = VC.fromTypeCheck (ve, pre, resTy, fResTy) in 
-       let finalvcs = List.concat [vcsRes;finalvcs] in            
- *)
+      let () = Printf.printf "%s" ("\n *******************ty of return Value "^RefTy.toString resTy) in      
+            
 
      (finalvcs, resTy)
 
@@ -368,23 +364,30 @@ let rec  type_synth_exp (ve, pre, exp) =
 
   | Texp_let (rf, vbl, exp) ->
       (*T-let rule from the paper*)
+        (** let vbl = (P1 = E1 and ... and Pn = EN) in (exp= E)       (flag = Nonrecursive)
+            let rec P1 = E1 and ... and Pn = EN in E   (flag = Recursive)
+         *)
 
-
-       let () = Printf.printf "%s" "\n######### synthesis:let \n" in
+      let () = Printf.printf "%s" "\n######### synthesis:let \n" in
  
       let (marker, markedVE) = markVE ve in 
+      (*list of VC and ([P1: Typeof E1; P2 : Typeof E2; .... : Pn : Typeof En)*)
       let (vcs1 , refTys_bind) = 
         type_synth_value_bindings (ve, pre, vbl) in 
 
       let value_type_list = match refTys_bind with 
         | RefTy.Tuple (var_binding_list) -> var_binding_list 
         | _ -> raise (SpecVerifyExc "Type of  not a tuple") in  
-
+      (*\Gamma, P1: T1, P2:T2 ....Pn:Tn*)  
       let extendedVE = List.fold_left (
-          (* fun (ve -> (pair var* refTY) -> ve)
-          *)  
           fun veacc (var, refty) -> 
-            let tsrefty  = toRefTyS refty in 
+            (*we should also have Eq (P1, bv T1)*)
+           let newrefTy =  match refty with 
+             RefTy.Base (bv, tyd, pred) -> let pred' = Predicate.Base (BP.varEq (var, bv)) in 
+                                      RefTy.Base (bv, tyd, Predicate.Conj(pred, pred'))
+            | _ -> raise (SpecVerifyExc "The type of the let RHS expression must be a Base type")    
+           in  
+           let tsrefty  = toRefTyS newrefTy in 
             let ve' = VE.add veacc (var, tsrefty) in 
             ve' 
 
@@ -393,9 +396,8 @@ let rec  type_synth_exp (ve, pre, exp) =
       let (vcs2, type_body_exp) = type_synth_exp (extendedVE, pre, exp) in 
 
       (List.concat [vcs1;vcs2], 
-       wellFormedType (marker,extendedVE,type_body_exp))
-  (*patlist is a list of pattern and expression, i.e. list of cases *)
-  (*TODO :: Correct  this using the rules*)
+      wellFormedType (marker,extendedVE,type_body_exp))
+  
   | Texp_match (testexp, case_list, explist, p) ->
        let () = Printf.printf "%s" "\n######### synthesis:match  \n" in
  
@@ -662,7 +664,7 @@ and doIt_pat_testexp_bind (ve, pre, pat_exp_bind)  =
        (* Extend ve' with a new dummy var to keep track of
                * relationship between matched arguments and rhsvar.*)
         
-      let dummyTyDbind = (Var.uniqueDummy , toRefTyS substituted_cstrResRefTy) in 
+      let dummyTyDbind = (Var.genVar() , toRefTyS substituted_cstrResRefTy) in 
 
       VE.add ve  dummyTyDbind  
      | _ -> raise (SpecVerifyExc "The pattern must be a Tpat_construct") 
@@ -670,6 +672,7 @@ and doIt_pat_testexp_bind (ve, pre, pat_exp_bind)  =
 
 and type_synth_value_bindings (ve, pre, vblist) = 
     let open Typedtree in 
+    
     let mapping_function  = 
       fun vb -> 
         let vbpattern  = vb.vb_pat in 
@@ -677,8 +680,11 @@ and type_synth_value_bindings (ve, pre, vblist) =
         let vbexpression = vb.vb_expr in 
         (vbid, type_synth_exp (ve, pre, vbexpression))  
     in 
+
+
     (*[(vcs1, refty1);(vcs2, refty2);...]*)
     let list_pair_vcs_refty = List.map mapping_function vblist in 
+    
     let folding_function = 
       fun (vcs, var_refty_binds) (vari, (vcsi,reftyi)) -> 
         (List.concat [vcs;vcsi], ((vari, reftyi)::var_refty_binds)) in 
@@ -748,8 +754,8 @@ and type_check_exp (ve, pre, exp, tyexp)  =
          * Γ ⊢ expRefTy <: ty
          *)
 
-        let () = Printf.printf "%s" ("\nrefinement Type for exp ::: "^(RefTy.toString expRefTy)) in    
-        let () = Printf.printf "%s" ("\nrefinement Type for tyexp :::"^(RefTy.toString tyexp)) in    
+        let () = Printf.printf "%s" ("\nrefinement Type synthesized for exp ::: "^(RefTy.toString expRefTy)) in    
+        let () = Printf.printf "%s" ("\nrefinement Type provided for tyexp :::"^(RefTy.toString tyexp)) in    
 
         let () = Printf.printf "%s" "Γ ⊢ expRefTy <: ty" in    
 

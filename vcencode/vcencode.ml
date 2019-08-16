@@ -23,12 +23,23 @@ let ignore = fun _ -> ()
 
 let z3_log = Z3_encode.logz3
 
+ (* 
+module Printf = struct 
+  let printf f s = ()
+
+
+end  
+  *)
+
 
 
 let discharge (VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP)) =
 
 	  let ctx = ref @@ Z3_encode.mkDefaultContext ()  in 
-  let solver = ref @@ Solver.mk_solver !ctx None in   
+  let solver = ref @@ Solver.mk_solver !ctx None in 
+  let () = Solver.reset !solver in   
+
+     
 
 
   let constMap = ConstMap.empty in  
@@ -37,18 +48,28 @@ let discharge (VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP)) =
   (*Adding missing tydbinds*)
   let bnew_x = (Var.fromString "x", TyD.Tvar (Tyvar.fromString "'a") ) in 
   let bnew_xs = (Var.fromString "xs", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
-   let bnew_v_2 = (Var.fromString "v_2", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
+  let bnew_l = (Var.fromString "l", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
+ let bnew_l2 = (Var.fromString "l2", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
+ let bnew_l4 = (Var.fromString "l4", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
+ let bnew_v1 = (Var.fromString "v_1", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
+ 
+    let bnew_v_2 = (Var.fromString "v_2", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
    let bnew_accum = (Var.fromString "accum", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
    let bnew_v = (Var.fromString "v", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
+   
    let bnew_temp1 = (Var.fromString "temp1", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
-let bnew_temp2 = (Var.fromString "temp2", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
-    
+  let bnew_temp2 = (Var.fromString "temp2", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
+  let bnew_v3 = (Var.fromString "v_3", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
+  let bnew_t1 = (Var.fromString "t1", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
+  let bv1 = (Var.fromString "v1", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
+  let bv2 = (Var.fromString "v2", TyD.Tvar (Tyvar.fromString "'a") ) in 
+         
 
   (*let bnew_v_22 = (Var.fromString "v_22", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
   let bnew_v_21 = (Var.fromString "v_21", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
   let bnew_v_7 = (Var.fromString "v_7", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
   *) 
-   let tydbinds = bnew_temp1 :: bnew_temp2:: bnew_v:: bnew_accum::  bnew_xs::bnew_x::   bnew_v_2 :: (*bnew_v_22 :: bnew_v_21:: bnew_v_7 :: *) (* bnew ::  *) tydbinds in 
+   let tydbinds =(*  bnew_v3::*) bv2:: bv1::bnew_t1::bnew_v1 ::bnew_l :: bnew_l4:: bnew_l2:: bnew_temp1 ::  (*bnew_temp2::*) bnew_v:: bnew_accum::   bnew_xs::bnew_x :: (*  bnew_v_2 :: *) (*bnew_v_22 :: bnew_v_21:: bnew_v_7 :: *) (* bnew ::  *) tydbinds in 
  
  
 (*   let relIdRmem = RelId.fromString "Rmem" in 
@@ -536,6 +557,8 @@ let bnew_temp2 = (Var.fromString "temp2", TyD.Tconstr(Tycon.fromString "list",[T
       let () = Printf.printf "%s" ("solver  "^(Solver.to_string solverDischarged)) in   
      
       let res =   Solver.check solverDischarged [] in 
+
+      let () = Solver.reset solverDischarged in 
      
     
       match  res with 

@@ -98,9 +98,7 @@ end
 module Var = struct
   open Ident
   
-  
   let  count = ref 0
-
   let genVar = 
     fun _ ->
       let id = "dummy"^(string_of_int !count) in 
@@ -113,7 +111,7 @@ module Var = struct
   let fromString s = create s
   let layout t = Layout.str (toString t )
   let noName = create ""
-  let uniqueDummy = genVar ()  
+   
 
 
 
@@ -1220,7 +1218,7 @@ struct
      
 
 
-
+(* 
 
   let rec layout rty = match rty with 
           Base(var,td,pred) -> L.seq [L.str ("{" ^ (Var.toString var)^ ":" ^ (TyD.toString td) ^ " | "); 
@@ -1232,7 +1230,16 @@ struct
               layout t1; L.str ")"]; 
             layout t2]," -> "))
         | Arrow ((v1,t1),t2) -> L.seq [L.str (Var.toString v1); L.str ":"; layout t1 ; L.str "->" ; layout t2] 
-            
+             *)
+  let rec layout rty = match rty with 
+          Base(var,td,pred) -> L.seq [L.str ("{" ^ (Var.toString var)^ ":" ^ (TyD.toString td) ^ " | "); 
+            Predicate.layout pred;L.str "}"]
+        | Tuple tv -> L.vector (List.rev (List.map (fun (v,t) ->  L.seq [L.str (Var.toString v); L.str ":"; layout t]) tv))
+        | Arrow ((v1,(Arrow (_,_) as t1)),t2) -> L.seq [
+              L.seq[L.str "("; L.str (Var.toString v1); L.str ":"; layout t1; L.str ")"]; 
+              L.seq [L.str "->"; layout t2]] 
+        | Arrow ((v1,t1),t2) -> L.seq [L.str (Var.toString v1); L.str ":"; layout t1 ; L.str "->" ; layout t2] 
+
 
 (* 
 
@@ -1310,7 +1317,7 @@ struct
           | _ -> (params, ty)
     in 
     let (parametersTyBind, resTy ) =  get_params arrowty [] res in
-     (parametersTyBind, resTy)
+     (List.rev parametersTyBind, resTy)
  
 end
 

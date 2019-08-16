@@ -159,6 +159,10 @@ let rec havocPred (pred) : (tydbinds*vc_pred) list =
         mybinds =  tyDB in 
       let vcs = havocPred p
       in
+    let _ = Printf.printf "%s" ("HAVOC Exists") in 
+      let _ = Printf.printf  "\n" in 
+
+     
       Vector.map (vcs, fun (binds,envP) ->
           (Vector.concat [mybinds;binds],envP))
 
@@ -170,9 +174,15 @@ let rec havocPred (pred) : (tydbinds*vc_pred) list =
       (* conj is a join point *)
       join (vcs1,vcs2)
 
-  | P.Dot (p1,p2) -> Vector.concat [havocPred p1;
+  | P.Dot (p1,p2) -> 
+   let _ = Printf.printf "%s" ("HAVOC DOT") in 
+      let _ = Printf.printf  "\n" in 
+
+    Vector.concat [havocPred p1;
                                     havocPred p2]
-  | _ -> trivialAns () (* May need havoc here.*)
+  | _ -> let _ = Printf.printf "%s" ("HAVOC TrivialVC") in 
+   
+  trivialAns () (* May need havoc here.*)
 
 
 let rec havocTyBind (v ,refTy) =
@@ -251,9 +261,9 @@ let rec fromTypeCheck (ve, pre, subTy, supTy)  =
              * Second, substitute actuals for formals in p2
              *)
         let p2 = P.applySubst (v1,v2) p2 in 
-            (* 
-             let _ = Printf.printf "AnteP: " in 
-             let _ = Layout.print (P.layout p1,Printf.printf) in 
+            
+             (* let _ = Printf.printf "\n\nAnteP********************: " in 
+             let _ = Printf.printf "%s" (Layout.toString (P.layout p2)) in 
              let _ = Printf.printf "\n" in 
               *)
             (*
@@ -262,8 +272,13 @@ let rec fromTypeCheck (ve, pre, subTy, supTy)  =
         let ve = VE.add ve (v1,RefTyS.generalize (Vector.new0 (),
                                                   RefSS.fromRefTy (RefTy.fromTyD t1))) in 
         let envVCs = fun _ -> havocVE ve in 
+        
+       
         let anteVCs = fun _ -> havocPred p1 in 
         let vcs = fun _ -> join (envVCs (),anteVCs ()) in 
+        
+             
+
         let conseqPs = fun _ -> 
           match coercePTtoT p2 with
             Conj vcps -> vcps 

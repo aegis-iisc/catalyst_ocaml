@@ -154,7 +154,8 @@ let bootStrapCons ve =
   let ve' = VE.add ve (nilvid,nilRefTyS) in 
   let ve'' = VE.add ve' (consvid,consRefTyS)
   in 
-  let type_nil_constant = RefTy.fromTyD listTyD in
+  let type_nil_constant = (* RefTy.fromTyD listTyD in *)
+                          RefTy.Base (Var.fromString "[]", listTyD, Predicate.truee()) in 
   let typeS_nil_constant = toRefTyS type_nil_constant in  
   let ve''' = VE.add ve'' (nilcosntantvid, typeS_nil_constant) in 
 
@@ -607,8 +608,8 @@ let rec elabRExpr (re,pre,tyDB,spsB,rexpr) =
 
 
 let  elabPRBind (pre) (PR.T {id;def}) =
-  (*This creates a new Tyvar without a name, Where is this used ??*)
-  let newVarTyD = fun _ -> TyD.makeTvar (Ident.create "") in 
+  (*This creates a new Tyvar without a name 'a , in the complete version this must be updated with noName*)
+  let newVarTyD = fun _ -> TyD.makeTvar (Ident.create "'a") in 
   let rec bindVars tyDB def =  
     match def with 
     | (PR.Nary (v,def)) -> bindVars (TyDB.add tyDB  v ( newVarTyD())) def  
@@ -812,6 +813,11 @@ let mergeTypes (tyd , refTy ) =
   let open Types in
   let open TyD in  
   let open RefTy in 
+   
+    let () = Printf.printf "%s" (" \n merging funTyD from the OCaml compiler "^(TyD.toString tyd))  in 
+    let () = Printf.printf "%s" (" \n merging funRefTy provided "^(RefTy.toString refTy))  in 
+
+
 
   let mergeErrorMsg (tyd,tyd') = "Cannot merge ML type " ^ (TyD.toString tyd)
                                  ^ " with type given in spec: " ^ (TyD.toString tyd') in 
@@ -846,6 +852,7 @@ let mergeTypes (tyd , refTy ) =
 
  *)
     | ( TyD.Tarrow (tyd1,tyd2), Arrow (argBind,resTy) ) ->
+
         let (substs,argBind') = doMerge tyd1 argBind in 
         let dummyArgVar = argv in 
         let (_,(_,resTy')) = doMerge tyd2 (dummyArgVar, 
@@ -854,10 +861,16 @@ let mergeTypes (tyd , refTy ) =
         in
         (Vector.new0 (), newArgBind)
 
-    | _ -> raise (ElebEnvFail ("Types Merge Error. Cannot merge\n"
+    | _ -> raise 
+
+        (ElebEnvFail ("Types Merge Error. Cannot merge\n"
                                ^ "1. "^(L.toString $ RefTy.layout refTy)^", \n"
                                ^ "2. "^(TyD.toString tyd)^"\n") ) in 
-  let (_,(_,refTy')) = doMerge tyd (genVar (), refTy)
+  let (_,(_,refTy')) = 
+    (* try 
+     *)  doMerge tyd (genVar (), refTy)
+    (* with 
+    | _ -> (Vector.new0 (), (genVar(), refTy))   *)
   in
   refTy'
 
@@ -903,6 +916,10 @@ let elab_vbs (ve) (vb_list) =
         let normalargTyD = TyD.normalizeTypes argType in 
         let normalbodyTyD = TyD.normalizeTypes body.exp_type in 
         
+        let () = Printf.printf "%s" (" \n Function artTy "^(TyD.toString normalargTyD))  in 
+        let () = Printf.printf "%s" (" \n funRefTy remaining "^(TyD.toString normalbodyTyD))  in 
+
+
         let funTyD = TyD.makeTarrow(normalargTyD, normalbodyTyD) in 
         let fun_name =get_name_for_pat vb_pat in
         (*if the function type is being provided by the programmer use it, else create a simlple RefTY from the ocaml types*)
@@ -914,8 +931,13 @@ let elab_vbs (ve) (vb_list) =
 
          in   
 
-        let funRefTy = mergeTypes (funTyD, RefTyS.specializeRefTy 
-                                     funTyS) in 
+        let funRefTy = RefTyS.specializeRefTy 
+                                     funTyS in  
+        let () = Printf.printf "%s" (" \n funTyD from the OCaml compiler "^(TyD.toString funTyD))  in 
+        let () = Printf.printf "%s" (" \n funRefTy provided "^(RefTy.toString funRefTy))  in 
+
+
+        let funRefTy = mergeTypes (funTyD, funRefTy ) in 
         (* skipping the parametric refinement types for now 
            let RefSS.T{svars; prefty= PRF}
         *)
@@ -1093,9 +1115,16 @@ let elaborate (tstr) (RelSpec.T {reldecs;primdecs;
    let  _ = Printf.printf "\n@Var Env After:\n" in
   let  _ = Printf.printf "%s" ((VE.layout initialVE)) in
     let  _ = Printf.printf "%s" "\n\n" in
+
+  let  _ = Printf.printf "\n@PRE Initial Empty --------->:\n" in
+  let  _ = Printf.printf "%s" (Layout.toString (PRE.layout PRE.empty)) in
+
   
 
   let  initialPRE = List.fold_left (fun (pre) (primbind) -> elabPRBind pre primbind) PRE.empty  primdecs in 
+
+  let  _ = Printf.printf "\n@PRE after prim elab -----> :\n" in
+  let  _ = Printf.printf "%s" (Layout.toString (PRE.layout initialPRE)) in
 
   
   

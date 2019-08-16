@@ -128,8 +128,8 @@ let catalyst_elaborate_envs relspecs typedtree =
       let  dischargeVC i vc = 
       let _ = Printf.printf "%s" ("Discharging VCS "^(string_of_int (i+1))^" of "^(string_of_int (List.length elaborated_vcs))^"\n") in 
           
-         (*  if (i = 0) then Printf.printf "Skipping VC1 " else 
- *)
+          (*   if (i = 0) then Printf.printf "Skipping VC1 " else 
+   *)
           match VCE.discharge vc with
           VCE.Success -> 
             Printf.printf  "%s" ("VC# "^(string_of_int i)^" discharged\n")
@@ -167,9 +167,9 @@ let () =
   		Printf.printf "%s" string_ast;
 
     let (tstr, _, _) =  get_abstract_syntax_tree ml_file in 
-    let () = Printf.printf "%s" "Print the AST" in 
+    (* let () = Printf.printf "%s" "Print the AST" in 
     let _ = Mytreeiter.Iterator.iter_structure  tstr in 
-
+ *)
     catalyst_elaborate_envs rel_ast tstr; 
    
 (*  else
