@@ -69,7 +69,7 @@ let discharge (VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP)) =
   let bnew_v_21 = (Var.fromString "v_21", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
   let bnew_v_7 = (Var.fromString "v_7", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
   *) 
-   let tydbinds =(*  bnew_v3::*) bv2:: bv1::bnew_t1::bnew_v1 ::bnew_l :: bnew_l4:: bnew_l2:: bnew_temp1 ::  (*bnew_temp2::*) bnew_v:: bnew_accum::   bnew_xs::bnew_x :: (*  bnew_v_2 :: *) (*bnew_v_22 :: bnew_v_21:: bnew_v_7 :: *) (* bnew ::  *) tydbinds in 
+   let tydbinds =(*  bnew_v3::*) (* bv1::bnew_t1::bnew_v1 ::bnew_l :: bnew_l4:: bnew_l2:: bnew_temp1 ::  (*bnew_temp2::*) bnew_v:: bnew_accum::  *)  bnew_xs::bnew_x :: (*  bnew_v_2 :: *) (*bnew_v_22 :: bnew_v_21:: bnew_v_7 :: *) (* bnew ::  *) tydbinds in 
  
  
 (*   let relIdRmem = RelId.fromString "Rmem" in 

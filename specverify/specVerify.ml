@@ -18,11 +18,11 @@ module PRE = ParamRelEnv
 
 
 (*comment this out to print  Printf messages*)
-(* module Printf = struct
+module Printf = struct
   let printf f s = ()
 
 end 
- *)
+
 
 
 module Tyvar =
@@ -167,7 +167,7 @@ let rec unifyArgs ((argv ,argTy) as argBind,
 
 (*Takes two refinement types and returns a unified type*)
 let  rec unifyWithDisj refTy1  refTy2  =
-   let () = Printf.printf "\n*******Performing Unification with Disjunction *********\n" in 
+   let () = Printf.printf "%s" "\n*******Performing Unification with Disjunction *********\n" in 
        
   let open RefTy in 
   match (refTy1, refTy2) with
@@ -176,7 +176,7 @@ let  rec unifyWithDisj refTy1  refTy2  =
   (*Disjunction of Predicates*)
   |(Base (bv1,td1,pred1),Base (bv2,td2,pred2)) ->
 
-      let () = Printf.printf "\n*******Performing Base : Base with Disjunction *********\n" in 
+      let () = Printf.printf "%s" "\n*******Performing Base : Base with Disjunction *********\n" in 
 
        let () = Printf.printf "%s" ("\nty of fst  "^RefTy.toString refTy1) in      
       let () = Printf.printf "%s" ("\nty of snd"^RefTy.toString refTy2) in      
@@ -190,7 +190,7 @@ let  rec unifyWithDisj refTy1  refTy2  =
       Base (bv2,td2,Predicate.dot (pred1',pred2))
   | (Tuple t1,Tuple t2) -> 
 
-      let () = Printf.printf "\n*******Performing Tuple  : Tuple with Disjunction *********\n" in 
+      let () = Printf.printf "%s" "\n*******Performing Tuple  : Tuple with Disjunction *********\n" in 
      let tuFun = fun l -> Tuple l 
       in 
       (tuFun
@@ -209,7 +209,7 @@ let  rec unifyWithDisj refTy1  refTy2  =
    * Invariant : bv and td of ty is unchanged.
    *)
 let  wellFormedType (marker, markedVE , ty) =
-   let () = Printf.printf "\n*******Checking |Gamma |- tau *********\n" in 
+   let () = Printf.printf "%s" "\n*******Checking |Gamma |- tau *********\n" in 
    let () = Printf.printf "%s" ((RefTy.toString ty)^"\n") in 
 
   
@@ -381,15 +381,16 @@ let rec  type_synth_exp (ve, pre, exp) =
       (*\Gamma, P1: T1, P2:T2 ....Pn:Tn*)  
       let extendedVE = List.fold_left (
           fun veacc (var, refty) -> 
-            (*we should also have Eq (P1, bv T1)*)
-           let newrefTy =  match refty with 
-             RefTy.Base (bv, tyd, pred) -> let pred' = Predicate.Base (BP.varEq (var, bv)) in 
-                                      RefTy.Base (bv, tyd, Predicate.Conj(pred, pred'))
+            (*we should also have Eq (P1, bv T1) to the constraints and should add the bv : baseOf (T1)*)
+           let (newrefTy, bvBind) =  match refty with 
+             RefTy.Base (bv, tyd, pred) -> let pred' = Predicate.Base (BP.varEq (var, bv)) in
+                                        (RefTy.Base (bv, tyd, Predicate.Conj(pred, pred')),( bv, toRefTyS (RefTy.Base (bv, tyd, Predicate.truee()) )))
             | _ -> raise (SpecVerifyExc "The type of the let RHS expression must be a Base type")    
            in  
            let tsrefty  = toRefTyS newrefTy in 
-            let ve' = VE.add veacc (var, tsrefty) in 
-            ve' 
+           let ve' = VE.add veacc (var, tsrefty) in
+           let ve'' = VE.add ve' bvBind in  
+            ve'' 
 
         ) ve value_type_list in 
 
@@ -901,6 +902,8 @@ let doIt_struct_items (ve_init, pre, tstr) =
         let () = Printf.printf "%s" "\n Case Tstr_value \n " in 
         let vcs_vb = doIt_value_bindings (ve, pre, value_bindings) in
         vcs_vb
+    
+    (*Extend this to handle user defined types (inductive and non-inductive)*)
     | _ -> ([], ve) in 
 
     (List.concat [vcs; (fst vcs_ve)] , snd (vcs_ve))

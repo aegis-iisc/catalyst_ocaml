@@ -1,27 +1,45 @@
-## OCaml 4.03 Frontend ##
+OCaml Implementation for Catalyst[1]
+A relational Specification framework as a dependent typesystem for OCaml.
 
-This is a minimal extract of OCaml 4.03
-[compiler](https://github.com/ocaml/ocaml/tree/4.03) frontend. It
-includes lexing, parsing and typechecking phases. Ideal for
-experimenting with the type system. 
-
-### Building ###
+Running
+==========
+./OCatalyst file.ml file.spec
 
 
-1. `./configure`
-2. `make`
+To Compile 
+===========
 
-A working installation of OCaml 4.03 or higher is assumed. In
-particular, `ocamlc`, `ocamlopt`, `ocamllex`, `ocamlyacc` and
-`ocamlde` tools are needed.
+We are currently building  OCatalyst using "ocamlbuild" tool.
 
-### COPYRIGHT ###
-
-All files marked "Copyright INRIA" in this distribution are copyright
-1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006,
-2007, 2008, 2009, 2010, 2011, 2012 Institut National de Recherche en
-Informatique et en Automatique (INRIA) and distributed under the
-conditions stated in file LICENSE.
+Dependencies
+-------------
+1.The OCaml compiler, version 4.03.0
+2. menhir, version 20180905 for Parsing and front-end design 
+3. Ocaml "core" pkg 
+4. Z3 libraries for ML
 
 
-# catalyst_ocaml
+Compiling 
+-------------
+cd OCatalyst_home
+ocamlbuild -use-menhir -tag thread -use-ocamlfind -pkg core -pkg z3 -Is typing,parsing,utils,speclang,specparser,specelab,specverify,vcencode,driver main/compile.native
+
+
+Things Handled
+1. Monomorphic lists with all major OCaml list library functions like concat, rev, append, revappend, cons, tail,  etc.
+2. Simple fold_left and fold_right, with trivial specifications for higher order functions. (This will extended with polymorphic higher order functions in the next update.)
+	- We get the correctness proof for the trivial case for free.
+3. Checked the incorrectness of a simple version of the map.
+
+
+Things in the next update
+1. Handling User defined datatypes.
+2. Handle inductive datatypes-
+	Handling, inductive types like a Tree will allow us to check relational properties over them. 
+2. Inferring variable sorts from the user provided specifications.
+	The current implementation uses the type inference of OCaml to get the base types of variables, this can be aided with the base types provided by the programmer and the definitions for the relations.  
+3. Extending Anormal form for extended OCaml
+4. Handling Parametric Relations and Parametric dependent types.
+
+
+

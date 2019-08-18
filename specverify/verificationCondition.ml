@@ -159,9 +159,9 @@ let rec havocPred (pred) : (tydbinds*vc_pred) list =
         mybinds =  tyDB in 
       let vcs = havocPred p
       in
-    let _ = Printf.printf "%s" ("HAVOC Exists") in 
+  (*   let _ = Printf.printf "%s" ("HAVOC Exists") in 
       let _ = Printf.printf  "\n" in 
-
+ *)
      
       Vector.map (vcs, fun (binds,envP) ->
           (Vector.concat [mybinds;binds],envP))
@@ -175,13 +175,13 @@ let rec havocPred (pred) : (tydbinds*vc_pred) list =
       join (vcs1,vcs2)
 
   | P.Dot (p1,p2) -> 
-   let _ = Printf.printf "%s" ("HAVOC DOT") in 
+  (*  let _ = Printf.printf "%s" ("HAVOC DOT") in 
       let _ = Printf.printf  "\n" in 
-
+ *)
     Vector.concat [havocPred p1;
                                     havocPred p2]
-  | _ -> let _ = Printf.printf "%s" ("HAVOC TrivialVC") in 
-   
+  | _ -> (* let _ = Printf.printf "%s" ("HAVOC TrivialVC") in 
+    *)
   trivialAns () (* May need havoc here.*)
 
 

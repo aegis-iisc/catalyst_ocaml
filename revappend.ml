@@ -23,5 +23,6 @@ let rec append l1 l2  =
 
 let rec revappend l1 l2 = 
   let revl1 = rev l1 in 
+  let lint = concat l1 l2 in 
   let res = append revl1 l2 in 
   res
