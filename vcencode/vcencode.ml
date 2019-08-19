@@ -23,13 +23,14 @@ let ignore = fun _ -> ()
 
 let z3_log = Z3_encode.logz3
 
- (* 
+ 
 module Printf = struct 
   let printf f s = ()
+  let originalPrint = Printf.printf 
 
 
 end  
-  *)
+ 
 
 
 
@@ -48,52 +49,10 @@ let discharge (VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP)) =
   (*Adding missing tydbinds*)
   let bnew_x = (Var.fromString "x", TyD.Tvar (Tyvar.fromString "'a") ) in 
   let bnew_xs = (Var.fromString "xs", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
-  let bnew_l = (Var.fromString "l", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
- let bnew_l2 = (Var.fromString "l2", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
- let bnew_l4 = (Var.fromString "l4", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
- let bnew_v1 = (Var.fromString "v_1", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
- 
-    let bnew_v_2 = (Var.fromString "v_2", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
-   let bnew_accum = (Var.fromString "accum", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
-   let bnew_v = (Var.fromString "v", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
    
-   let bnew_temp1 = (Var.fromString "temp1", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
-  let bnew_temp2 = (Var.fromString "temp2", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
-  let bnew_v3 = (Var.fromString "v_3", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
-  let bnew_t1 = (Var.fromString "t1", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
-  let bv1 = (Var.fromString "v1", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
-  let bv2 = (Var.fromString "v2", TyD.Tvar (Tyvar.fromString "'a") ) in 
-         
-
-  (*let bnew_v_22 = (Var.fromString "v_22", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
-  let bnew_v_21 = (Var.fromString "v_21", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
-  let bnew_v_7 = (Var.fromString "v_7", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
-  *) 
-   let tydbinds =(*  bnew_v3::*) (* bv1::bnew_t1::bnew_v1 ::bnew_l :: bnew_l4:: bnew_l2:: bnew_temp1 ::  (*bnew_temp2::*) bnew_v:: bnew_accum::  *)  bnew_xs::bnew_x :: (*  bnew_v_2 :: *) (*bnew_v_22 :: bnew_v_21:: bnew_v_7 :: *) (* bnew ::  *) tydbinds in 
+   let tydbinds = bnew_xs::bnew_x :: tydbinds in 
  
  
-(*   let relIdRmem = RelId.fromString "Rmem" in 
-  let rmemInst = RelLang.instOfRel relIdRmem in 
-  
-  let rmem_4099= Simple (Rel (RP.Eq ( RelLang.R (rmemInst, Var.fromString "temp4099"), RelLang.U((RelLang.R (rmemInst, Var.fromString "xs")),
-                                                                                                (RelLang.R (rmemInst, Var.fromString "l2")) ) ) )) in 
-
-   let pred_1= Simple (Base (BP.Eq ( 
-                              (Var (Var.fromString "temp4099")), Var ((Var.fromString "xs") ))))  in 
-
-  let pred_3= Simple (Base (BP.Eq ( 
-                              (Var (Var.fromString "temp4099")), Var ((Var.fromString "v_3") ))))  in 
- 
- let pred_31= Simple (Base (BP.Eq ( 
-                              (Var (Var.fromString "v_1")), Var ((Var.fromString "l2") ))))  in 
- 
-  let anteP_extra_list = [(* rhd_l3;rob_l3; rmem_l3 ;robs_l3; *)(* pred_31  ;  *)(* rmem_4099  *) (* pred_2; pred_3 pred_4;pred_5;pred_6;pred_7 *)] in
-
-
-  let anteP_extra = Conj anteP_extra_list in 
-  let anteP = Conj [anteP;anteP_extra] in 
-  *)
-   
   let newVC = VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP) in 
   
 
@@ -108,9 +67,9 @@ let discharge (VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP)) =
 
   in     
   let sanitizedVC = sanitizeVC newVC in 
-  let _ = Printf.printf "%s" ("Sanitized VCS") in 
-  let _ = Printf.printf "%s" (L.toString (VC.layouts [sanitizedVC])) in 
-  let _ = Printf.printf  "\n"  in 
+  let _ = Printf.originalPrint "%s" ("Sanitized VCS") in 
+  let _ = Printf.originalPrint "%s" (L.toString (VC.layouts [sanitizedVC])) in 
+  let _ = Printf.originalPrint  "\n"  in 
 
   let VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP) = sanitizedVC in 
       
@@ -193,7 +152,7 @@ let discharge (VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP)) =
          (tyMap, constMap, relMap, (TyMap.find tyMap tyD))  
         with 
         | TyMap.TyDNotFound _ -> 
-            let () = Printf.printf "%s" ("@@@@@"^(TyD.toString tyD)) in 
+          let () = Printf.printf "%s" ("@@@@@"^(TyD.toString tyD)) in 
       
           let sortfortyD = (match tyD with 
              TyD.Tvar _ ->  addTyD tyMap tyD 
@@ -283,7 +242,8 @@ let discharge (VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP)) =
 
     
     let processPrimEq (tyMap, constMap, relMap) (primR, def) =
-       
+         let () = Printf.originalPrint "%s" (" \nprocessPrimEq PrimEq  ") in 
+          
           (*
            * tbinds of VC.t are already processed. So Z3 relation
            * representing primR has been created already.
@@ -331,8 +291,10 @@ let discharge (VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP)) =
               try 
                 getConstForVar constMap v
                 with  
-               | ConstMap.ConstNotFound v -> const_true   
+               | ConstMap.ConstNotFound v -> raise (VCEex ("Var "^v^" not found"))(* const_true  *)  
           in 
+
+         
           let rec encodeQRelExpr  (e:expr) =
             match e with 
               T els -> 
@@ -553,11 +515,17 @@ let discharge (VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP)) =
       let solverDischarged = getSolver () in 
       let expressions_list = Solver.get_assertions solverDischarged  in  
 
-      let () = Printf.printf "%s" ("exp_list_size "^(string_of_int (List.length expressions_list))) in   
-      let () = Printf.printf "%s" ("solver  "^(Solver.to_string solverDischarged)) in   
-     
-      let res =   Solver.check solverDischarged [] in 
 
+      let () = Printf.originalPrint "%s" ("\n# of Z3 expressions "^(string_of_int (List.length expressions_list))) in   
+      let () = Printf.originalPrint "%s" ("\nsolver \n "^(Solver.to_string solverDischarged)) in   
+     
+      let res =   Solver.check solverDischarged [] in
+       let unsat_core = Solver.get_unsat_core solverDischarged in 
+ 
+       let () = Printf.printf "%s" ("\nUnsat_core  ") in   
+      let () = List.iter (fun exp -> Printf.printf  "%s" ("\n "^Z3_encode.Expr.to_string exp)) unsat_core in 
+       
+ 
       let () = Solver.reset solverDischarged in 
      
     

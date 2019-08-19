@@ -22,12 +22,12 @@ open Arithmetic
 open FuncDecl
 open Integer
 open Quantifier
- (* 
+ 
 module Printf = struct 
   let printf f s = ()
 
 
-end   *)
+end  
  
 
 
@@ -85,7 +85,7 @@ let genTypeName = mkGenName (0,"T")
 let genSetName = mkGenName (0,"set")
 
 let mkDefaultContext () =
-  let cfg = [("model", "true"); ("proof", "false");("smt.macro-finder","true")] in 
+  let cfg = [("model", "true"); ("proof", "true");("smt.macro-finder","true");("unsat_core","true")] in 
   let ctx = mk_context cfg
   in
   ctx
@@ -124,19 +124,19 @@ let sortToString sort = Sort.to_string (sortToZ3Sort sort)
 let typeCheckAst (AST (ast,sort),sort') = 
   match (sort,sort') with
     (Int _,Int _) -> 
-    (Printf.printf "%s" ("Sort Checking Int, Int "^(sortToString sort)
+   (*  (Printf.printf "%s" ("Sort Checking Int, Int "^(sortToString sort)
                               ^" vs "^(sortToString sort')));
-          
+    *)       
       true
   | (Bool _ , Bool _) ->
-      (Printf.printf "%s" ("Sort Checking Bool Bool"^(sortToString sort)
+     (*  (Printf.printf "%s" ("Sort Checking Bool Bool"^(sortToString sort)
                               ^" vs "^(sortToString sort')));
-           
+      *)      
         true
   | (T (name1,_), T (name2, _)) ->  
-          (Printf.printf "%s" ("Sort Checking named , named "^(sortToString sort)
+     (*      (Printf.printf "%s" ("Sort Checking named , named "^(sortToString sort)
                               ^" vs "^(sortToString sort')));
-          name1 = name2
+      *)     name1 = name2
   | _ -> (Printf.printf "%s" ("Sort mismatch: other , other  "^(sortToString sort)
                               ^" vs "^(sortToString sort')); false)
 
@@ -267,11 +267,11 @@ let mkStrucRel (name,sorts) =
     
   let  Set {ty;pred} = mkSet (name,sorts) in 
   let rel = fun ast -> 
-    let () = List.iter (fun s ->Printf.printf "%s" (Layout.toString (sort_layout s)) ) sorts in 
+    (* let () = List.iter (fun s ->Printf.printf "%s" (Layout.toString (sort_layout s)) ) sorts in 
     let () = Printf.printf "%s" ("domainTY for "^name) in 
     let () = Printf.printf "%s" (Layout.toString (sort_layout domainTy)) in 
    let () = Printf.printf "%s" (Layout.toString (ast_layout ast)) in 
-  
+   *)
     let _ = assert (typeCheckAst (ast,domainTy)) in 
               (*
                * Constructing (n-1)-arity set from an n-arity
@@ -290,8 +290,8 @@ let mkStrucRel (name,sorts) =
 
 
 let mkStrucRelApp (SR {rel;_}, ast) = 
-    let () = Printf.printf "%s" " *********mkStrucRelApp*****" in 
-    try 
+ (*    let () = Printf.printf "%s" " *********mkStrucRelApp*****" in 
+  *)   try 
     rel ast
   with 
   | e -> raise e
@@ -401,8 +401,8 @@ let rec mkSetEqAssertion (s1,s2) =
   | (Null,Set {ty;_}) -> mkSetEqAssertion (mkEmptySet ty, s2)
   | (Set {ty;_},Null) -> mkSetEqAssertion (s1, mkEmptySet ty)
   | (Set {ty=sorts1;pred=pred1}, Set {ty=sorts2;pred=pred2}) -> 
-      let () = Printf.printf "%s" "@mkSetEqAssertion" in 
-          (*
+      (* let () = Printf.printf "%s" "@mkSetEqAssertion" in 
+       *)    (*
            * Pre-condition of sorts1 = sorts2 is automatically
            * checked when pred1 and pred2 are applied
            *)

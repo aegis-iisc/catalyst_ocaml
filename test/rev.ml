@@ -8,8 +8,9 @@ let rec rev l3 =
   match l3 with 
     [] ->  []
   | x::xs -> let temp2 = rev xs in
-              let temp3 = [] in 
-                let temp4 = x::temp2 in 
-                 concat temp2 temp4
-                
+                let t1 = [] in         
+                let temp3 = x::t1 in 
+        
+              let res= concat temp2 temp3 in 
+                res
 

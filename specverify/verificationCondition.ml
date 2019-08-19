@@ -705,7 +705,7 @@ let elaborate (re,pre,vc) =
     
     in 
     let tydbinds' = Vector.concat [tydbinds;newtydbinds] in 
-    let bindings = {tbinds=tydbinds'; rbinds=PRE.empty} in 
+    let bindings = {tbinds=tydbinds'; rbinds=newPre} in 
       (*
       let _ = print "RelInstTable : \n"
       let _ = Control.message (Control.Top, fun _ ->

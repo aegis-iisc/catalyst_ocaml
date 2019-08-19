@@ -36,7 +36,7 @@ struct
 
   	let add mp k v = (k,v) :: mp 
 
-  	let remove mp k = List.remove_assq k mp
+  	let remove mp k = List.remove_assoc k mp
 
   	let map f t = List.map f t
   	

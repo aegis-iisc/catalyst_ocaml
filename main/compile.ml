@@ -1,16 +1,3 @@
-(*-----------------------------------------*)
-(*			Lex And Parse Spec			   *)
-(*-----------------------------------------*)
-(* We need to do the following 
- * expand elaborate_sml_with spec  for ML 
- * create a main file called catalyst 
- * compile the front end code with this as the target 
- * exceute*)
-
-
-
-
-
 open SpecLang
 module Nm = Normalize
 module ElabVE = ElaborateVarEnv
@@ -19,21 +6,7 @@ module RE = RelEnv
 module PRE = ParamRelEnv
 module VC = VerificationCondition
 module VCE = Vcencode 
- (* 
- let spec_file = "rev.spec"
-let ml_file = "rev.ml"
- *)
-(*    
-let spec_file = "concat.spec"
-let ml_file = "concat.ml"
- *)
-(*   
-let spec_file = "identity.spec"
-let ml_file = "identity.ml"
- *)
-(*let spec_file= "head.spec"
-let ml_file = "head.ml"   
-*)
+ 
 exception CompilerEx of string
 exception CantDischargeVC
 let ppf = Format.err_formatter 
@@ -77,30 +50,22 @@ let get_abstract_syntax_tree ml_file  =
 
 
 let catalyst_elaborate_envs relspecs typedtree = 
-(*The logic of elaborateSMLWithSpec goes here*)
-   (*  let norm_sourcefile x =
-            try Nm.normalize_structure typedtree 
-         with Nm.NormalizationFailure (e, t, m) ->
-      (Format.printf "@[Normalization failed at %a(%s) %a@.@]") ;false;
-        in 
-    let a_norm_tree = norm_sourcefile typedtree in 
-    *) 
     
     let speclang = relspecs in 
     let (ve, re, pre) =  ElabVE.elaborate typedtree speclang in 
-    let  _ = Printf.printf "@Var Env:\n" in 
-      let  _ = Printf.printf "---------\n" in 
+    let  _ = Printf.printf "\n Initial Var Env:\n" in 
+    let  _ = Printf.printf "---------\n" in 
       
       let  _ = Printf.printf "%s" ((VE.layout ve)) in 
-      let  _ = Printf.printf "\n@Rel Env:\n" in
+      let  _ = Printf.printf "\n Initial Rel Env:\n" in
       let  _ = Printf.printf "-----------\n" in 
        
       let _ = Printf.printf "%s" (L.toString (RE.layout re)) in 
-      let _ = Printf.printf "\n@Param Rel Env:\n" in
+      let _ = Printf.printf "\n Initial Param Rel Env:\n" in
       let  _ = Printf.printf "--------------\n" in 
        
       let _ = Printf.printf "%s" (L.toString (PRE.layout pre)) in 
-       let _ = Printf.printf  "\n" in 
+      let _ = Printf.printf  "\n" in 
            
 
      (*get the  verification conditions*)
@@ -115,10 +80,8 @@ let catalyst_elaborate_envs relspecs typedtree =
       
     let elaborated_vcs = 
         List.map (fun vc -> VC.elaborate (re,pre,vc)) initial_vcs in 
-     
-      let  _ = Printf.printf "----------\n" in 
-    
-      let _ = Printf.printf "%s" ("Elaborated VCS") in 
+           
+      let _ = Printf.printf "%s" ("\n Elaborated VCS \n") in 
       let _ = Printf.printf "%s" (string_of_int (List.length elaborated_vcs)) in 
       let _ = Printf.printf  "\n" in 
 
@@ -132,9 +95,9 @@ let catalyst_elaborate_envs relspecs typedtree =
    *)
           match VCE.discharge vc with
           VCE.Success -> 
-            Printf.printf  "%s" ("VC# "^(string_of_int i)^" discharged\n")
+            Printf.printf  "%s" ("VC# "^(string_of_int (i+1))^" discharged\n")
         | VCE.Undef -> (Printf.printf "%s" ("Solver timeout  while trying to \
-                  \discharge VC #"^(string_of_int i)); 
+                  \discharge VC #"^(string_of_int (i+1))); 
                   ();
                   (* z3_log_close (); *)
           raise CantDischargeVC)
@@ -145,53 +108,35 @@ let catalyst_elaborate_envs relspecs typedtree =
                   *) raise CantDischargeVC)
     in  
     let unit_lists = List.mapi dischargeVC elaborated_vcs in   
-
-    (* let _ = z3_log_close () in 
-    *)
       
-    Printf.printf "%s" "is correct w.r.t given specification!\n"
+    Printf.printf "%s" "The implementation is correct w.r.t given specification!\n"
     
  
 let () = 
   
-  let ml_file = Sys.argv.(1) in 
-  let spec_file = Sys.argv.(2) in 
+  let num_args = (Array.length Sys.argv) - 1 in 
+  if num_args = 2 
+  then  
+    let ml_file = Sys.argv.(1) in 
+    let spec_file = Sys.argv.(2) in 
 
-  let _ = Printf.printf "%s" ("\nmlfile :: "^ml_file) in 
+    let _ = Printf.printf "%s" ("\nmlfile :: "^ml_file) in 
 
-  let _ = Printf.printf "%s" ("\nspecfile :: "^spec_file) in 
-      
+    let _ = Printf.printf "%s" ("\nspecfile :: "^spec_file) in 
+        
 
-  	let rel_ast = elaborateSMLWithSpec spec_file in 
-  	let string_ast = RelSpec.toString rel_ast in 		
-  		Printf.printf "%s" string_ast;
+    	let rel_ast = elaborateSMLWithSpec spec_file in 
+    	let string_ast = RelSpec.toString rel_ast in 		
+    		Printf.printf "%s" string_ast;
 
-    let (tstr, _, _) =  get_abstract_syntax_tree ml_file in 
-    (* let () = Printf.printf "%s" "Print the AST" in 
-    let _ = Mytreeiter.Iterator.iter_structure  tstr in 
- *)
-    catalyst_elaborate_envs rel_ast tstr; 
+      let (tstr, _, _) =  get_abstract_syntax_tree ml_file in 
+      (* let () = Printf.printf "%s" "Print the AST" in 
+      let _ = Mytreeiter.Iterator.iter_structure  tstr in 
+   *)
+      catalyst_elaborate_envs rel_ast tstr; 
    
-(*  else
-    raise (CompilerEx "Usage :: ./compile mlfile specfile" )
- *)
+  else
+    let exception_msg = (" Incorrect Number of argumnets, required 2, provided "^(string_of_int num_args)^" Usage :: ./compile.native <path_to_ml_file> <path_to_spec_file>") in  
+    raise (CompilerEx  exception_msg)
+ 
   
-
-       	  
-(* 
-let catalyst_parse_spec_file (ppf:Format) (fileName:string) : SL.RelSpec.T =
-  let elaborateSMLWithSpec =
-      fun specfile -> 
-         try  
-          let specast = SpecFrontEnd.lex_and_parse_file (specfile)
-          in specast
-         with 
-        | e -> raise e
-  in       
-  let relspec_ast = elaborateSMLWithSpec file in 
-  let string_ast = RelSpec.toString relspec_ast in    
-    
-     fprintf ppf "%a@" string_ast;
-    relspec_ast
-
- *)
