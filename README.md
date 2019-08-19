@@ -1,5 +1,5 @@
 OCaml Implementation for Catalyst[1]
-A relational Specification framework as a dependent typesystem for OCaml.
+A relational Specification framework as a dependent typesystem for OCaml called OCatalyst
 
 Running
 ==========
