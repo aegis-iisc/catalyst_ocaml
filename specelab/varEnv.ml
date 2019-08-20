@@ -1,3 +1,5 @@
+(*
+ * Variable Environment Creation*)
 open SpecLang
 module L = Layout
 open SpecMap
