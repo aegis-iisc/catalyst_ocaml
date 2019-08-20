@@ -132,7 +132,7 @@ let bootStrapCons ve =
   let nilvid = Var.fromString "[]" in 
   let nilcosntantvid = Var.fromString "nil" in 
   let consvid = Var.fromString "::" in 
-  let conparam = TyD.Tvar (Tyvar.fromString "'a") in 
+  let conparam = TyD.Tvar (Tyvar.fromString "int") in 
   let list_cons = Tycon.fromString "list" in 
   let listconsparams = [conparam] in 
   let listTyD = TyD.makeTconstr (list_cons, listconsparams) in 
@@ -609,7 +609,7 @@ let rec elabRExpr (re,pre,tyDB,spsB,rexpr) =
 
 let  elabPRBind (pre) (PR.T {id;def}) =
   (*This creates a new Tyvar without a name 'a , in the complete version this must be updated with noName*)
-  let newVarTyD = fun _ -> TyD.makeTvar (Ident.create "'a") in 
+  let newVarTyD = fun _ -> TyD.makeTvar (Ident.create "int") in 
   let rec bindVars tyDB def =  
     match def with 
     | (PR.Nary (v,def)) -> bindVars (TyDB.add tyDB  v ( newVarTyD())) def  

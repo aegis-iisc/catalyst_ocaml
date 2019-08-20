@@ -47,10 +47,11 @@ let discharge (VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP)) =
   let relMap = RelMap.empty in 
 
   (*Adding missing tydbinds*)
-  let bnew_x = (Var.fromString "x", TyD.Tvar (Tyvar.fromString "'a") ) in 
-  let bnew_xs = (Var.fromString "xs", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "'a")]) ) in 
+  let bnew_x = (Var.fromString "x", TyD.Tvar (Tyvar.fromString "int") ) in 
+  let bnew_xs = (Var.fromString "xs", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "int")]) ) in 
+  let bnew_c = (Var.fromString "c", TyD.Tvar (Tyvar.fromString "int") ) in 
    
-   let tydbinds = bnew_xs::bnew_x :: tydbinds in 
+   let tydbinds = bnew_c :: bnew_xs::bnew_x :: tydbinds in 
  
  
   let newVC = VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP) in 
@@ -520,11 +521,11 @@ let discharge (VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP)) =
       let () = Printf.originalPrint "%s" ("\nsolver \n "^(Solver.to_string solverDischarged)) in   
      
       let res =   Solver.check solverDischarged [] in
-       let unsat_core = Solver.get_unsat_core solverDischarged in 
+(*        let unsat_core = Solver.get_unsat_core solverDischarged in 
  
        let () = Printf.printf "%s" ("\nUnsat_core  ") in   
       let () = List.iter (fun exp -> Printf.printf  "%s" ("\n "^Z3_encode.Expr.to_string exp)) unsat_core in 
-       
+ *)       
  
       let () = Solver.reset solverDischarged in 
      

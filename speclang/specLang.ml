@@ -77,10 +77,10 @@ struct
   open Ident
   type t = Ident.t
 
-  let symbase = "'a"
+  let symbase = "int"
   let  count = ref 0
 
-  let newSVar () = Ident.create_persistent "'a"
+  let newSVar () = Ident.create_persistent "int"
 
 
   (* fun _ ->
@@ -316,8 +316,8 @@ struct
         Types.Tvar s -> (match s with 
                           (*This is a hack currently we have only one type of Tyvar*)
                           Some s' -> Tvar (Tyvar.fromString s')
-                          |None -> Tvar (Tyvar.fromString "'a") 
-                            (*no type variable meants int type *)
+                          |None -> Tvar (Tyvar.fromString "int") 
+                            (*no type variable means int type *)
                           )
        | Types.Tbool -> Tbool 
 

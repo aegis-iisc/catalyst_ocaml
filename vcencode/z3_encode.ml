@@ -22,13 +22,13 @@ open Arithmetic
 open FuncDecl
 open Integer
 open Quantifier
- 
+ (* 
 module Printf = struct 
   let printf f s = ()
 
 
 end  
- 
+  *)
 
 
 
@@ -85,7 +85,7 @@ let genTypeName = mkGenName (0,"T")
 let genSetName = mkGenName (0,"set")
 
 let mkDefaultContext () =
-  let cfg = [("model", "true"); ("proof", "true");("smt.macro-finder","true");("unsat_core","true")] in 
+  let cfg = [("model", "true"); ("proof", "true")(*; ("smt.macro-finder","true") *)] in 
   let ctx = mk_context cfg
   in
   ctx
@@ -248,6 +248,10 @@ let mkSet (name,sorts) =
     let sortStrs = List.map (fun s -> (sortToString s)) sorts  in 
     let sortStr = fun _ -> (List.fold_left (fun acc s ->  acc^","^s) "(" sortStrs)^")" in 
     let errMsg = (fun _ -> "Type Mismatch. Set: "^name^".\n") in
+    (* let () = Printf.printf "%s" (" Testing assertion for "^name^" \n ") in 
+    let () = Printf.printf "%s" (" ast length "^(string_of_int (Vector.length asts))^" \n ") in 
+    let () = Printf.printf "%s" (" sorts length "^(string_of_int (Vector.length sortStrs))^" \n ") in 
+     *)
     let _ = assert (Vector.length asts = Vector.length sorts) in 
     let _ = assert (List.for_all2 (fun ast s -> typeCheckAst (ast, s)) asts sorts ) in 
     let z3_asts = Vector.map (asts,astToZ3Ast) 

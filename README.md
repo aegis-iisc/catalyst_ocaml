@@ -39,7 +39,7 @@ Experiments
 
 
 Ongoing Extensions in order of priority (timeline- approximate estimated date of completion)
---------------------
+---------------------------------------
 1. The implementation currently does not handle user-defined datatypes (inductive and simple). This will be supported next. (timeline- 08/26)
 	- Handling inductive types like Trees, Binary Trees, etc. will allow us to check more interesting relational properties. This will be supported along with the related experimentations. 
 2. The current implementation requires the programmer to provide an A-normal form implementation for the test inputs and has a limited automatic A-normal form translation. 
@@ -47,8 +47,11 @@ Ongoing Extensions in order of priority (timeline- approximate estimated date of
 3. Inferring variable types from the user-provided specifications.
     -The current implementation uses the type inference of OCaml to get the base types of variables, this is efficient but imprecise in certain cases, We plan to aid this with the base types provided by the programmer as a part of the definitions for the relations. (timeline 09/02)  
 
-4. Handling Parametric Relations and Parametric dependent types and experimentations. (timeline 09/09)
-5. A better pretty-printing library for printing the final and intermediate results. (09/12)
+4. Handling Parametric Relations and Parametric dependent types and experimentations. (timeline 09/12)
+5. The current implementation, only allows refinement relations like (R1 = R2, R1 C R2 and R1 C= R2), 
+	we plan to extend these with relations invoving implication and double implication. (09/15)
+6. A better pretty-printing library for printing the final and intermediate results. (09/15)
+
 	
 
 
