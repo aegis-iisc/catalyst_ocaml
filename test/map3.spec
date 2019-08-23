@@ -6,7 +6,7 @@ relation Robs = Rob*;
 relation Roas = Roa*;
 primitive relation RId = \z.{(z)};
 
-map : (y -> {v2 | RId(v2) = {()} }) -> l 
+map : (y -> {v2 | {(v2)} = {()} }) -> l 
   -> {v |  Rmem (v) = {()} /\ Robs(v) = {()}};
 
 

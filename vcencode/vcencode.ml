@@ -49,11 +49,20 @@ let discharge (VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP)) =
   (*Adding missing tydbinds*)
   let bnew_x = (Var.fromString "x", TyD.Tvar (Tyvar.fromString "int") ) in 
   let bnew_xs = (Var.fromString "xs", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "int")]) ) in 
-  let bnew_c = (Var.fromString "c", TyD.Tvar (Tyvar.fromString "int") ) in 
-   
-   let tydbinds = bnew_c :: bnew_xs::bnew_x :: tydbinds in 
- 
- 
+  (* let bnew_c = (Var.fromString "c", TyD.Tvar (Tyvar.fromString "int") ) in 
+(* *)   let bnew_v6 = (Var.fromString "v_6", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "int")]) ) in 
+ *)   
+   let tydbinds =  bnew_xs::bnew_x :: tydbinds in 
+
+  (* let pred0 = Simple (Base (BP.Eq ( 
+                              (Var (Var.fromString "x")), (Var (Var.fromString "c") )))) in 
+  let pred1 = Simple (Base (BP.Eq ( 
+                              (Var (Var.fromString "l")), (Var (Var.fromString "v_6") )))) in 
+  
+  let anteP_extra_list = [pred0;pred1] in
+  let anteP_extra = Conj anteP_extra_list in 
+  let anteP = Conj [anteP;anteP_extra] in 
+ *)
   let newVC = VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP) in 
   
 
@@ -71,6 +80,7 @@ let discharge (VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP)) =
   let _ = Printf.originalPrint "%s" ("Sanitized VCS") in 
   let _ = Printf.originalPrint "%s" (L.toString (VC.layouts [sanitizedVC])) in 
   let _ = Printf.originalPrint  "\n"  in 
+
 
   let VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP) = sanitizedVC in 
       

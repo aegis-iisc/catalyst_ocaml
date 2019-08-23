@@ -141,8 +141,8 @@ patmatch : LPAREN cp=conpat RPAREN EQUALOP re=rexpr
          | i=ID EQUALOP re=rexpr {(Con.fromString i, None, Expr re)};
 
 
-conpat :  i=ID {Con.fromString i, None}
-       |  i=ID co=conargs {Con.fromString i, Some co};
+conpat :  i=ID {(Con.fromString i, None)}
+       |  i=ID co=conargs {(Con.fromString i, Some co)};
 
 conargs : i=ID {Vector.fromList [Var.fromString i]}
         | LPAREN is=idseq RPAREN {Vector.fromList is};

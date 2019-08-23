@@ -18,11 +18,11 @@ module PRE = ParamRelEnv
 
 
 (*comment this out to print  Printf messages*)
-module Printf = struct
+(* module Printf = struct
   let printf f s = ()
 
 end 
-
+ *)
 
 
 module Tyvar =
@@ -313,8 +313,13 @@ let rec  type_synth_exp (ve, pre, exp) =
              *  Γ ⊢ argTy <: fargty
              *)
 
-     (*    let () = Printf.printf "%s" "@@@Here " in       
-      *)   let vcs3 = VC.fromTypeCheck (ve,pre,argTy,fargty) in         
+         let () = Printf.printf "%s" "@@@Here " in       
+         let () = Printf.printf "%s" "\n actual type \n" in 
+         let () = Printf.printf "%s" (RefTy.toString argTy) in 
+       let () = Printf.printf "%s" "\n formal type \n" in 
+         let () = Printf.printf "%s" (RefTy.toString fargty) in 
+     
+         let vcs3 = VC.fromTypeCheck (ve,pre,argTy,fargty) in         
 
          
        (*
@@ -339,6 +344,12 @@ let rec  type_synth_exp (ve, pre, exp) =
       in 
       let (finalvcs, finalsubsts) = List.fold_left2 (folding_fun) (vcs1,[]) parametersTyBind arg_label_exp_list
       in 
+
+      let _ = Printf.printf "%s" ("\n  VCS after T-apply \n") in 
+      let _ = Printf.printf  "\n" in 
+
+     let _ = Printf.printf "%s" (L.toString (VC.layouts finalvcs)) in 
+     
       let resTy = RefTy.applySubsts finalsubsts resRefTy in 
       let () = Printf.printf "%s" ("\n *******************ty of return Value "^RefTy.toString resTy) in      
             
@@ -467,11 +478,9 @@ let rec  type_synth_exp (ve, pre, exp) =
       let (vcs_final, types_final) = List.fold_left (fun (accvcs, types) (vcs, ty) -> (List.concat [accvcs;vcs], ty::types))
           ([],[]) vcs_type_list in 
       (vcs_final, List.hd (List.rev types_final) )                   
-  (*TDOD Tconst must return non trivial value *)    
   | Texp_construct (lc, cd, lexp) ->
 
        let () = Printf.printf "%s" "\n######### synthesis:constructor \n" in
-
        let  (vcs, constructor_resTy ) = type_synth_constructor_apply (ve , pre, cd, lexp)  
       in 
       
@@ -488,7 +497,7 @@ let rec  type_synth_exp (ve, pre, exp) =
   | _ -> 
        let () = Printf.printf "%s" "\n######### synthesis:Other \n" in
        trivialAns ()   
-
+(*generalize this to any constructor*)
 and type_synth_constructor_apply (ve, pre, const_desc, list_exp) = 
   (*T-apply rule for the constructor rather than function , Ocaml constrcutors are treated differently than functions*)
   let constructorName =
@@ -504,6 +513,10 @@ and type_synth_constructor_apply (ve, pre, const_desc, list_exp) =
     | _ -> raise (SpecVerifyExc ("Constructor "^constructorName^" not found in the VE"))
   in 
   let constrRefTy = RefTyS.specializeRefTy constrTyS in 
+
+
+  let () = Printf.printf "%s" ("Constructor ref type "^(RefTy.toString constrRefTy)) in 
+
 
   match constructorName with 
    
@@ -610,6 +623,7 @@ and type_synth_constructor_apply (ve, pre, const_desc, list_exp) =
               (List.concat[vcs;vcs1],List.concat[substs;substs'])
             in 
             let (finalvcs, finalsubsts) = List.fold_left2 (folding_fun) ([],[]) list_fargTyBinds list_exp in
+
             let resTy = RefTy.applySubsts finalsubsts fResTy in 
             (finalvcs, resTy)
 
@@ -904,6 +918,7 @@ let doIt_struct_items (ve_init, pre, tstr) =
         vcs_vb
     
     (*Extend this to handle user defined types (inductive and non-inductive)*)
+    | Tstr_type (rec_flag, type_decl_list) -> (*Unimpl*) ([], ve )
     | _ -> ([], ve) in 
 
     (List.concat [vcs; (fst vcs_ve)] , snd (vcs_ve))

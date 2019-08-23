@@ -78,7 +78,7 @@ let catalyst_elaborate_envs relspecs typedtree =
       | e -> raise e
     in    
       
-    let elaborated_vcs = 
+(*     let elaborated_vcs = 
         List.map (fun vc -> VC.elaborate (re,pre,vc)) initial_vcs in 
            
       let _ = Printf.printf "%s" ("\n Elaborated VCS \n") in 
@@ -109,7 +109,7 @@ let catalyst_elaborate_envs relspecs typedtree =
     in  
     let unit_lists = List.mapi dischargeVC elaborated_vcs in   
       
-    Printf.printf "%s" "The implementation is correct w.r.t given specification!\n"
+ *)    Printf.printf "%s" "The implementation is correct w.r.t given specification!\n"
     
  
 let () = 

@@ -34,9 +34,11 @@ module Con = struct
       | Nil 
       | True 
       | False 
-      | Const of Asttypes.constant
+      (* | Const of Asttypes.constant
+       *)
+      | NamedCons of Ident.t
 
-let constant_to_string t = match t with 
+(*let constant_to_string t = match t with 
       Const_int i -> string_of_int i 
     | Const_char c -> Char.escaped c
     | Const_string  (s1, _) -> (s1^"::s2")
@@ -49,15 +51,16 @@ let constant_to_string t = match t with
     | Const_int32 i -> Int32.to_string i
     | Const_int64 i -> Int64.to_string i  
     | Const_nativeint n -> Nativeint.to_string n
-    
+  *)  
 
   let toString t = match t with 
         Cons -> "::"
       | Nil -> "[]"
       | True -> "true"
       | False -> "false"
-      | Const t' ->  constant_to_string t'
-
+      | NamedCons id -> Ident.name id
+      (* | Const t' ->  constant_to_string t'
+ *)
   let default = Cons  
   let truee = True
   let falsee = False
@@ -66,7 +69,7 @@ let constant_to_string t = match t with
     | true -> Cons 
     | false -> match s = "nil" with
         | true -> Nil
-        | false -> Const (Const_int (int_of_string s))
+        | false -> NamedCons (Ident.create s)
 
 
 
@@ -1560,16 +1563,38 @@ module Bind = struct
       Some rid -> rid 
     | None -> raise (BindException "SVar impossible case") in 
     let SPS.ColonArrow (_,TS.Tuple tts) = groundSort in 
+
+    let () = Printf.printf "%s" ("\n Size of tts "^(string_of_int (List.length tts))) in 
+
     let (bvs,rApps) = Vector.unzip (List.map ( fun tt -> 
         let v = genVar () in 
         match tt with 
           TS.T tyd -> (v,RelLang.rId v)
         | TS.S t -> (v, RelLang.appR (mapSVar t, empty (), v))
       ) tts) in 
-    let Some xexpr = List.fold_right (fun rApp xop -> match xop with 
-          None -> Some rApp 
-        | Some xexpr -> Some (RelLang.crossprd (rApp,xexpr))) rApps None in 
-    let bv = genVar () in 
+    let () = Printf.printf "%s" "-----------> " in
+    let () = List.iter (fun rApp -> Printf.printf "%s" ("\n Rapp "^RelLang.exprToString rApp)  
+               ) rApps in 
+
+    let Some xexpr = List.fold_right 
+        (fun rApp xop -> match xop with 
+          None -> let () = Printf.printf "%s" "@ this node None " in
+              let () = Printf.printf "%s" ("\n Rapp "^RelLang.exprToString rApp) in 
+              
+               Some rApp 
+        | Some xexpr -> let () = Printf.printf "%s" "@ this node Some " in 
+              let () = Printf.printf "%s" ("\n Rapp "^RelLang.exprToString rApp) in 
+              let () = Printf.printf "%s" ("\n xexpr "^RelLang.exprToString xexpr) in 
+              Some (RelLang.crossprd (rApp,xexpr))
+        | _ -> let () = Printf.printf "%s" "@ this node Some " in raise (SpecLangEx "xepr case unhandled ") 
+        )rApps None 
+
+     in 
+   (*  let xexpr = match  xexpr with
+      | Some s -> s 
+      | None  -> None 
+    in    
+    *) let bv = genVar () in 
     let fr = Fr (bvs,xexpr) in 
     let targs = List.map (TyD.makeTvar) tyvars in 
     let bindex = Expr {ground = (id,targs,bv); fr=fr} in 

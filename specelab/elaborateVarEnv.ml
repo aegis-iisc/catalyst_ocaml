@@ -25,11 +25,11 @@ module PR = PrimitiveRelation
 module SR = StructuralRelation
 
 (*comment this out to print  Printf messages*)
-module Printf = struct
+(* module Printf = struct
   let printf f s = ()
 
 end 
-
+ *)
 
 module SPSBValue = struct
   type t = {dom : TyD.t option ref; range : SVar.t}
@@ -161,6 +161,115 @@ let bootStrapCons ve =
 
   
   ve'''
+
+
+
+  (*Unimple, the tyvar for the data type is empty for now*)
+  let extract_param_tyvars corety_variance_list = 
+    []
+  (*type_declaration =
+  {
+    typ_id: Ident.t;
+    typ_name: string loc;
+    typ_params: (core_type * variance) list;
+    typ_type: Types.type_declaration;
+    typ_cstrs: (core_type * core_type * Location.t) list;
+    typ_kind: type_kind;
+    typ_private: private_flag;
+    typ_manifest: core_type option;
+    typ_loc: Location.t;
+    typ_attributes: attributes;
+   }
+    type binarytree = E of Tree | T of binarytree * binarytree 
+      *)
+  let elabDataTypeDecl ve (tdecl) = 
+    let open Typedtree in 
+    let type_id = tdecl.typ_id in
+    let cons_for_type = Tycon.fromString (Ident.name type_id) in 
+    (*get the TyD.Tvar for the tyvars*)
+    let cons_type_paramsTyd_list = extract_param_tyvars (tdecl.typ_params) in 
+
+    let destTyD = TyD.makeTconstr (Tycon.fromString (Ident.name (type_id)), cons_type_paramsTyd_list) in 
+ 
+    let type_kind = tdecl.typ_kind in 
+    match type_kind with 
+      Ttype_abstract -> (*Unimpl*) ve 
+      | Ttype_variant (cd_list) -> 
+        
+          (* type bt... = 
+              | E of int
+              | T of bt * bt
+           *)
+          (*constructor_declaration =
+            {
+             cd_id: Ident.t;
+             cd_name: string loc;
+             cd_args: constructor_arguments;
+             cd_res: core_type option;
+             cd_loc: Location.t;
+             cd_attributes: attributes;
+            }
+        *)
+
+          let ve' = List.fold_left (fun ve cd -> 
+                let data_cons_id (*e.g. Node *) = cd.cd_id in 
+                let argsRefTys = 
+                  match cd.cd_args with 
+                    | Cstr_tuple (core_type_list) ->
+                        (*return the list of the TyD.t*)
+                        let getTyd_core_type coretyp = 
+                          let ctype_desc = coretyp.ctyp_desc in 
+                          match ctype_desc with 
+                            Ttyp_any -> TyD.Tunknown 
+                            | Ttyp_var (s) -> TyD.makeTvar (Tyvar.fromString s)
+                            | Ttyp_arrow (_,_,_)-> (*Unimpl*) raise (ElebEnvFail "Ttyp_arrow not handled as type variant argument") 
+                            | Ttyp_tuple (ct_list) -> (*Unimpl*) raise (ElebEnvFail "Ttyp_tuple not handled as type variant argumen") 
+                            | Ttyp_constr (p , l, ct_list) ->
+                                 let arg_tyconsId = 
+                                   if Tycon.is_ident p then
+                                      Path.head p 
+                                  else 
+                                    raise (ElebEnvFail "Only Identities allows as paths")  
+
+                                  in   
+                                 (*In general scenario the arguments might have parameters again*)   
+                                let argTyD = TyD.makeTconstr (Tycon.fromString (Ident.name arg_tyconsId) , []) in 
+                                argTyD
+
+                        in 
+                        let args_basetypelist = List.map (getTyd_core_type) core_type_list in 
+                        let args_RefinementTypeList = List.map (fun baseTy -> RefTy.fromTyD baseTy) args_basetypelist in 
+                        args_RefinementTypeList  
+                      
+
+
+                    | Cstr_record (ld_list) -> (*Unimp*) raise (ElebEnvFail "User defined data-types with records as variant not handled")
+                  in 
+
+                 let refTy_data_cons = 
+                  match argsRefTys with 
+                    [] -> RefTy.fromTyD destTyD
+                    | _ -> 
+                      let args_var_refTyBind  =List.map (fun refTy -> (Var.noName, refTy)) argsRefTys in 
+                      let cons_argsRefTuple = RefTy.Tuple (args_var_refTyBind) in   
+                      RefTy.Arrow ((Var.noName, cons_argsRefTuple),  RefTy.fromTyD destTyD) 
+                 in 
+                  
+                 let ve' = VE.add  ve (data_cons_id, toRefTyS refTy_data_cons) in 
+                 ve'
+
+                ) ve cd_list in 
+
+              ve'
+
+      | Ttype_record (ld_list) -> (*Unimpl*) raise (ElebEnvFail "Ttype_record not handled yet while elaborating a type decl")
+      | Ttype_open -> (*Unimpl*) ve 
+
+
+
+
+
+
 
 (* let  elabDatBind  ve (cons,tyvars,tycon) =
    let destTyD = TyD.makeTconstr (tycon, tyvars) in 
@@ -642,13 +751,18 @@ let  elabPRBind (pre) (PR.T {id;def}) =
   in
   PRE.add pre (id,reldesc)
 
-let elabSRBind (re)(pre)(ve ) (StructuralRelation.T {id;params;mapp}) =
+let elabSRBind (re)(pre)(ve ) (StructuralRelation.T {id;params;mapp} as sr) =
 
+  let () = Printf.printf "%s" ("\n elabSRBind :: param size "^(string_of_int (List.length params))) in 
+  let () = Printf.printf "%s" ("\n SR ::  "^(StructuralRelation.toString sr)) in 
+  
   let open SPSBValue in 
   let open SPSBKey in   
 
+
   let spsB = List.fold_left (fun spsB r -> 
       SPSBinds.add spsB r {dom = ref None; range = SVar.newSVar ()}) SPSBinds.empty params in 
+  
   let isParam = fun rid -> SPSB.mem spsB rid in 
 
   (* First pass - type & sort annotate instantiations *)
@@ -658,8 +772,11 @@ let elabSRBind (re)(pre)(ve ) (StructuralRelation.T {id;params;mapp}) =
                                             fun ((con,valop,rterm), relTySOp) ->
                                               match (valop ,rterm) with
                                                 (None,RelLang.Expr _) -> (* must be Rnull *)
+                                                  let () = Printf.printf "%s" "Case 1" in 
                                                   ((con, valop  , rterm), relTySOp) 
                                               | (None,RelLang.Star ie) ->
+                                                  let () = Printf.printf "%s" "Case 2" in 
+                                                  
                                                   let  _ = match relTySOp with
                                                       None -> ()
                                                     | Some _ -> raise (ElebEnvFail "Ind uasge wrong") in 
@@ -687,14 +804,20 @@ let elabSRBind (re)(pre)(ve ) (StructuralRelation.T {id;params;mapp}) =
                                                   ((con, valop , RelLang.Star newRInst), Some relTyS)
 
                                               | (Some vars, RelLang.Expr rexpr) -> 
+                                                  let () = Printf.printf "%s" "Case 3" in 
+                                                  
                                                   let convid = Var.fromString (Con.toString con) in 
-                                                  let RefTyS.T {tyvars;refss;_} = 
+                                                  let () = Printf.printf "%s" ("\n Convid "^Ident.name convid) in 
+                                                  
+                                                  let (RefTyS.T {tyvars;refss;_} as reftys) = 
                                                     try VE.find ve convid 
                                                     with 
                                                     | VE.VarNotFound _ -> 
                                                         (*Create the basic type for cosntructor*)
                                                         let s = "Constructor " ^(Con.toString con)^ " not found in var env." in 
                                                         raise (ElebEnvFail s) in 
+                                                  
+                                                  let () = Printf.printf "%s" ("\n RefTyS for convid  "^RefTyS.toString reftys ) in 
                                                   
                                                   let refty = RefSS.toRefTy refss in
                                                   let datTyD = match refty with
@@ -714,7 +837,7 @@ let elabSRBind (re)(pre)(ve ) (StructuralRelation.T {id;params;mapp}) =
              * mapping it to a bogus def. This is to identify
              * recursive applications.
              *)
-                                                  let open PRE in  
+                                                 (*  let open PRE in  
                                                   let bogusDesc = {
                                                     tys = PTS.simple (empty, SPS.ColonArrow
                                                                         (*author Ashish : Treating Tnil as Tunknown in SML , confirm ??*)
@@ -722,6 +845,8 @@ let elabSRBind (re)(pre)(ve ) (StructuralRelation.T {id;params;mapp}) =
                                                     def = PRE.Bind ( Bind.BogusDef)} in
 
                                                   let extendedPRE = PRE.add pre (id,bogusDesc) in 
+                                                  *)
+                                                  let extendedPRE = pre in  
                                                   let () = Printf.printf "%s" "@here3-4  \n" in 
                                            
                                                   let (cs,tupTy,rexpr') = elabRExpr (re, extendedPRE, (tyDB), spsB, rexpr) in 
@@ -752,6 +877,12 @@ let elabSRBind (re)(pre)(ve ) (StructuralRelation.T {id;params;mapp}) =
   let pts = match relTySOp with
       None -> raise (ElebEnvFail "Failed Elaboraion")
     | Some relTyS -> relTyS in 
+
+  let () = Printf.printf "%s" (" \n RelTyS "^(ProjTypeScheme.toString pts)) in 
+
+  let () = Printf.printf "%s" " \n pts :::::::::::::::::::::::" in 
+  let () = Printf.printf "%s" (" \n "^RelId.toString id)  in 
+    
   let  bdef = Bind.makeBindDef (id,params,pts) in 
   let open PRE in 
   let  pre' = PRE.add pre (id,{tys=pts;def = PRE.Bind bdef}) in
@@ -1093,14 +1224,14 @@ let elaborate (tstr) (RelSpec.T {reldecs;primdecs;
 
   let tstr_items = tstr.str_items in
   let veWithBool =(*  bootStrapBools *) VE.empty in 
-  let veWithCons = bootStrapCons veWithBool in 
+  let veWithListCons = bootStrapCons veWithBool in 
 
 
   let  _ = Printf.printf "\n@Var Env Before:\n" in
   let  _ = Printf.printf "%s" ((VE.layout veWithBool)) in
   let  _ = Printf.printf "%s" "\n\n" in
  
-
+  (*generate the types for the user-defined data types*)
   let initialVE = List.fold_left
       (fun ve str_item ->
          let str_item_desc = str_item.str_desc in 
@@ -1109,7 +1240,12 @@ let elaborate (tstr) (RelSpec.T {reldecs;primdecs;
              List.fold_left (fun ve vb -> elabValueBind ve vb) ve vbl 
          | Tstr_eval (expr, attr) ->
              elabExpr ve expr
-         |_ -> ve) veWithCons tstr_items in 
+         | Tstr_type (rec_flag, type_decl_list) -> 
+            let () = Printf.printf "%s" "\n elaborating Tstr_type" in 
+            List.fold_left (fun veacc ty_decl -> elabDataTypeDecl veacc ty_decl) ve type_decl_list   
+         
+
+         |_ -> ve) veWithListCons tstr_items in 
 
 
    let  _ = Printf.printf "\n@Var Env After:\n" in
@@ -1129,6 +1265,7 @@ let elaborate (tstr) (RelSpec.T {reldecs;primdecs;
   
   
   let  initialRE =  RE.empty in 
+  (*There is a common function to elaborate RE and PRE*)
   let  (elabRE,elabPRE) = List.fold_left (fun (re, pre) srbind -> 
      elabSRBind re pre initialVE srbind) (initialRE, initialPRE) reldecs  in 
 

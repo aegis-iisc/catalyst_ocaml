@@ -21,7 +21,8 @@ Dependencies
 
 Compiling with ocamlbuild 
 -------------------------
-cd OCatalyst_home
+cd OCatalyst_home 
+
 ocamlbuild -use-menhir -tag thread -use-ocamlfind -pkg core -pkg z3 -Is typing,parsing,utils,speclang,specparser,specelab,specverify,vcencode,driver main/ocatalyst.(native|byte)
 
 
