@@ -134,9 +134,9 @@ let typeCheckAst (AST (ast,sort),sort') =
       *)      
         true
   | (T (name1,_), T (name2, _)) ->  
-     (*      (Printf.printf "%s" ("Sort Checking named , named "^(sortToString sort)
+          (* (Printf.printf "%s" ("Sort Checking named , named "^(sortToString sort)
                               ^" vs "^(sortToString sort')));
-      *)     name1 = name2
+           *)name1 = name2
   | _ -> (Printf.printf "%s" ("Sort mismatch: other , other  "^(sortToString sort)
                               ^" vs "^(sortToString sort')); false)
 
@@ -247,8 +247,8 @@ let mkSet (name,sorts) =
       (asts, fn ast -> L.str $ astToString ast))*)
     let sortStrs = List.map (fun s -> (sortToString s)) sorts  in 
     let sortStr = fun _ -> (List.fold_left (fun acc s ->  acc^","^s) "(" sortStrs)^")" in 
-    let errMsg = (fun _ -> "Type Mismatch. Set: "^name^".\n") in
-    (* let () = Printf.printf "%s" (" Testing assertion for "^name^" \n ") in 
+    (* let errMsg = (fun _ -> "Type Mismatch. Set: "^name^".\n") in
+    let () = Printf.printf "%s" (" Testing assertion for "^name^" \n ") in 
     let () = Printf.printf "%s" (" ast length "^(string_of_int (Vector.length asts))^" \n ") in 
     let () = Printf.printf "%s" (" sorts length "^(string_of_int (Vector.length sortStrs))^" \n ") in 
      *)
@@ -271,8 +271,8 @@ let mkStrucRel (name,sorts) =
     
   let  Set {ty;pred} = mkSet (name,sorts) in 
   let rel = fun ast -> 
-    (* let () = List.iter (fun s ->Printf.printf "%s" (Layout.toString (sort_layout s)) ) sorts in 
-    let () = Printf.printf "%s" ("domainTY for "^name) in 
+   (* let () = List.iter (fun s ->Printf.printf "%s" (Layout.toString (sort_layout s)) ) sorts in 
+     let () = Printf.printf "%s" ("domainTY for "^name) in 
     let () = Printf.printf "%s" (Layout.toString (sort_layout domainTy)) in 
    let () = Printf.printf "%s" (Layout.toString (ast_layout ast)) in 
    *)

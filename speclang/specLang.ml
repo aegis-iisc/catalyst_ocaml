@@ -114,6 +114,7 @@ module Var = struct
   let fromString s = create s
   let layout t = Layout.str (toString t )
   let noName = create ""
+  let equal t1 t2 = Ident.equal t1 t2
    
 
 
@@ -249,8 +250,8 @@ struct
     
 
   let rec sametype t1 t2 = 
-      (* let _ = Printf.printf "%s" ("Asked if "^(visitType t1)^" and "^(visitType t2)^" are sametypes\n") in 
-       *)  let rec sametypes tl1 tl2 = (List.length tl1 = List.length tl2) &&  
+     (*  let _ = Printf.printf "%s" ("Asked if "^(visitType t1)^" and "^(visitType t2)^" are sametypes\n") in 
+      *)   let rec sametypes tl1 tl2 = (List.length tl1 = List.length tl2) &&  
           List.fold_left2 (fun flag t1 t2  -> (sametype t1 t2)) true tl1 tl2 
       in
       match (t1,t2) with 
@@ -262,8 +263,8 @@ struct
         | (Ttuple td1, Ttuple td2) -> sametypes td1 td2
         | (Tconstr (tycon1,tdl1), Tconstr (tycon2,tdl2)) -> 
             let tyconeq = Tycon.equals (tycon1,tycon2)  in 
-            (tyconeq) && 
-            (List.fold_left2 (fun acc x y -> acc && (sametype x y)) true tdl1 tdl2)
+            (tyconeq)  && 
+            (List.fold_left2 (fun acc x y -> acc && (sametype x y)) true tdl1 tdl2) 
         | (Tfield (s1,td1),Tfield (s2,td2)) -> (s1 = s2) && sametype td1 td2
         | (Tbool, Tbool) -> true
         | (Tint, Tint) -> true  
@@ -328,7 +329,12 @@ struct
        | Types.Ttuple tel -> Ttuple (List.map (fun te -> normalizeTypes te) tel)
        | Types.Tconstr (p,tel,_) -> 
            if Tycon.is_ident p then
-            Tconstr (p, (List.map (fun te -> normalizeTypes te) tel))
+            let constPath = Tycon.toString p  in
+            (*A hack to handle Ttyp constructor  arguments .e.g Node of int * ... will have int defined as a Tconst rather than Tvar in Ocaml*)
+            if constPath = "int" then 
+              Tvar (Tyvar.fromString "int")
+            else   
+              Tconstr (p, (List.map (fun te -> normalizeTypes te) tel))
           else 
             raise (TyConEx "Only Identities allows as paths")  
        | Types.Tfield (s,_, te1,_) -> Tfield (s, normalizeTypes te1) 
@@ -503,8 +509,7 @@ struct
   let eq = fun (Eq (x,y)) -> (x, y) 
 
   type sol = (SVar.t * t)
-  (* Understanding - Example of a function within a function *)
-
+  
   let trySolveConstraint (c:cs) : sol option =
     let len = List.length in   
     
@@ -1129,8 +1134,8 @@ let rec  layout t = match t with
     | Base bp -> Base (BasePredicate.applySubst subst bp)
     | Rel rp -> Rel (RelPredicate.applySubst subst rp)
     | Exists (tyDB,t) -> if (TyDBinds.mem tyDB ol)
-        then raise (RelPredicateException "Attempted substitution on existentially \
-                                           				              \ quantified variable")
+        then let expstr = ("Attempted substitution "^(Ident.name nw)^"  on existentially quantified variable "^(Ident.name ol)) in 
+            raise (RelPredicateException expstr) 
         else Exists (tyDB,applySubst subst t)
     | Not t -> Not (applySubst subst t )
     | Conj (t1,t2) -> Conj (applySubst subst t1, applySubst subst t2)

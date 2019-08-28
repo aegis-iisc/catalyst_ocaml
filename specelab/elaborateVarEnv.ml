@@ -232,8 +232,13 @@ let bootStrapCons ve =
                                     raise (ElebEnvFail "Only Identities allows as paths")  
 
                                   in   
-                                 (*In general scenario the arguments might have parameters again*)   
-                                let argTyD = TyD.makeTconstr (Tycon.fromString (Ident.name arg_tyconsId) , []) in 
+                                 (*In general scenario the arguments might have parameters again
+                                 int passed to a data constructor is a Tcons in Ocaml*)   
+                                 let argTyD = if ((Tycon.toString p ) = "int")
+                                  then TyD.makeTvar (Tyvar.fromString "int")
+                                  else 
+                                  TyD.makeTconstr (Tycon.fromString (Ident.name arg_tyconsId) , []) 
+                                in 
                                 argTyD
 
                         in 
@@ -525,19 +530,8 @@ let addRelToConTy (ve: VE.t) (con,letop,rexpr) (id:RelId.t) =
 exception CantInferType of string
 exception Return of TS.cs list * TS.t * RelLang.instexpr
 
-(* let testfun (tyDB) = 
 
-   let () = let foo = fun x -> x + 1 in
-        foo tyDB  
-   in 
-    ()
-
-*)   
-(*
-  This is where relational expressions are translated to RefTy expressions
-*)  
 let rec elabRExpr (re,pre,tyDB,spsB,rexpr) =
-
 
   let typeSynthRElem elem = match elem with
     (*What should be the type constructor for int and bool*)
@@ -561,10 +555,9 @@ let rec elabRExpr (re,pre,tyDB,spsB,rexpr) =
   let () = Printf.printf "%s" "@here-elabRE-2  \n" in 
             
   let isParam = fun rid -> SPSB.mem spsB rid in 
-  (*This has some syntax error *) 
     let () = Printf.printf "%s" "@here-elabRE-3  \n" in 
  
-    let doItParamApp ((RelLang.RInst {rel=rid;_} as rinst) ,tyd) = 
+  let doItParamApp ((RelLang.RInst {rel=rid;_} as rinst) ,tyd) = 
       let open SPSBValue in 
       let () = Printf.printf "%s" ("@here-elabRE-4   \n") in 
       let {dom;range=svar} = SPSB.find spsB rid in 
@@ -705,12 +698,21 @@ let rec elabRExpr (re,pre,tyDB,spsB,rexpr) =
   let funD (e1, e2) = D (e1, e2) in 
   let funT td = TS.T td in
   match rexpr with
-    U (v1, v2) -> doIt (v1,v2) (funU) TS.unionType 
-  | X (v1,v2) -> doIt (v1,v2) (funX) TS.crossPrdType
-  | D (v1,v2) -> doIt (v1,v2) (funD) TS.unionType 
-  | T els -> (emptycs(), TS.Tuple   
+    U (v1, v2) -> 
+          let () = Printf.printf "%s" ("elabRExpr Union ") in 
+          doIt (v1,v2) (funU) TS.unionType 
+  | X (v1,v2) -> 
+        let () = Printf.printf "%s" ("elabRExpr X ") in 
+        doIt (v1,v2) (funX) TS.crossPrdType
+  | D (v1,v2) -> 
+        let () = Printf.printf "%s" ("elabRExpr D ") in 
+        doIt (v1,v2) (funD) TS.unionType 
+  | T els -> 
+        let () = Printf.printf "%s" ("elabRExpr T ") in 
+          (emptycs(), TS.Tuple   
                 (List.map (funT << typeSynthRElem) els) ,rexpr)
   | R (rinst,y) ->  
+      let () = Printf.printf "%s" ("elabRExpr R ") in 
      
     doItRInstApp (rinst,y)  
 
@@ -750,6 +752,39 @@ let  elabPRBind (pre) (PR.T {id;def}) =
   let  reldesc = {PRE.tys=prTS; PRE.def= PRE.Prim prDef}
   in
   PRE.add pre (id,reldesc)
+
+
+let joinTyS tys1 tys2 = 
+  let open TupSort in
+  
+
+  let PTS.T {sortscheme= ss1;_} = tys1 in  
+  let PTS.T {sortscheme= ss2;_} = tys2 in  
+  
+
+
+  let PSS.T {sort = projSort1;_} = ss1 in 
+  let PSS.T {sort = projSort2;_} = ss2 in 
+
+
+  let PS.T {sort =sps1 ; _ } = projSort1 in 
+  let PS.T {sort =sps2 ; _ } = projSort2 in 
+
+  let tupsort1 = SPS.range sps1 in 
+  let tupsort2 = SPS.range sps2 in 
+
+ let tupleList1 = match tupsort1 with 
+     TS.Tuple tTl -> tTl    
+     | _ -> raise (ElebEnvFail "Unknow TupleSort")
+ in 
+ let tupleList2 = match tupsort2 with 
+     TS.Tuple tTl -> tTl    
+     | _ -> raise (ElebEnvFail "Unknow TupleSort")
+  in    
+  let joinedTys = if (List.length tupleList1 > List.length tupleList2) then tys1 else tys2 in 
+  joinedTys
+
+
 
 let elabSRBind (re)(pre)(ve ) (StructuralRelation.T {id;params;mapp} as sr) =
 
@@ -837,7 +872,7 @@ let elabSRBind (re)(pre)(ve ) (StructuralRelation.T {id;params;mapp} as sr) =
              * mapping it to a bogus def. This is to identify
              * recursive applications.
              *)
-                                                 (*  let open PRE in  
+                                                  let open PRE in  
                                                   let bogusDesc = {
                                                     tys = PTS.simple (empty, SPS.ColonArrow
                                                                         (*author Ashish : Treating Tnil as Tunknown in SML , confirm ??*)
@@ -845,15 +880,15 @@ let elabSRBind (re)(pre)(ve ) (StructuralRelation.T {id;params;mapp} as sr) =
                                                     def = PRE.Bind ( Bind.BogusDef)} in
 
                                                   let extendedPRE = PRE.add pre (id,bogusDesc) in 
-                                                  *)
-                                                  let extendedPRE = pre in  
-                                                  let () = Printf.printf "%s" "@here3-4  \n" in 
-                                           
+                                                                                           
                                                   let (cs,tupTy,rexpr') = elabRExpr (re, extendedPRE, (tyDB), spsB, rexpr) in 
+                                                 
                                                   let () = Printf.printf "%s" "@here3-5  \n" in 
                                            
+                                                  let () = Printf.printf "%s" ("\n Tuple Type returned "^(TupSort.toString tupTy)) in 
                                                   let _ = assertEmptyCs cs in 
                                                   let relSPS = SPS.ColonArrow (datTyD, tupTy) in 
+                                                 
                                                   let (svars, paramSPS) = Vector.unzip (Vector.map 
                                                                                           (spsB, fun (_,{dom;range=svar}) -> 
                                                                                               let tyD = match !dom with
@@ -868,8 +903,26 @@ let elabSRBind (re)(pre)(ve ) (StructuralRelation.T {id;params;mapp} as sr) =
                                                   let relSS = PSS.generalize (svars,relPS) in 
                                                   let relTyS = PTS.generalize (tyvars,relSS) 
                                                   in 
+                                                  let ptsIncoming = match relTySOp with
+                                                      None -> bogusDesc.tys
+                                                      | Some relTyS -> relTyS 
+                                                  in       
 
-                                                  ((con, valop  , RelLang.Expr rexpr'), Some relTyS)
+                                                  let () = Printf.printf "%s" (" \n RelTySOP "^(ProjTypeScheme.toString ptsIncoming)) in 
+
+                                                  let () = Printf.printf "%s" (" \n RelTyS "^(ProjTypeScheme.toString relTyS)) in 
+
+                                                 
+
+                                                    
+
+                                                  let joined_relTyS = joinTyS ptsIncoming relTyS in 
+
+
+                                                  let () = Printf.printf "%s" (" \n Joined RelTyS "^(ProjTypeScheme.toString joined_relTyS)) in 
+
+
+                                                  ((con, valop  , RelLang.Expr rexpr'), Some joined_relTyS)
 
                                               | _ -> raise (ElebEnvFail "Impossible case of valop -rterm :") ) in 
 

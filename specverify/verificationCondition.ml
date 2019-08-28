@@ -324,8 +324,7 @@ let rec fromTypeCheck (ve, pre, subTy, supTy)  =
         in
         Vector.concat [vcs1; vcs2]
   with   
-  |_ -> Vector.new0 ()
-
+  |e -> raise e
 
 (* -- VC Elaboration -- *)
   (*

@@ -49,20 +49,36 @@ let discharge (VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP)) =
   (*Adding missing tydbinds*)
   let bnew_x = (Var.fromString "x", TyD.Tvar (Tyvar.fromString "int") ) in 
   let bnew_xs = (Var.fromString "xs", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "int")]) ) in 
-  (* let bnew_c = (Var.fromString "c", TyD.Tvar (Tyvar.fromString "int") ) in 
-(* *)   let bnew_v6 = (Var.fromString "v_6", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "int")]) ) in 
- *)   
-   let tydbinds =  bnew_xs::bnew_x :: tydbinds in 
-
-  (* let pred0 = Simple (Base (BP.Eq ( 
-                              (Var (Var.fromString "x")), (Var (Var.fromString "c") )))) in 
-  let pred1 = Simple (Base (BP.Eq ( 
-                              (Var (Var.fromString "l")), (Var (Var.fromString "v_6") )))) in 
+  let bnew_v_9 = (Var.fromString "v_9", TyD.Tvar (Tyvar.fromString "int") ) in 
+  let bnew_el = (Var.fromString "el", TyD.Tvar (Tyvar.fromString "int") ) in 
   
-  let anteP_extra_list = [pred0;pred1] in
+  let bnew_v1 = (Var.fromString "v_1", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "int")]) ) in 
+ let bnew_v13 = (Var.fromString "v_13", TyD.Tconstr(Tycon.fromString "btree", []) ) in 
+ let bnew_lt = (Var.fromString "lt", TyD.Tconstr(Tycon.fromString "btree", []) ) in 
+
+ let bnew_v11 = (Var.fromString "v_11", TyD.Tconstr(Tycon.fromString "btree", []) ) in 
+  let bnew_rt = (Var.fromString "rt", TyD.Tconstr(Tycon.fromString "btree", []) ) in 
+
+ let bnew_v_12 = (Var.fromString "v_12", TyD.Tvar (Tyvar.fromString "int") ) in 
+ let bnew_n = (Var.fromString "n", TyD.Tvar (Tyvar.fromString "int") ) in 
+  
+    let tydbinds = (*bnew_el :: bnew_lt :: bnew_rt:: bnew_n:: bnew_v_12:: bnew_v11:: bnew_v13::*) bnew_v1:: (*  bnew_v_9:: bnew_x :: bnew_xs:: *)tydbinds in 
+ 
+  let pred0 = Simple (Base (BP.Eq ( 
+                              (Var (Var.fromString "n")), (Var (Var.fromString "v_12") )))) in 
+  let pred1 = Simple (Base (BP.Eq ( 
+                              (Var (Var.fromString "lt")), (Var (Var.fromString "v_11") )))) in 
+  
+  let pred2 = Simple (Base (BP.Eq ( 
+                              (Var (Var.fromString "rt")), (Var (Var.fromString "v_13") )))) in 
+  let pred3 = Simple (Base (BP.Eq ( 
+                              (Var (Var.fromString "el")), (Var (Var.fromString "v_9") )))) in 
+  
+
+  let anteP_extra_list = [(* pred0;pred1;pred2;pred3 *)] in
   let anteP_extra = Conj anteP_extra_list in 
   let anteP = Conj [anteP;anteP_extra] in 
- *)
+
   let newVC = VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP) in 
   
 

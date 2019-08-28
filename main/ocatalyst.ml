@@ -78,21 +78,22 @@ let catalyst_elaborate_envs relspecs typedtree =
       | e -> raise e
     in    
       
-(*     let elaborated_vcs = 
+    let elaborated_vcs = 
         List.map (fun vc -> VC.elaborate (re,pre,vc)) initial_vcs in 
            
-      let _ = Printf.printf "%s" ("\n Elaborated VCS \n") in 
+     (*  let _ = Printf.printf "%s" ("\n Elaborated VCS \n") in 
       let _ = Printf.printf "%s" (string_of_int (List.length elaborated_vcs)) in 
       let _ = Printf.printf  "\n" in 
 
      let _ = Printf.printf "%s" (L.toString (VC.layouts elaborated_vcs)) in 
       
-
+ *)
       let  dischargeVC i vc = 
       let _ = Printf.printf "%s" ("Discharging VCS "^(string_of_int (i+1))^" of "^(string_of_int (List.length elaborated_vcs))^"\n") in 
           
-          (*   if (i = 0) then Printf.printf "Skipping VC1 " else 
-   *)
+     (*         if ( i = 0 || i = 1 || i= 2 || i=3 || i=5 || i= 6 ) then Printf.printf "Skipping VC1 " 
+           else 
+    *)
           match VCE.discharge vc with
           VCE.Success -> 
             Printf.printf  "%s" ("VC# "^(string_of_int (i+1))^" discharged\n")
@@ -109,7 +110,7 @@ let catalyst_elaborate_envs relspecs typedtree =
     in  
     let unit_lists = List.mapi dischargeVC elaborated_vcs in   
       
- *)    Printf.printf "%s" "The implementation is correct w.r.t given specification!\n"
+    Printf.printf "%s" "The implementation is correct w.r.t given specification!\n"
     
  
 let () = 

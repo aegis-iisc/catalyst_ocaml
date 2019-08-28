@@ -18,11 +18,11 @@ module PRE = ParamRelEnv
 
 
 (*comment this out to print  Printf messages*)
-(* module Printf = struct
+module Printf = struct
   let printf f s = ()
 
 end 
- *)
+
 
 
 module Tyvar =
@@ -120,7 +120,6 @@ let decomposeTupleBind = RefTy.decomposeTupleBind
    * the sake of constructor pattern matches, where the returned type binds
    * contain type bindings for matched pattern vars.
 
-   Ashish : Unify constructor arguments must be different as it takes a list of arguments
    *)
 let rec unifyArgs ((argv ,argTy) as argBind,
                    (arg:Ident.t) ) =
@@ -134,7 +133,7 @@ let rec unifyArgs ((argv ,argTy) as argBind,
       
       *) (Vector.new1 (arg,argTy), Vector.new1 (arg,argName))
   |(RefTy.Tuple argBinds', _) -> 
-
+       (*The constructor argument refinement occurs here*) 
       (* Unifying v0:{x0:T0,x1:T1} with v1 would return
        * v1 ↦ {x0:T0,x1:T1} as the only new bind. However,
        * all references v0 elements should now refer to v1
@@ -156,8 +155,7 @@ let rec unifyArgs ((argv ,argTy) as argBind,
       in
       (binds,substs)
   | (RefTy.Arrow _, _) -> 
-    (* let () = Printf.printf "%s" "Arrow RefinementType " in 
-     *)
+    
       (Vector.new1 (arg,argTy), 
        Vector.new1 (arg,argv))
   | _ -> raise (SpecVerifyExc "Invalid argTy-argExpVal pair encountered")
@@ -178,8 +176,8 @@ let  rec unifyWithDisj refTy1  refTy2  =
 
       let () = Printf.printf "%s" "\n*******Performing Base : Base with Disjunction *********\n" in 
 
-       let () = Printf.printf "%s" ("\nty of fst  "^RefTy.toString refTy1) in      
-      let () = Printf.printf "%s" ("\nty of snd"^RefTy.toString refTy2) in      
+       let () = Printf.printf "%s" ("\n \n ty of fst  "^RefTy.toString refTy1) in      
+      let () = Printf.printf "%s" ("\n \n ty of snd"^RefTy.toString refTy2) in      
            
    let _ = assert (TyD.sametype td1 td2) in 
         let pred_unify_result_vars = Predicate.Base (BP.varEq (bv1, bv2)) in 
@@ -209,10 +207,15 @@ let  rec unifyWithDisj refTy1  refTy2  =
    * Invariant : bv and td of ty is unchanged.
    *)
 let  wellFormedType (marker, markedVE , ty) =
-   let () = Printf.printf "%s" "\n*******Checking |Gamma |- tau *********\n" in 
+   let () = Printf.printf "%s" "\n*******Checking WFT |Gamma |- tau *********\n" in 
    let () = Printf.printf "%s" ((RefTy.toString ty)^"\n") in 
 
-  
+   let var_for_ty =    
+      match ty with 
+          RefTy.Base (v,extd,pred) -> v
+        | _ -> raise (SpecVerifyExc "WellFormedness check is not implemented only for Base RefinementType \n")
+     
+    in     
   let velist = VE.toVector markedVE in 
   let indx = Vector.index velist (fun (v,_) -> varEq (v,marker)) in 
   let i = match indx with 
@@ -220,17 +223,38 @@ let  wellFormedType (marker, markedVE , ty) =
     |_ -> raise (SpecVerifyExc "Marker absent")
   in 
   let prefix = Vector.prefix velist i in 
+
+  let  _ = Printf.printf "\nPrefix Var environment :\n" in 
+  let  _ = Printf.printf "---------\n" in 
+  let  _ = Printf.printf "%s" ((VE.layout prefix)) in 
+
+  (*In certain cases the bound variable of the ty and the prefix have a conflict, we remove such suoerfluos vars from the prefix 
+    A better approach could be renaming the captured variable*)
+
+  let sanitizedPrefix= List.filter (fun (visited_var, rtys) -> if (Var.equal visited_var var_for_ty) then false else true) prefix in      
+
+
+  let  _ = Printf.printf "\nSanitized Prefix Var environment :\n" in 
+  let  _ = Printf.printf "---------\n" in 
+  let  _ = Printf.printf "%s" ((VE.layout sanitizedPrefix)) in 
+
+
   let exttylist = List.map 
       (fun (v,rtys) -> (v,
                         RefSS.toRefTy (RefTyS.specialize rtys))
-      ) prefix in 
+      ) sanitizedPrefix in 
+
+
+
   let  flattened = List.concat 
       (List.map (fun (v,ty)-> 
            match ty with
              RefTy.Tuple _ -> decomposeTupleBind (v,ty)
            | _ -> Vector.new1 (v,ty)) exttylist) in 
+  
   let (tyDB,pred1 ) = List.fold_left (
       fun (clos,pred') (exvar,exty) ->
+        let () = Printf.printf "%s" ("Var : Ty "^Ident.name exvar^" :: "^RefTy.toString exty) in 
         match exty with 
           RefTy.Base (bv,extd,pred) -> (TyDBinds.add clos exvar extd,
                                         Predicate.conj (pred',Predicate.applySubst (exvar,bv) pred))
@@ -380,6 +404,11 @@ let rec  type_synth_exp (ve, pre, exp) =
          *)
 
       let () = Printf.printf "%s" "\n######### synthesis:let \n" in
+      let  _ = Printf.printf "\nVar Env Let :\n" in 
+        let  _ = Printf.printf "---------\n" in 
+      
+        let  _ = Printf.printf "%s" ((VE.layout ve)) in 
+     
  
       let (marker, markedVE) = markVE ve in 
       (*list of VC and ([P1: Typeof E1; P2 : Typeof E2; .... : Pn : Typeof En)*)
@@ -403,13 +432,20 @@ let rec  type_synth_exp (ve, pre, exp) =
            let ve'' = VE.add ve' bvBind in  
             ve'' 
 
-        ) ve value_type_list in 
+        ) markedVE value_type_list in 
 
       let (vcs2, type_body_exp) = type_synth_exp (extendedVE, pre, exp) in 
 
-      (List.concat [vcs1;vcs2], 
-      wellFormedType (marker,extendedVE,type_body_exp))
-  
+      let () = Printf.printf "%s" ("\n RefinementType of the synth let body expression in T-let \n"^(RefTy.toString (type_body_exp))) in 
+      let wft =  wellFormedType (marker,extendedVE,type_body_exp) in 
+      
+      (*  let wft =  wellFormedType (marker,extendedVE,type_body_exp) in 
+       *) let () = Printf.printf "%s" ("\n WFT of the synth let body expression in T-let \n"^(RefTy.toString (wft))) in 
+      
+
+       (List.concat [vcs1;vcs2], wft)  
+    
+  (*match E with [P1 -> E1; P2  -> E2;....Pn -> En] or Exception (explist)*)
   | Texp_match (testexp, case_list, explist, p) ->
        let () = Printf.printf "%s" "\n######### synthesis:match  \n" in
  
@@ -419,10 +455,10 @@ let rec  type_synth_exp (ve, pre, exp) =
       let open SpecLang in 
       let newTyVar = Tyvar.newSVar () in
       let new_Tvar = TyD.Tvar newTyVar in  
-
-      let ve = VE.add ve (  (Var.fromString "x"), (toRefTyS (RefTy.fromTyD (new_Tvar))) ) in 
+      (*Change this to general extension of the parameters to the *)
+      (* let ve = VE.add ve (  (Var.fromString "x"), (toRefTyS (RefTy.fromTyD (new_Tvar))) ) in 
       let ve = VE.add ve ( (Var.fromString "xs"), (toRefTyS (RefTy.fromTyD (TyD.makeTconstr ((Tycon.fromString "list"), [(new_Tvar)] )))) )in 
-        
+       *)  
         
       let folding_function = fun  (vcs,wftypes) ({c_lhs;c_rhs;_}) ->
         let pat = c_lhs in 
@@ -433,19 +469,22 @@ let rec  type_synth_exp (ve, pre, exp) =
         
         let extendedVE = doIt_pat_testexp_bind(markedVE, pre, valbind) in 
         
-         let  _ = Printf.printf "\n@Var Env:\n" in 
+        let  _ = Printf.printf "\nVar Env After adding [v/mu]:\n" in 
         let  _ = Printf.printf "---------\n" in 
       
         let  _ = Printf.printf "%s" ((VE.layout extendedVE)) in 
      
         let (vcs1,ty) = type_synth_exp (extendedVE,pre,expr) in 
         (*add red to vcs*)
+        let () = Printf.printf "%s" ("\n RefinementType of the expression in case P->E \n"^(RefTy.toString (ty))) in 
+
         
         let wftype = wellFormedType (marker,extendedVE,ty)
         in
-         let  _ = Printf.printf  "\nMacth Exp Ty:\n" in 
-        let  _ = Printf.printf "%s" (RefTy.toString ty) in 
        
+        (*add red to vcs*)
+        let () = Printf.printf "%s" ("\n WellFormed RefinementType of the expression in case P->E \n"^(RefTy.toString (wftype))) in 
+
         (List.concat [vcs;vcs1], wftype :: wftypes)
       in  
 
@@ -457,7 +496,7 @@ let rec  type_synth_exp (ve, pre, exp) =
 
       let unifiedType = List.fold_left unifyWithDisj wftype wftypes in 
 
-         let  _ = Printf.printf "@Unified Type:\n" in 
+         let  _ = Printf.printf "@\n \n Unified Type:\n" in 
         let  _ = Printf.printf "%s" ("\n "^(RefTy.toString unifiedType)) in 
     
  
@@ -628,9 +667,9 @@ and type_synth_constructor_apply (ve, pre, const_desc, list_exp) =
             (finalvcs, resTy)
 
 
-            | Base (var, tyd, pr) -> 
+            | (Base (var, tyd, pr) as constRefTy) -> 
              let () = Printf.printf "%s" ("#######T-const-apply Other case \n") in
-             ([], RefTy.fromTyD (tyd))
+             ([], constRefTy)
 
         )
   | "[]" -> (*nil constuctor constnat case*)
@@ -646,6 +685,123 @@ and type_synth_constructor_apply (ve, pre, const_desc, list_exp) =
    
       ([], resRefTy)
 
+
+  | _ -> (*Any other data constructor*)
+        let () = Printf.printf "%s" "T-consApply case user defined datatype" in 
+      
+        (*update the type of the argument in the variable environment*)
+      let args_types = const_desc.cstr_args in 
+      let localTyDBind = List.map2 (fun exp ty -> (exp, (RefTy.fromTyD (TyD.normalizeTypes ty)))) list_exp args_types in  
+
+      ( match constrRefTy with 
+          | Arrow ( (_, (Tuple tdl)) as par, fResTy ) -> 
+             let () = Printf.printf "%s" ("####### T-consApply Arrow (Tuple , dest ) case \n") in 
+             let list_fargTyBinds = tdl in 
+             let () = assert ((List.length list_fargTyBinds) = (List.length list_exp)) in 
+  
+             let folding_fun = fun (vcs, substs) (fargBind) (actual_arg_exp) ->
+                let (_, fargty) = fargBind in 
+                let exp_from_valExp = actual_arg_exp in 
+                (*Two componets , if identity then use the local environment, else get the type by synthesizing type *) 
+                let exp_desc_from_exp = exp_from_valExp.exp_desc in 
+                (*case Consname l e.g. Node (l,n,r)*)  
+                match exp_desc_from_exp with 
+                
+                | Texp_ident (p,_,_) -> 
+                    let () = Printf.printf "%s" ("Consstructor application to an Identity ") in      
+                
+                    let argId = (match p with 
+                      Pident id -> id
+                      | _ -> raise (SpecVerifyExc "Only Pident handled "))
+                in 
+
+                let argTy = List.assoc exp_from_valExp localTyDBind in  
+                  (*
+                  *  Γ ⊢ argTy <: fargty
+                  *)
+                let () = Printf.printf "%s" ("ty of argument const "^RefTy.toString argTy) in      
+                let () = Printf.printf "%s" ("ty of argument const "^RefTy.toString fargty) in      
+                let vcs1 = VC.fromTypeCheck (ve,pre,argTy,fargty) in         
+                (*unify the actual argument with the type of the formal*) 
+                let  (_,substs') = unifyArgs (fargBind,argId)  
+                in
+                (List.concat[vcs;vcs1],List.concat[substs;substs'])
+                  
+
+                (*case Consname applied to an expession, may arise in a not-anormal format, e.g.  Node (lexp, nexp, rexp)*)
+                | _ ->  
+                   let () = Printf.printf "%s" ("Consstructor application to an expression ") in      
+                   let (vcs0,argTy) = type_synth_exp (ve,pre,exp_from_valExp) in 
+                  (*Create a local tempVar with this type
+                  This is required as the AST is not a-normalized, in an anormalized form this will always be a Val*)
+                  let tempVar = getUniqueId "temp" in 
+                  let extendedVE = VE.add ve (tempVar, (toRefTyS argTy)) in  
+                  let ve = VE.add ve (tempVar, (toRefTyS argTy)) in  
+                      (*
+                       *  Γ ⊢ argTy <: fargty
+                       *)
+                  let () = Printf.printf "%s" ("ty of argument const "^RefTy.toString argTy) in      
+                  let () = Printf.printf "%s" ("ty of argument const "^RefTy.toString fargty) in      
+                  
+                  let vcs1 = VC.fromTypeCheck (extendedVE,pre,argTy,fargty) in         
+
+                  let  (_,substs') = unifyArgs (fargBind,tempVar)  
+                  in
+                  (List.concat[vcs;vcs0;vcs1],List.concat[substs;substs'])
+            in 
+             let (finalvcs, finalsubsts) = List.fold_left2 (folding_fun) ([],[]) list_fargTyBinds list_exp in
+              let resTy = RefTy.applySubsts finalsubsts fResTy in 
+       
+            (finalvcs, resTy)
+
+            | Arrow (tdsrcBind, fResTy) -> 
+               let () = Printf.printf "%s" ("####### Arrow (src , dest ) case \n") in
+               let list_fargTyBinds = [tdsrcBind] in
+               let () = Printf.printf "%s" ("length left "^ (string_of_int (List.length list_fargTyBinds))) in
+                let () = Printf.printf "%s" ("length right "^ (string_of_int (List.length list_exp))) in
+               let () = assert ((List.length list_fargTyBinds) = (List.length list_exp)) in 
+
+            let folding_fun = fun (vcs, substs) (fargBind) (actual_arg_exp) ->
+              let (_, fargty) = fargBind in 
+              let exp_from_valExp = actual_arg_exp in
+              let open Typedtree in 
+
+              let (_,argTy) = type_synth_exp (ve,pre,exp_from_valExp) in 
+                        (*
+                         *  Γ ⊢ argTy <: fargty
+                         *)
+
+              let vcs1 = VC.fromTypeCheck (ve,pre,argTy,fargty) in         
+
+
+              (* let get the pattern for the id   *) 
+              let exp_desc_from_exp = exp_from_valExp.exp_desc in 
+              let argPId  = match exp_desc_from_exp with 
+                | Texp_ident (p,_,_) -> p
+
+              in 
+              let argId = match argPId with 
+                  Pident id -> id
+                | _ -> raise (SpecVerifyExc "Only Pident handled ")in 
+
+              let  (_,substs') = unifyArgs (fargBind,argId)  
+              in
+              (List.concat[vcs;vcs1],List.concat[substs;substs'])
+            in 
+            let (finalvcs, finalsubsts) = List.fold_left2 (folding_fun) ([],[]) list_fargTyBinds list_exp in
+
+            let resTy = RefTy.applySubsts finalsubsts fResTy in 
+            (finalvcs, resTy)
+
+
+            | (Base (var, tyd, pr) as constRefTy) -> 
+             let () = Printf.printf "%s" ("#######T-const-apply Other case \n") in
+             ([], constRefTy)
+
+        )
+  
+
+
 (*The v/\mu [\phi_c] v/\mu [phi_n]*)
 and doIt_pat_testexp_bind (ve, pre, pat_exp_bind)  = 
   let pat= pat_exp_bind.vb_pat in 
@@ -654,8 +810,10 @@ and doIt_pat_testexp_bind (ve, pre, pat_exp_bind)  =
     | Texp_ident (p,_,_) -> Path.head p 
     | _ -> raise (SpecVerifyExc "The testexp must be and identity") 
   in   
+  let () = Printf.printf "%s" ("Creating pat-exp binds for "^Ident.name testExpId) in 
+  
   match pat.pat_desc with   
-    | Tpat_construct (_, cd, _) ->
+    | Tpat_construct (_, cd, pl) ->
       let cstr_name = cd.cstr_name in 
       let cstr_Id = Var.fromString cstr_name in 
       let cstr_refTyS = 
@@ -667,13 +825,13 @@ and doIt_pat_testexp_bind (ve, pre, pat_exp_bind)  =
       let cstr_refTy = RefinementTypeScheme.specializeRefTy cstr_refTyS in 
 
       let substituted_cstrResRefTy = 
-      match cstr_refTy with 
-        | Base (oldv, tyD, oldpred) -> RefTy.applySubsts [(testExpId, oldv)] cstr_refTy
-        | Arrow ((_,_) as argBind, resTy) -> 
+        match cstr_refTy with 
+          | Base (oldv, tyD, oldpred) -> RefTy.applySubsts [(testExpId, oldv)] cstr_refTy
+          | Arrow ((_,_) as argBind, resTy) -> 
                 match resTy with 
                 | Base (oldv, tyd, oldpred) -> RefTy.applySubsts [(testExpId, oldv )] resTy 
                 | _ -> raise (SpecVerifyExc "The result of an arrow type must be a Base for constructor")
-        | _ -> raise (SpecVerifyExc "constructor cannot be a Tuple")
+          | _ -> raise (SpecVerifyExc "constructor cannot be a Tuple")
     
       in
        (* Extend ve' with a new dummy var to keep track of
@@ -681,7 +839,65 @@ and doIt_pat_testexp_bind (ve, pre, pat_exp_bind)  =
         
       let dummyTyDbind = (Var.genVar() , toRefTyS substituted_cstrResRefTy) in 
 
-      VE.add ve  dummyTyDbind  
+
+      let ve' = VE.add ve  dummyTyDbind in 
+
+      (*get the tydBinds for constructor argumenst , e.g Node (n,l,r) -> (n : int, l:tree, r:tree)*)
+
+      let () = Printf.printf "%s" ("\n \n RefinementType for the constructor "^(RefTy.toString cstr_refTy)) in 
+
+      let formal_cstr_args = 
+      match cstr_refTy with 
+        | RefTy.Arrow ( (v,ty), dest) ->  
+              (match ty with 
+                 Tuple tl -> tl
+                | _->raise (SpecVerifyExc "Unimple Constructor Arrow Type, only allowed case is [Tuple] => dest") )
+        | _ -> []
+      in 
+
+      let formal_cstr_argBinds = List.map (fun (_,rty) ->
+          match rty with 
+          | RefTy.Base (v, tyd, phi) -> (v, rty)
+          | _ -> raise (SpecVerifyExc "Unimple the argument types for the constructor must be Base type")
+          ) formal_cstr_args 
+      in 
+(* 
+      let ve'' = List.fold_left (fun ve arg_pat -> 
+      let arg_pat_type = arg_pat.pat_type in  
+      let arg_pat_normaltype = TyD.normalizeTypes (arg_pat_type) in       
+      match arg_pat.pat_desc with 
+       | Tpat_var (id, _) -> let ()= Printf.printf "%s" ("\n Arg_pat_name for the constructor "^(Ident.name id)) in 
+         VE.add ve (id, toRefTyS (RefTy.fromTyD arg_pat_normaltype))
+       | _ -> raise (SpecVerifyExc "arguments to constructors must be a Tpat_var ")    
+      ) ve' pl
+      in  *)
+
+      let ve'' = List.fold_left2 (fun ve (fargId, fargTy) (arg_pat) -> 
+         match arg_pat.pat_desc with 
+           | Tpat_var (id, _) -> let ()= Printf.printf "%s" ("\n Arg_pat_name for the constructor "^(Ident.name id)) in 
+              match fargTy with 
+                | RefTy.Base (v, tyd, pred) -> 
+
+                let pred_equate_cons_params = Predicate.Base (BP.varEq (v, id)) in 
+                let pred' = Predicate.Conj (pred, pred_equate_cons_params) in 
+                let unified_fargTy =  RefTy.Base (v, tyd, pred') in 
+                  let ve = VE.add ve (id, toRefTyS unified_fargTy) in 
+                  let ve = VE.add ve (v, toRefTyS fargTy) in 
+                  ve
+                | _-> raise (SpecVerifyExc "the type of arguments to constructors must be a  Base ")  
+            | _ -> raise (SpecVerifyExc "arguments to constructors must be a Tpat_var ")    
+      
+        ) ve' (formal_cstr_argBinds) pl  in 
+
+      ve''
+
+      (*Expression e1 is type-checked under the extended environment:
+        Γ, (x:ν:int | true) , xs: (ν:intlist | true), 
+            Rmem(z) = Rid(x) [ Rmem(y)
+          *)
+
+
+
      | _ -> raise (SpecVerifyExc "The pattern must be a Tpat_construct") 
      
 
@@ -769,8 +985,8 @@ and type_check_exp (ve, pre, exp, tyexp)  =
          * Γ ⊢ expRefTy <: ty
          *)
 
-        let () = Printf.printf "%s" ("\nrefinement Type synthesized for exp ::: "^(RefTy.toString expRefTy)) in    
-        let () = Printf.printf "%s" ("\nrefinement Type provided for tyexp :::"^(RefTy.toString tyexp)) in    
+        let () = Printf.printf "%s" ("\n \n refinement Type synthesized for exp ::: "^(RefTy.toString expRefTy)) in    
+        let () = Printf.printf "%s" ("\n \nrefinement Type provided for tyexp :::"^(RefTy.toString tyexp)) in    
 
         let () = Printf.printf "%s" "Γ ⊢ expRefTy <: ty" in    
 
@@ -792,7 +1008,7 @@ and doIt_lambda (ve, pre, lambda) =
             with 
             | _ -> raise (SpecVerifyExc ("Impossible case "^(Ident.name v)))   
           in  
-          let () = Printf.printf "%s" ("Function "^(Var.toString v)^" being typechecked \n")  in 
+          let () = Printf.printf "%s" ("\n \n \t Function "^(Var.toString v)^" being typechecked \n")  in 
           let () = Printf.printf "%s" (RefTyS.toString ftys)  in 
           let  RefSS.T {prefty = PRf.T {refty=fty;params};_} 
             = RefTyS.specialize ftys  in 
@@ -805,12 +1021,13 @@ and doIt_lambda (ve, pre, lambda) =
                                                                                    PTS.simple (empty(),sps))) params pre 
           in 
           let vcs = match RefTyS.isAssumption ftys with
-              false -> (Printf.printf "%s" ((Var.toString var_from_pat)^" will be\
-                                                                        \ checked\n"); 
+              false -> (Printf.printf "%s" ("\n \n \t "^(Var.toString var_from_pat)^" will be\
+                                                                        \ checked\n");
+                                                                        Printf.printf "%s" ("\n \n \t *************************** \n"); 
                         type_check_function (extendedVE, extendedPRE, body.exp_desc , fty))
             | true -> Vector.new0 ()
           in 
-          let () = Printf.printf "%s" ("Length of vcs "^(string_of_int (List.length vcs )))   in 
+          let () = Printf.printf "%s" ("\n \n Length of vcs "^(string_of_int (List.length vcs )))   in 
           (vcs,  extendedVE)
       (*if not Tpat_var then unhandled*)
       | _ -> ([], ve)  
@@ -847,8 +1064,6 @@ and type_synth_function (ve , pre , fexp)
 
 
 
-(*Type checking value bindings, 
-  create a lambda here and typecheck that *)
 and doIt_value_bindings (ve, pre, valbinds) :(VC.t list * VE.t) = 
                                              let doIt_each_value_bind = 
                                                fun vb -> 
