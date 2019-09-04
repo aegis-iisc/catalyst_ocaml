@@ -1045,7 +1045,7 @@ struct
       | Sub (e1,e2) -> Sub (f e1, f e2)
       | SubEq (e1,e2) -> SubEq (f e1, f e2)
 
-    let applySubst subst t = exprMap t (RelLang.applySubsts ( Vector.new1 subst))
+    let applySubst subst t = exprMap t (RelLang.applySubsts ( [subst]))
 
     let mapTyD t f = 
       let g = RelLang.mapTyD in 
@@ -1271,11 +1271,16 @@ struct
     
   let  rec mapBaseTy t f = match t with
       Base (v,t,p) -> 
+        let () = Printf.printf "%s" "\nBase substs" in 
         let (x,y,z) = f (v,t,p) in 
         Base (x,y,z)
-    | Tuple tv -> Tuple (List.map (fun (v,t) -> 
+    | Tuple tv -> 
+      let () = Printf.printf "%s" "\nTuple substs" in 
+        Tuple (List.map (fun (v,t) -> 
         (v,mapBaseTy t f)) tv)
-    | Arrow ((v1,t1),t2) -> Arrow ((v1,mapBaseTy t1 f), 
+    | Arrow ((v1,t1),t2) ->
+          let () = Printf.printf "%s" "\nArrow substs" in 
+           Arrow ((v1,mapBaseTy t1 f), 
                                    mapBaseTy t2 f)
 
   let mapTyD t f = mapBaseTy t (fun (v,t,p) -> 

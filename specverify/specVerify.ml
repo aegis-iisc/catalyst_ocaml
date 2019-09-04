@@ -959,10 +959,6 @@ and doIt_pat_testexp_bind (ve, pre, pat_exp_bind)  =
        (* Extend ve' with a new dummy var to keep track of
                * relationship between matched arguments and rhsvar.*)
         
-      let dummyTyDbind = (Var.genVar() , toRefTyS substituted_cstrResRefTy) in 
-
-
-      let ve' = VE.add ve  dummyTyDbind in 
 
       (*get the tydBinds for constructor argumenst , e.g Node (n,l,r) -> (n : int, l:tree, r:tree)*)
 
@@ -983,18 +979,45 @@ and doIt_pat_testexp_bind (ve, pre, pat_exp_bind)  =
           | _ -> raise (SpecVerifyExc "Unimple the argument types for the constructor must be Base type")
           ) formal_cstr_args 
       in 
-(* 
+
+      (*actual to formal bind*)
+      let substitutions = List.fold_left2 (fun sub (fargId, fargTy) (arg_pat) -> 
+         match arg_pat.pat_desc with 
+           | Tpat_var (id, _) -> let ()= Printf.printf "%s" ("\n Arg_pat_name for the constructor "^(Ident.name id)) in 
+              let sub = (id, fargId) :: sub in 
+              sub 
+           (* | Tpat_constant ci -> []
+            *)   
+           | _ -> raise (SpecVerifyExc "arguments to constructors must be a Tpat_var ")    
+      
+        ) [] (formal_cstr_argBinds) pl  in
+
+
+        let () = List.iter (fun (oldid, newid) -> Printf.printf "%s" ("\n old "^(Ident.name oldid)^" |-> "^(Ident.name newid)^" \n ") ) substitutions in 
+
+      let substituted_cstrResRefTy  =  RefTy.applySubsts substitutions substituted_cstrResRefTy in 
+
+      let () = Printf.printf "%s" (" \n substituted RefTy "^(RefTy.toString substituted_cstrResRefTy)) in   
+       
+       let dummyTyDbind = (Var.genVar() , toRefTyS substituted_cstrResRefTy) in 
+
+
+      let ve' = VE.add ve  dummyTyDbind in 
+
+
       let ve'' = List.fold_left (fun ve arg_pat -> 
       let arg_pat_type = arg_pat.pat_type in  
       let arg_pat_normaltype = TyD.normalizeTypes (arg_pat_type) in       
       match arg_pat.pat_desc with 
        | Tpat_var (id, _) -> let ()= Printf.printf "%s" ("\n Arg_pat_name for the constructor "^(Ident.name id)) in 
          VE.add ve (id, toRefTyS (RefTy.fromTyD arg_pat_normaltype))
-       | _ -> raise (SpecVerifyExc "arguments to constructors must be a Tpat_var ")    
+      (*  | Tpat_constant (ci) -> ve   
+       *) | _ -> raise (SpecVerifyExc "arguments to constructors must be a Tpat_var ")    
       ) ve' pl
-      in  *)
+      in 
 
-      let ve'' = List.fold_left2 (fun ve (fargId, fargTy) (arg_pat) -> 
+
+     (*  let ve'' = List.fold_left2 (fun ve (fargId, fargTy) (arg_pat) -> 
          match arg_pat.pat_desc with 
            | Tpat_var (id, _) -> let ()= Printf.printf "%s" ("\n Arg_pat_name for the constructor "^(Ident.name id)) in 
               match fargTy with 
@@ -1010,9 +1033,9 @@ and doIt_pat_testexp_bind (ve, pre, pat_exp_bind)  =
             | _ -> raise (SpecVerifyExc "arguments to constructors must be a Tpat_var ")    
       
         ) ve' (formal_cstr_argBinds) pl  in 
-
+      *)
       ve''
-
+        
       (*Expression e1 is type-checked under the extended environment:
         Γ, (x:ν:int | true) , xs: (ν:intlist | true), 
             Rmem(z) = Rid(x) [ Rmem(y)
