@@ -1,0 +1,117 @@
+[
+  structure_item (exception.ml[1,0+0]..exception.ml[1,0+17])
+    Tstr_exception
+    extension_constructor (exception.ml[1,0+0]..exception.ml[1,0+17])
+      pext_name = "TestExp/1199"
+      pext_kind =
+        Text_decl
+          []
+          None
+  structure_item (exception.ml[4,21+0]..exception.ml[5,35+5])
+    Tstr_value Nonrec
+    [
+      <def>
+        pattern (exception.ml[4,21+4]..exception.ml[4,21+6])
+          Tpat_var "gt/1200"
+        expression (exception.ml[4,21+7]..exception.ml[5,35+5]) ghost
+          Texp_function
+          Nolabel
+          [
+            <case>
+              pattern (exception.ml[4,21+7]..exception.ml[4,21+8])
+                Tpat_var "x/1201"
+              expression (exception.ml[4,21+9]..exception.ml[5,35+5]) ghost
+                Texp_function
+                Nolabel
+                [
+                  <case>
+                    pattern (exception.ml[4,21+9]..exception.ml[4,21+10])
+                      Tpat_var "y/1202"
+                    expression (exception.ml[5,35+1]..exception.ml[5,35+5])
+                      Texp_construct "true"
+                      []
+                ]
+          ]
+    ]
+  structure_item (exception.ml[7,42+0]..exception.ml[8,58+6])
+    Tstr_value Nonrec
+    [
+      <def>
+        pattern (exception.ml[7,42+4]..exception.ml[7,42+9])
+          Tpat_var "raise/1203"
+        expression (exception.ml[7,42+10]..exception.ml[8,58+6]) ghost
+          Texp_function
+          Nolabel
+          [
+            <case>
+              pattern (exception.ml[7,42+10]..exception.ml[7,42+12])
+                Tpat_var "ex/1204"
+              expression (exception.ml[8,58+1]..exception.ml[8,58+6])
+                Texp_construct "false"
+                []
+          ]
+    ]
+  structure_item (exception.ml[10,67+0]..exception.ml[15,143+15])
+    Tstr_value Nonrec
+    [
+      <def>
+        pattern (exception.ml[10,67+4]..exception.ml[10,67+11])
+          Tpat_var "compare/1205"
+        expression (exception.ml[10,67+12]..exception.ml[15,143+15]) ghost
+          Texp_function
+          Nolabel
+          [
+            <case>
+              pattern (exception.ml[10,67+12]..exception.ml[10,67+13])
+                Tpat_var "x/1206"
+              expression (exception.ml[10,67+14]..exception.ml[15,143+15]) ghost
+                Texp_function
+                Nolabel
+                [
+                  <case>
+                    pattern (exception.ml[10,67+14]..exception.ml[10,67+15])
+                      Tpat_var "y/1207"
+                    expression (exception.ml[11,87+1]..exception.ml[15,143+15])
+                      Texp_let Nonrec
+                      [
+                        <def>
+                          pattern (exception.ml[11,87+5]..exception.ml[11,87+11])
+                            Tpat_var "compre/1208"
+                          expression (exception.ml[11,87+14]..exception.ml[11,87+20])
+                            Texp_apply
+                            expression (exception.ml[11,87+14]..exception.ml[11,87+16])
+                              Texp_ident "gt/1200"
+                            [
+                              <arg>
+                                Nolabel
+                                expression (exception.ml[11,87+17]..exception.ml[11,87+18])
+                                  Texp_ident "x/1206"
+                              <arg>
+                                Nolabel
+                                expression (exception.ml[11,87+19]..exception.ml[11,87+20])
+                                  Texp_ident "y/1207"
+                            ]
+                      ]
+                      expression (exception.ml[12,112+1]..exception.ml[15,143+15])
+                        Texp_ifthenelse
+                        expression (exception.ml[12,112+4]..exception.ml[12,112+12])
+                          Texp_ident "compre/1208"
+                        expression (exception.ml[13,131+2]..exception.ml[13,131+3])
+                          Texp_ident "x/1206"
+                        Some
+                          expression (exception.ml[15,143+2]..exception.ml[15,143+15])
+                            Texp_apply
+                            expression (exception.ml[15,143+2]..exception.ml[15,143+7])
+                              Texp_ident "raise/1203"
+                            [
+                              <arg>
+                                Nolabel
+                                expression (exception.ml[15,143+8]..exception.ml[15,143+15])
+                                  Texp_construct "TestExp"
+                                  []
+                            ]
+                ]
+          ]
+    ]
+]
+

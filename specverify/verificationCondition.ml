@@ -287,12 +287,15 @@ let rec fromTypeCheck (ve, pre, subTy, supTy)  =
 
         (*currently the match case does not end after the value*)
         let res = match p2 with
-            True -> []
+            True ->
+              let () = Printf.printf "%s" ("@Empty Case ") in  
+              []
           | _ -> 
               let folding_f = 
                 fun (tybinds,anteP) (conseqP) (vcacc) ->
                   match anteP with
-                    Simple False -> vcacc
+                    Simple False -> 
+                      vcacc
                   | _ -> (T ( {tbinds=tybinds; rbinds=pre} , anteP, conseqP)) :: vcacc  
               in
             let vcl = List.length (vcs()) in 

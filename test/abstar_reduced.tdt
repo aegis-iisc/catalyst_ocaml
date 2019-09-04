@@ -1,0 +1,412 @@
+[
+  structure_item (abstar_reduced.ml[1,0+0]..abstar_reduced.ml[1,0+17])
+    Tstr_exception
+    extension_constructor (abstar_reduced.ml[1,0+0]..abstar_reduced.ml[1,0+17])
+      pext_name = "TestExp/1199"
+      pext_kind =
+        Text_decl
+          []
+          None
+  structure_item (abstar_reduced.ml[2,18+0]..abstar_reduced.ml[2,18+29])
+    Tstr_type Rec
+    [
+      type_declaration pair/1200 (abstar_reduced.ml[2,18+0]..abstar_reduced.ml[2,18+29])
+        ptype_params =
+          []
+        ptype_cstrs =
+          []
+        ptype_kind =
+          Ttype_variant
+            [
+              (abstar_reduced.ml[2,18+12]..abstar_reduced.ml[2,18+29])
+                Pair/1201
+                [
+                  core_type (abstar_reduced.ml[2,18+20]..abstar_reduced.ml[2,18+23])
+                    Ttyp_constr "int/1"
+                    []
+                  core_type (abstar_reduced.ml[2,18+26]..abstar_reduced.ml[2,18+29])
+                    Ttyp_constr "int/1"
+                    []
+                ]
+                None
+            ]
+        ptype_private = Public
+        ptype_manifest =
+          None
+    ]
+  structure_item (abstar_reduced.ml[5,51+0]..abstar_reduced.ml[8,105+35])
+    Tstr_type Rec
+    [
+      type_declaration pairList/1202 (abstar_reduced.ml[5,51+0]..abstar_reduced.ml[8,105+35])
+        ptype_params =
+          []
+        ptype_cstrs =
+          []
+        ptype_kind =
+          Ttype_variant
+            [
+              (abstar_reduced.ml[6,68+13]..abstar_reduced.ml[6,68+14])
+                E/1203
+                []
+                None
+              (abstar_reduced.ml[7,84+9]..abstar_reduced.ml[7,84+20])
+                L/1204
+                [
+                  core_type (abstar_reduced.ml[7,84+16]..abstar_reduced.ml[7,84+20])
+                    Ttyp_constr "pair/1200"
+                    []
+                ]
+                None
+              (abstar_reduced.ml[8,105+9]..abstar_reduced.ml[8,105+35])
+                LCons/1205
+                [
+                  core_type (abstar_reduced.ml[8,105+20]..abstar_reduced.ml[8,105+24])
+                    Ttyp_constr "pair/1200"
+                    []
+                  core_type (abstar_reduced.ml[8,105+27]..abstar_reduced.ml[8,105+35])
+                    Ttyp_constr "pairList/1202"
+                    []
+                ]
+                None
+            ]
+        ptype_private = Public
+        ptype_manifest =
+          None
+    ]
+  structure_item (abstar_reduced.ml[23,531+0]..abstar_reduced.ml[24,547+3])
+    Tstr_value Nonrec
+    [
+      <def>
+        pattern (abstar_reduced.ml[23,531+4]..abstar_reduced.ml[23,531+9])
+          Tpat_var "raise/1206"
+        expression (abstar_reduced.ml[23,531+10]..abstar_reduced.ml[24,547+3]) ghost
+          Texp_function
+          Nolabel
+          [
+            <case>
+              pattern (abstar_reduced.ml[23,531+10]..abstar_reduced.ml[23,531+12])
+                Tpat_var "ex/1207"
+              expression (abstar_reduced.ml[24,547+2]..abstar_reduced.ml[24,547+3])
+                Texp_construct "E"
+                []
+          ]
+    ]
+  structure_item (abstar_reduced.ml[27,553+0]..abstar_reduced.ml[31,642+33])
+    Tstr_value Nonrec
+    [
+      <def>
+        pattern (abstar_reduced.ml[27,553+4]..abstar_reduced.ml[27,553+12])
+          Tpat_var "isABList/1208"
+        expression (abstar_reduced.ml[27,553+13]..abstar_reduced.ml[31,642+33]) ghost
+          Texp_function
+          Nolabel
+          [
+            <case>
+              pattern (abstar_reduced.ml[27,553+13]..abstar_reduced.ml[27,553+15])
+                Tpat_var "pl/1209"
+              expression (abstar_reduced.ml[28,572+9]..abstar_reduced.ml[31,642+33])
+                Texp_match
+                expression (abstar_reduced.ml[28,572+15]..abstar_reduced.ml[28,572+17])
+                  Texp_ident "pl/1209"
+                [
+                  <case>
+                    pattern (abstar_reduced.ml[29,595+9]..abstar_reduced.ml[29,595+10])
+                      Tpat_construct "E"
+                      []
+                    expression (abstar_reduced.ml[29,595+14]..abstar_reduced.ml[29,595+18])
+                      Texp_construct "true"
+                      []
+                  <case>
+                    pattern (abstar_reduced.ml[30,615+11]..abstar_reduced.ml[30,615+14])
+                      Tpat_construct "L"
+                      [
+                        pattern (abstar_reduced.ml[30,615+13]..abstar_reduced.ml[30,615+14])
+                          Tpat_var "p/1210"
+                      ]
+                    expression (abstar_reduced.ml[30,615+20]..abstar_reduced.ml[30,615+24])
+                      Texp_construct "true"
+                      []
+                  <case>
+                    pattern (abstar_reduced.ml[31,642+11]..abstar_reduced.ml[31,642+24])
+                      Tpat_construct "LCons"
+                      [
+                        pattern (abstar_reduced.ml[31,642+18]..abstar_reduced.ml[31,642+19])
+                          Tpat_var "p/1211"
+                        pattern (abstar_reduced.ml[31,642+21]..abstar_reduced.ml[31,642+23])
+                          Tpat_var "pl/1212"
+                      ]
+                    expression (abstar_reduced.ml[31,642+29]..abstar_reduced.ml[31,642+33])
+                      Texp_construct "true"
+                      []
+                ]
+                []
+          ]
+    ]
+  structure_item (abstar_reduced.ml[35,711+0]..abstar_reduced.ml[40,845+29])
+    Tstr_value Rec
+    [
+      <def>
+        pattern (abstar_reduced.ml[35,711+8]..abstar_reduced.ml[35,711+14])
+          Tpat_var "concat/1213"
+        expression (abstar_reduced.ml[35,711+15]..abstar_reduced.ml[40,845+29]) ghost
+          Texp_function
+          Nolabel
+          [
+            <case>
+              pattern (abstar_reduced.ml[35,711+15]..abstar_reduced.ml[35,711+17])
+                Tpat_var "l1/1214"
+              expression (abstar_reduced.ml[35,711+18]..abstar_reduced.ml[40,845+29]) ghost
+                Texp_function
+                Nolabel
+                [
+                  <case>
+                    pattern (abstar_reduced.ml[35,711+18]..abstar_reduced.ml[35,711+20])
+                      Tpat_var "l2/1215"
+                    expression (abstar_reduced.ml[36,735+0]..abstar_reduced.ml[40,845+29])
+                      Texp_match
+                      expression (abstar_reduced.ml[36,735+6]..abstar_reduced.ml[36,735+8])
+                        Texp_ident "l1/1214"
+                      [
+                        <case>
+                          pattern (abstar_reduced.ml[37,749+4]..abstar_reduced.ml[37,749+6])
+                            Tpat_construct "[]"
+                            []
+                          expression (abstar_reduced.ml[37,749+10]..abstar_reduced.ml[37,749+12])
+                            Texp_ident "l2/1215"
+                        <case>
+                          pattern (abstar_reduced.ml[38,762+4]..abstar_reduced.ml[38,762+9])
+                            Tpat_construct "::"
+                            [
+                              pattern (abstar_reduced.ml[38,762+4]..abstar_reduced.ml[38,762+5])
+                                Tpat_var "x/1216"
+                              pattern (abstar_reduced.ml[38,762+7]..abstar_reduced.ml[38,762+9])
+                                Tpat_var "xs/1217"
+                            ]
+                          expression (abstar_reduced.ml[38,762+14]..abstar_reduced.ml[40,845+29])
+                            Texp_let Nonrec
+                            [
+                              <def>
+                                pattern (abstar_reduced.ml[38,762+18]..abstar_reduced.ml[38,762+23])
+                                  Tpat_var "temp1/1218"
+                                expression (abstar_reduced.ml[38,762+26]..abstar_reduced.ml[38,762+38])
+                                  Texp_apply
+                                  expression (abstar_reduced.ml[38,762+26]..abstar_reduced.ml[38,762+32])
+                                    Texp_ident "concat/1213"
+                                  [
+                                    <arg>
+                                      Nolabel
+                                      expression (abstar_reduced.ml[38,762+33]..abstar_reduced.ml[38,762+35])
+                                        Texp_ident "xs/1217"
+                                    <arg>
+                                      Nolabel
+                                      expression (abstar_reduced.ml[38,762+36]..abstar_reduced.ml[38,762+38])
+                                        Texp_ident "l2/1215"
+                                  ]
+                            ]
+                            expression (abstar_reduced.ml[39,804+16]..abstar_reduced.ml[40,845+29])
+                              Texp_let Nonrec
+                              [
+                                <def>
+                                  pattern (abstar_reduced.ml[39,804+20]..abstar_reduced.ml[39,804+25])
+                                    Tpat_var "temp2/1219"
+                                  expression (abstar_reduced.ml[39,804+28]..abstar_reduced.ml[39,804+36])
+                                    Texp_construct "::"
+                                    [
+                                      expression (abstar_reduced.ml[39,804+28]..abstar_reduced.ml[39,804+29])
+                                        Texp_ident "x/1216"
+                                      expression (abstar_reduced.ml[39,804+31]..abstar_reduced.ml[39,804+36])
+                                        Texp_ident "temp1/1218"
+                                    ]
+                              ]
+                              expression (abstar_reduced.ml[40,845+24]..abstar_reduced.ml[40,845+29])
+                                Texp_ident "temp2/1219"
+                      ]
+                      []
+                ]
+          ]
+    ]
+  structure_item (abstar_reduced.ml[66,1625+0]..abstar_reduced.ml[82,2414+53])
+    Tstr_value Rec
+    [
+      <def>
+        pattern (abstar_reduced.ml[66,1625+8]..abstar_reduced.ml[66,1625+19])
+          Tpat_var "parseABStar/1220"
+        expression (abstar_reduced.ml[66,1625+20]..abstar_reduced.ml[82,2414+53]) ghost
+          Texp_function
+          Nolabel
+          [
+            <case>
+              pattern (abstar_reduced.ml[66,1625+20]..abstar_reduced.ml[66,1625+23])
+                Tpat_var "src/1221"
+              expression (abstar_reduced.ml[67,1653+4]..abstar_reduced.ml[82,2414+53])
+                Texp_match
+                expression (abstar_reduced.ml[67,1653+10]..abstar_reduced.ml[67,1653+13])
+                  Texp_ident "src/1221"
+                [
+                  <case>
+                    pattern (abstar_reduced.ml[68,1673+8]..abstar_reduced.ml[68,1673+10])
+                      Tpat_construct "[]"
+                      []
+                    expression (abstar_reduced.ml[68,1673+14]..abstar_reduced.ml[68,1673+15])
+                      Texp_construct "E"
+                      []
+                  <case>
+                    pattern (abstar_reduced.ml[69,1691+10]..abstar_reduced.ml[69,1691+17])
+                      Tpat_construct "::"
+                      [
+                        pattern (abstar_reduced.ml[69,1691+10]..abstar_reduced.ml[69,1691+11])
+                          Tpat_var "x/1222"
+                        pattern (abstar_reduced.ml[69,1691+15]..abstar_reduced.ml[69,1691+17])
+                          Tpat_var "xs/1223"
+                      ]
+                    expression (abstar_reduced.ml[69,1691+21]..abstar_reduced.ml[82,2414+53])
+                      Texp_match
+                      expression (abstar_reduced.ml[69,1691+27]..abstar_reduced.ml[69,1691+29])
+                        Texp_ident "xs/1223"
+                      [
+                        <case>
+                          pattern (abstar_reduced.ml[70,1727+21]..abstar_reduced.ml[70,1727+23])
+                            Tpat_construct "[]"
+                            []
+                          expression (abstar_reduced.ml[70,1727+27]..abstar_reduced.ml[72,1863+44])
+                            Texp_let Nonrec
+                            [
+                              <def>
+                                pattern (abstar_reduced.ml[70,1727+31]..abstar_reduced.ml[70,1727+42])
+                                  Tpat_var "failingPair/2225"
+                                expression (abstar_reduced.ml[70,1727+45]..abstar_reduced.ml[70,1727+62])
+                                  Texp_construct "Pair"
+                                  [
+                                    expression (abstar_reduced.ml[70,1727+51]..abstar_reduced.ml[70,1727+55])
+                                      Texp_constant Const_int 1000
+                                    expression (abstar_reduced.ml[70,1727+57]..abstar_reduced.ml[70,1727+61])
+                                      Texp_constant Const_int 1000
+                                  ]
+                            ]
+                            expression (abstar_reduced.ml[71,1794+40]..abstar_reduced.ml[72,1863+44])
+                              Texp_let Nonrec
+                              [
+                                <def>
+                                  pattern (abstar_reduced.ml[71,1794+44]..abstar_reduced.ml[71,1794+48])
+                                    Tpat_var "fres/2226"
+                                  expression (abstar_reduced.ml[71,1794+51]..abstar_reduced.ml[71,1794+64])
+                                    Texp_construct "L"
+                                    [
+                                      expression (abstar_reduced.ml[71,1794+53]..abstar_reduced.ml[71,1794+64])
+                                        Texp_ident "failingPair/2225"
+                                    ]
+                              ]
+                              expression (abstar_reduced.ml[72,1863+40]..abstar_reduced.ml[72,1863+44])
+                                Texp_ident "fres/2226"
+                        <case>
+                          pattern (abstar_reduced.ml[74,1913+22]..abstar_reduced.ml[74,1913+31])
+                            Tpat_construct "::"
+                            [
+                              pattern (abstar_reduced.ml[74,1913+22]..abstar_reduced.ml[74,1913+24])
+                                Tpat_var "x'/2223"
+                              pattern (abstar_reduced.ml[74,1913+28]..abstar_reduced.ml[74,1913+31])
+                                Tpat_var "xs'/2224"
+                            ]
+                          expression (abstar_reduced.ml[74,1913+35]..abstar_reduced.ml[82,2414+53])
+                            Texp_let Nonrec
+                            [
+                              <def>
+                                pattern (abstar_reduced.ml[74,1913+39]..abstar_reduced.ml[74,1913+47])
+                                  Tpat_var "x_x_pair/2227"
+                                expression (abstar_reduced.ml[74,1913+50]..abstar_reduced.ml[74,1913+61])
+                                  Texp_construct "Pair"
+                                  [
+                                    expression (abstar_reduced.ml[74,1913+56]..abstar_reduced.ml[74,1913+57])
+                                      Texp_ident "x/1222"
+                                    expression (abstar_reduced.ml[74,1913+58]..abstar_reduced.ml[74,1913+60])
+                                      Texp_ident "x'/2223"
+                                  ]
+                            ]
+                            expression (abstar_reduced.ml[75,1979+36]..abstar_reduced.ml[82,2414+53])
+                              Texp_let Nonrec
+                              [
+                                <def>
+                                  pattern (abstar_reduced.ml[75,1979+40]..abstar_reduced.ml[75,1979+47])
+                                    Tpat_var "fstpair/2228"
+                                  expression (abstar_reduced.ml[75,1979+50]..abstar_reduced.ml[75,1979+60])
+                                    Texp_construct "L"
+                                    [
+                                      expression (abstar_reduced.ml[75,1979+52]..abstar_reduced.ml[75,1979+60])
+                                        Texp_ident "x_x_pair/2227"
+                                    ]
+                              ]
+                              expression (abstar_reduced.ml[76,2045+36]..abstar_reduced.ml[82,2414+53])
+                                Texp_let Nonrec
+                                [
+                                  <def>
+                                    pattern (abstar_reduced.ml[76,2045+40]..abstar_reduced.ml[76,2045+50])
+                                      Tpat_var "testablist/2229"
+                                    expression (abstar_reduced.ml[76,2045+53]..abstar_reduced.ml[76,2045+69])
+                                      Texp_apply
+                                      expression (abstar_reduced.ml[76,2045+53]..abstar_reduced.ml[76,2045+61])
+                                        Texp_ident "isABList/1208"
+                                      [
+                                        <arg>
+                                          Nolabel
+                                          expression (abstar_reduced.ml[76,2045+62]..abstar_reduced.ml[76,2045+69])
+                                            Texp_ident "fstpair/2228"
+                                      ]
+                                ]
+                                expression (abstar_reduced.ml[77,2119+36]..abstar_reduced.ml[82,2414+53])
+                                  Texp_ifthenelse
+                                  expression (abstar_reduced.ml[77,2119+39]..abstar_reduced.ml[77,2119+51])
+                                    Texp_ident "testablist/2229"
+                                  expression (abstar_reduced.ml[78,2176+40]..abstar_reduced.ml[80,2328+43])
+                                    Texp_let Nonrec
+                                    [
+                                      <def>
+                                        pattern (abstar_reduced.ml[78,2176+44]..abstar_reduced.ml[78,2176+50])
+                                          Tpat_var "lptail/2230"
+                                        expression (abstar_reduced.ml[78,2176+53]..abstar_reduced.ml[78,2176+68])
+                                          Texp_apply
+                                          expression (abstar_reduced.ml[78,2176+53]..abstar_reduced.ml[78,2176+64])
+                                            Texp_ident "parseABStar/1220"
+                                          [
+                                            <arg>
+                                              Nolabel
+                                              expression (abstar_reduced.ml[78,2176+65]..abstar_reduced.ml[78,2176+68])
+                                                Texp_ident "xs'/2224"
+                                          ]
+                                    ]
+                                    expression (abstar_reduced.ml[79,2249+40]..abstar_reduced.ml[80,2328+43])
+                                      Texp_let Nonrec
+                                      [
+                                        <def>
+                                          pattern (abstar_reduced.ml[79,2249+44]..abstar_reduced.ml[79,2249+47])
+                                            Tpat_var "res/2231"
+                                          expression (abstar_reduced.ml[79,2249+50]..abstar_reduced.ml[79,2249+74])
+                                            Texp_construct "LCons"
+                                            [
+                                              expression (abstar_reduced.ml[79,2249+57]..abstar_reduced.ml[79,2249+65])
+                                                Texp_ident "x_x_pair/2227"
+                                              expression (abstar_reduced.ml[79,2249+67]..abstar_reduced.ml[79,2249+73])
+                                                Texp_ident "lptail/2230"
+                                            ]
+                                      ]
+                                      expression (abstar_reduced.ml[80,2328+40]..abstar_reduced.ml[80,2328+43])
+                                        Texp_ident "res/2231"
+                                  Some
+                                    expression (abstar_reduced.ml[82,2414+40]..abstar_reduced.ml[82,2414+53])
+                                      Texp_apply
+                                      expression (abstar_reduced.ml[82,2414+40]..abstar_reduced.ml[82,2414+45])
+                                        Texp_ident "raise/1206"
+                                      [
+                                        <arg>
+                                          Nolabel
+                                          expression (abstar_reduced.ml[82,2414+46]..abstar_reduced.ml[82,2414+53])
+                                            Texp_construct "TestExp"
+                                            []
+                                      ]
+                      ]
+                      []
+                ]
+                []
+          ]
+    ]
+]
+

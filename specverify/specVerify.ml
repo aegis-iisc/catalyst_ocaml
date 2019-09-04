@@ -18,11 +18,11 @@ module PRE = ParamRelEnv
 
 
 (*comment this out to print  Printf messages*)
-module Printf = struct
+(* module Printf = struct
   let printf f s = ()
 
 end 
-
+ *)
 
 
 module Tyvar =
@@ -39,6 +39,7 @@ type substs = subst list
 
 let ($) (f,arg) = f arg
 exception Destructpair of string
+exception ANormalError
 let fst = fun x ->
   match x with 
   | (a,b) -> a
@@ -178,14 +179,25 @@ let  rec unifyWithDisj refTy1  refTy2  =
 
        let () = Printf.printf "%s" ("\n \n ty of fst  "^RefTy.toString refTy1) in      
       let () = Printf.printf "%s" ("\n \n ty of snd"^RefTy.toString refTy2) in      
-           
-   let _ = assert (TyD.sametype td1 td2) in 
-        let pred_unify_result_vars = Predicate.Base (BP.varEq (bv1, bv2)) in 
-       let pred1 = Predicate.Conj (pred1, pred_unify_result_vars) in 
-       (*let pred2 = Predicate.Conj (pred2, pred_unify_result_vars) in 
-      *)  let pred1' = Predicate.applySubst (bv2,bv1) pred1
-       in
-      Base (bv2,td2,Predicate.dot (pred1',pred2))
+      
+      let _ = assert (TyD.sametype td1 td2) in 
+      let unified_type = 
+        match (td1, td2) with
+        (Ttop, _) -> let () = Printf.printf "%s" ("\n \n case 1 ") in      
+           refTy2 
+        | (_, Ttop) ->    
+            let () = Printf.printf "%s" ("\n \n csae 2 ") in      
+      
+          refTy1
+        | (_,_)->
+          let pred_unify_result_vars = Predicate.Base (BP.varEq (bv1, bv2)) in 
+           let pred1 = Predicate.Conj (pred1, pred_unify_result_vars) in 
+           (*let pred2 = Predicate.Conj (pred2, pred_unify_result_vars) in 
+        *)   let pred1' = Predicate.applySubst (bv2,bv1) pred1
+         in
+          Base (bv2,td2,Predicate.dot (pred1',pred2))
+       in 
+       unified_type   
   | (Tuple t1,Tuple t2) -> 
 
       let () = Printf.printf "%s" "\n*******Performing Tuple  : Tuple with Disjunction *********\n" in 
@@ -287,10 +299,25 @@ let normalized_function {var; body} =
 
   (fun_name, parameters, normalbody)
 
+(*return true if the functio name is raise*)
+let is_excecption_call fucntionexp = 
+  let open Typedtree  in 
+  let exp_desc = fucntionexp.exp_desc in 
+  let function_id = match exp_desc with 
+    Texp_ident (p, l, vd) ->
+
+      let () = Printf.printf "%s" "\n******Checking if the function call is to Pervasive.raise*********** \n" in
+      let ident_var = match p with 
+          Pident id -> id
+        | _ -> raise (SpecVerifyExc "Only Pident handled ")
+      in ident_var  
+      
+    | _ -> raise (SpecVerifyExc "Unimpl, function call requires the function to be an identity, unimplemented general case ")  
+  in 
+  if Ident.name function_id = "raise" then true else false  
 
 
-
-
+(*The main type-synthesis routine*)
 let rec  type_synth_exp (ve, pre, exp) = 
   let open Typedtree  in 
   let exp_desc = exp.exp_desc in 
@@ -298,92 +325,173 @@ let rec  type_synth_exp (ve, pre, exp) =
   let normal_exp_type = TyD.normalizeTypes exp_type in 
 
   let trivialAns = fun _ -> ([], RefTy.fromTyD (normal_exp_type)) in 
-
+  let exceptionAns = fun _ -> ([], RefTy.fromTyD (TyD.Ttop)) in 
 
   match exp_desc with 
+  | Texp_ifthenelse (testexp, trueexp, falseexp) ->
+    let () = Printf.printf "%s" "\n######### synthesis: If-then-else \n" in 
+    
+    let (vcstestexp, fty) = type_synth_exp (ve, pre, testexp) in 
+    let () = Printf.printf "%s" "\n######### TestExp type \n" in 
+    let () = Printf.printf "%s" (RefTy.toString fty) in 
+    (*rather than checking that fty is a type with Base type bool we treat it a bool while checking the branches*)
+    
+    let testId = match testexp.exp_desc with 
+      | Texp_ident (p, _,_) -> if (Path.is_ident p) then Path.head p else raise (ANormalError)
+      | _ -> raise (ANormalError)
 
-  | Texp_apply (fexp, arg_label_exp_list) ->
-       let () = Printf.printf "%s" "\n######### synthesis:apply \n" in 
-       let (vcs1,fty) = type_synth_exp (ve, pre, fexp) in 
-      
-      let () = Printf.printf "%s" "\n######### F type \n" in 
-      let () = Printf.printf "%s" (RefTy.toString fty) in 
-       
-      (*uncurry the type*)
-      let (parametersTyBind, resRefTy) =
-        match fty with 
-        | RefTy.Arrow (x,y) -> RefTy.uncurry_Arrow fty
-        | _ -> 
-            let exp_str = "Type of 271 not an arrow" in 
-            raise (SpecVerifyExc exp_str) 
-      in 
+    in 
+    (*\Gammac \Gamma, e1:bool*)
+    (*create phi_true*)
 
-      (*The a-normal  form will have just one argument*)   
-      let () = assert ((List.length arg_label_exp_list) = (List.length parametersTyBind)) in 
-    (*Also assert the type of the arguments *)   
-      let () = List.iter (fun (x,y) -> Printf.printf "%s" ("\n[ "^(Var.toString x)^" :: "^(RefTy.toString y)^" ] \n"))  parametersTyBind in  
+    let (marker, markedVE) = markVE ve in 
+    
+    let markedVE = VE.add markedVE (testId, toRefTyS fty)  in 
 
-  
-      let folding_fun = fun (vcs, substs) (fargBind) (actual_arg_exp) ->
-        let argValExp =  actual_arg_exp in
-        let (_, fargty) = fargBind in 
-        let exp_from_valExp  = 
-          match (snd argValExp) with 
-          | Some e -> e 
-          | None -> raise (SpecVerifyExc "Expression missing")
-        in    
-        let (vcs2,argTy) = type_synth_exp (ve,pre,exp_from_valExp) in 
-            (*
-             *  Γ ⊢ argTy <: fargty
-             *)
+    
+        
 
-         let () = Printf.printf "%s" "@@@Here " in       
-         let () = Printf.printf "%s" "\n actual type \n" in 
-         let () = Printf.printf "%s" (RefTy.toString argTy) in 
-       let () = Printf.printf "%s" "\n formal type \n" in 
-         let () = Printf.printf "%s" (RefTy.toString fargty) in 
-     
-         let vcs3 = VC.fromTypeCheck (ve,pre,argTy,fargty) in         
+    let predtesttrue = Predicate.Base (BP.varBoolEq (testId, true)) in 
+    let dummyRefTy_true = RefTy.Base (Var.noName, TyD.Tbool, predtesttrue) in 
 
-         
-       (*
-             * Then, determine type of this expression by substituion of
-             * actuals for formals.
-             *)
+    let dummyTyDbind_true = (Var.genVar() , toRefTyS dummyRefTy_true) in 
 
-        (**)
-        (* let get the pattern for the id   *) 
-        let exp_desc_from_exp = exp_from_valExp.exp_desc in 
-        let argPId  = match exp_desc_from_exp with 
-          | Texp_ident (p,_,_) -> p
+    
+    let extendedVE_true = VE.add markedVE dummyTyDbind_true  in 
 
-        in 
-        let argId = match argPId with 
-            Pident id -> id
-          | _ -> raise (SpecVerifyExc "Only Pident handled ")in 
+    let (vcstrueexp, ftytrueexp) = type_synth_exp (extendedVE_true, pre, trueexp) in 
+    let () = Printf.printf "%s" "\n#########  TrueExp type \n" in 
+    let () = Printf.printf "%s" (RefTy.toString ftytrueexp) in 
 
-        let  (_,substs') = unifyArgs (fargBind,argId)  
-        in
-        (List.concat[vcs2;vcs3],List.concat[substs;substs'])
-      in 
-      let (finalvcs, finalsubsts) = List.fold_left2 (folding_fun) (vcs1,[]) parametersTyBind arg_label_exp_list
-      in 
+    let wftype_true = wellFormedType (marker,extendedVE_true,ftytrueexp) in 
+    
 
-      let _ = Printf.printf "%s" ("\n  VCS after T-apply \n") in 
-      let _ = Printf.printf  "\n" in 
+    (*create phi_false*)
+    let predtestfalse = Predicate.Base (BP.varBoolEq (testId, false)) in 
+    let dummyRefTy_false = RefTy.Base (Var.noName, TyD.Tbool, predtesttrue) in 
 
-     let _ = Printf.printf "%s" (L.toString (VC.layouts finalvcs)) in 
-     
-      let resTy = RefTy.applySubsts finalsubsts resRefTy in 
-      let () = Printf.printf "%s" ("\n *******************ty of return Value "^RefTy.toString resTy) in      
+    let dummyTyDbind_false = (Var.genVar() , toRefTyS dummyRefTy_false) in 
+
+    
+    let extendedVE_false = VE.add markedVE dummyTyDbind_false  in 
+
+
+    let (resvcs, resty) = 
+      match falseexp with 
+        | Some fexp -> 
+          let (vcsfalseexp, ftyfalseexp) = type_synth_exp (extendedVE_false, pre, fexp) in  
+          let () = Printf.printf "%s" "\n#########  FalseExp type \n" in 
+          let () = Printf.printf "%s" (RefTy.toString ftyfalseexp) in 
+
+          let wftype_false = wellFormedType (marker,extendedVE_false,ftyfalseexp) in 
+    
             
+          let unified_branch_exps = unifyWithDisj wftype_true wftype_false in 
+          let  _ = Printf.printf "@\n \n Unified Type:\n" in 
+          let  _ = Printf.printf "%s" ("\n "^(RefTy.toString unified_branch_exps)) in 
 
-     (finalvcs, resTy)
+          let finalvcs = List.concat [vcstestexp;vcstrueexp;vcsfalseexp] in 
+
+          (finalvcs, unified_branch_exps)
+          
+        | None -> 
+          let finalvcs = List.concat [vcstestexp;vcstrueexp] in 
+
+          (finalvcs, ftytrueexp)
+
+     in 
+     (resvcs, resty)       
+   (*An exception in Ocaml is a function application for Pervasive.raise *)  
+  | Texp_apply   (fexp, arg_label_exp_list) ->
+       let () = Printf.printf "%s" "\n######### synthesis:apply######### \n" in 
+
+       if (is_excecption_call fexp)
+        then 
+          let () = Printf.printf "%s" "\nException Case, handled differently \n" in 
+           exceptionAns()
+        else 
+          let () = Printf.printf "%s" "\n Else Case, handled as per the typing rules of a T-APP \n" in 
+          
+
+         let (vcs1,fty) = type_synth_exp (ve, pre, fexp) in 
+         let () = Printf.printf "%s" "\n######### F type ####### \n" in 
+         let () = Printf.printf "%s" (RefTy.toString fty) in 
+         
+        (*uncurry the type*)
+        let (parametersTyBind, resRefTy) =
+          match fty with 
+          | RefTy.Arrow (x,y) -> RefTy.uncurry_Arrow fty
+          | _ -> 
+              let exp_str = "Type of 271 not an arrow" in 
+              raise (SpecVerifyExc exp_str) 
+        in 
+
+        (*The a-normal  form will have just one argument*)   
+        let () = assert ((List.length arg_label_exp_list) = (List.length parametersTyBind)) in 
+      (*Also assert the type of the arguments *)   
+        let () = List.iter (fun (x,y) -> Printf.printf "%s" ("\n[ "^(Var.toString x)^" :: "^(RefTy.toString y)^" ] \n"))  parametersTyBind in  
+
+    
+        let folding_fun = fun (vcs, substs) (fargBind) (actual_arg_exp) ->
+          let argValExp =  actual_arg_exp in
+          let (_, fargty) = fargBind in 
+          let exp_from_valExp  = 
+            match (snd argValExp) with 
+            | Some e -> e 
+            | None -> raise (SpecVerifyExc "Expression missing")
+          in    
+          let (vcs2,argTy) = type_synth_exp (ve,pre,exp_from_valExp) in 
+              (*
+               *  Γ ⊢ argTy <: fargty
+               *)
+
+           let () = Printf.printf "%s" "\n actual type \n" in 
+           let () = Printf.printf "%s" (RefTy.toString argTy) in 
+         let () = Printf.printf "%s" "\n formal type \n" in 
+           let () = Printf.printf "%s" (RefTy.toString fargty) in 
+       
+           let vcs3 = VC.fromTypeCheck (ve,pre,argTy,fargty) in         
+
+           
+         (*
+               * Then, determine type of this expression by substituion of
+               * actuals for formals.
+               *)
+
+          (**)
+          (* let get the pattern for the id   *) 
+          let exp_desc_from_exp = exp_from_valExp.exp_desc in 
+          let argPId  = match exp_desc_from_exp with 
+            | Texp_ident (p,_,_) -> p
+            (*Handling exception handling*)
+            | _ -> raise (SpecVerifyExc  "Unimpl, Only allowed arguments to a function are Identities")
+
+          in 
+          let argId = match argPId with 
+              Pident id -> id
+            | _ -> raise (SpecVerifyExc "Only Pident handled ")in 
+
+          let  (_,substs') = unifyArgs (fargBind,argId)  
+          in
+          (List.concat[vcs2;vcs3],List.concat[substs;substs'])
+        in 
+        let (finalvcs, finalsubsts) = List.fold_left2 (folding_fun) (vcs1,[]) parametersTyBind arg_label_exp_list
+        in 
+
+        let _ = Printf.printf "%s" ("\n  VCS after T-apply \n") in 
+        let _ = Printf.printf  "\n" in 
+
+       let _ = Printf.printf "%s" (L.toString (VC.layouts finalvcs)) in 
+       
+        let resTy = RefTy.applySubsts finalsubsts resRefTy in 
+        let () = Printf.printf "%s" ("\n *******************ty of return Value "^RefTy.toString resTy) in      
+              
+
+       (finalvcs, resTy)
 
   | Texp_ident (p, l, vd) ->
 
-       let () = Printf.printf "%s" "\n######### synthesis:ident \n" in
- 
+      let () = Printf.printf "%s" "\n######### synthesis:ident \n" in
       let ident_var = match p with 
           Pident id -> id
         | _ -> raise (SpecVerifyExc "Only Pident handled ")in 
@@ -392,11 +500,25 @@ let rec  type_synth_exp (ve, pre, exp) =
       let idRefTy = RefTyS.specializeRefTy (idRefTyS) in 
       ([], idRefTy)
   | Texp_constant c -> 
-
        let () = Printf.printf "%s" "\n######### synthesis:constant \n" in
-       trivialAns ()
-
-
+       (*match on the different types for constants*)
+       (*type constant =
+    Const_int of int
+  | Const_char of char
+  | Const_string of string * string option
+  | Const_float of string
+  | Const_int32 of int32
+  | Const_int64 of int64
+  | Const_nativeint of nativeint*)
+    let vc_type_pair = 
+      match c with 
+        Const_int  (i) -> let reftyvar_for_c = RefTy.genVar() in 
+                let type_for_i = RefTy.Base (reftyvar_for_c, TyD.makeTvar (SpecLang.Tyvar.fromString "int"), Predicate.Base (BP.varIntEq (reftyvar_for_c, i ))) in 
+                ([], type_for_i)  
+      | _ -> Printf.printf "%s" ("type synthesis for constant, unimplemented case, returning trivial value");
+            trivialAns ()
+    in 
+    vc_type_pair        
   | Texp_let (rf, vbl, exp) ->
       (*T-let rule from the paper*)
         (** let vbl = (P1 = E1 and ... and Pn = EN) in (exp= E)       (flag = Nonrecursive)

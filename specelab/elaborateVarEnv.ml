@@ -124,7 +124,9 @@ let bootStrapBools ve =
   let fTyS = RefTyS.generalizeRefTy (empty, 
                                      RefTy.Base (v2,t,eqPred2)) in
   let ve' = VE.add ve (tvid,tTyS) in 
-  let ve'' = VE.add ve' (fvid,fTyS)
+  let ve'' = VE.add ve' (fvid,fTyS) in 
+  let ve'' = VE.add ve'' (v1, toRefTyS (RefTy.fromTyD boolTyD)) in 
+  let ve'' = VE.add ve'' (v2, toRefTyS (RefTy.fromTyD boolTyD))
   in
   ve''
 let bootStrapCons ve = 
@@ -269,6 +271,40 @@ let bootStrapCons ve =
 
       | Ttype_record (ld_list) -> (*Unimpl*) raise (ElebEnvFail "Ttype_record not handled yet while elaborating a type decl")
       | Ttype_open -> (*Unimpl*) ve 
+
+
+(*extension_constructor =
+  {
+    ext_id: Ident.t;
+    ext_name: string loc;
+    ext_type : Types.extension_constructor;
+    ext_kind : extension_constructor_kind;
+    ext_loc : Location.t;
+    ext_attributes: attributes;
+  }*)
+let elabExceptionDecl ve ext_cons =
+    let () = Printf.printf "%s" ("Exception") in  
+    let open Typedtree in 
+    let exception_name_loc = ext_cons.ext_name in
+    let exception_name = exception_name_loc.txt in 
+    let exception_kind = ext_cons.ext_kind in 
+
+    let () = Printf.printf "%s" ("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Exception Name "^exception_name) in 
+    
+    let id_exception_name = Var.fromString exception_name in 
+
+    let tyd_exception = TyD.Ttop in 
+    let refty_exception = RefTy.fromTyD tyd_exception in 
+
+
+    match  exception_kind with
+    | Text_decl (args, core_tyoption ) ->
+              let () = Printf.printf "%s" ("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%Exception") in 
+              let ex_refty_bind = (id_exception_name, toRefTyS refty_exception) in 
+              let ve' = VE.add ve ex_refty_bind in 
+              ve'
+              
+    | Text_rebind (_,_)-> (*Unimpl*) raise (ElebEnvFail "Rebinding Exception case not handled, only Exception decls allowed")
 
 
 
@@ -527,8 +563,9 @@ let addRelToConTy (ve: VE.t) (con,letop,rexpr) (id:RelId.t) =
    *)
 
 
-exception CantInferType of string
+exception CantInferType
 exception Return of TS.cs list * TS.t * RelLang.instexpr
+exception Error of string 
 
 
 let rec elabRExpr (re,pre,tyDB,spsB,rexpr) =
@@ -541,7 +578,7 @@ let rec elabRExpr (re,pre,tyDB,spsB,rexpr) =
         try 
           TyDBinds.find (tyDB) (v)  
         with 
-        | (TyDBinds.KeyNotFound _) -> raise (CantInferType ("Type inference failed "^(Var.toString v))) in 
+        | (TyDBinds.KeyNotFound _) -> raise (Error ("Type inference failed "^(Var.toString v))) in 
   
   let () = Printf.printf "%s" "@here-elabRE-1  \n" in 
                                            
@@ -615,15 +652,16 @@ let rec elabRExpr (re,pre,tyDB,spsB,rexpr) =
   let open RelLang in 
   
   let rec doItRInstApp ((RInst {rel;args;_} as rinst) ,tyd) = 
-        let open ParamRelEnv in 
-        let _ = if isParam rel 
-          then
-            let (x,y,z) =  doItParamApp (rinst,tyd) in 
-            raise (Return (x,y,z))
-          else () in 
+       let open ParamRelEnv in 
+       try 
+       let _ = if isParam rel 
+        then
+         let (x,y,z) =  doItParamApp (rinst,tyd) in 
+          raise (Return (x,y,z))
+        else () in 
         let relName = RelId.toString rel in 
 
-        let () = Printf.printf "%s" ("doItRInstApp-1"^relName) in   
+        let () = Printf.printf "%s" ("\n doItRInstApp "^relName) in   
         let {tys=relTyS;def} =           
           try (PRE.find pre rel) with
 
@@ -637,7 +675,8 @@ let rec elabRExpr (re,pre,tyDB,spsB,rexpr) =
               let (x,y,z) = doItPrimApp (rinst,tyd) in 
               raise (Return (x,y,z))
           (* Hack: For recursive applications. *)
-          | PRE.Bind Bind.BogusDef -> (raise (ElebEnvFail ("Cant infer type")))
+
+          | PRE.Bind Bind.BogusDef -> (raise CantInferType )
           | _ -> () in 
         let tyd' = PTS.domain relTyS in 
         let () = Printf.printf "%s" ("doItRInstApp-2"^(TyD.toString tyd')) in   
@@ -681,8 +720,9 @@ let rec elabRExpr (re,pre,tyDB,spsB,rexpr) =
         in
 
         (emptycs(), expsort, newRInst)   
-
-         in    
+        with 
+          | Return (a,b,c) -> (a,b,c)  
+    in    
 
     let doItRInstApp = fun (rinst, x) ->
         let tyd_found =  TyDB.find tyDB x in   
@@ -839,7 +879,8 @@ let elabSRBind (re)(pre)(ve ) (StructuralRelation.T {id;params;mapp} as sr) =
                                                   ((con, valop , RelLang.Star newRInst), Some relTyS)
 
                                               | (Some vars, RelLang.Expr rexpr) -> 
-                                                  let () = Printf.printf "%s" "Case 3" in 
+                                                try   
+                                                  let () = Printf.printf "%s" "Case elabSRBind Case Some Relation R" in 
                                                   
                                                   let convid = Var.fromString (Con.toString con) in 
                                                   let () = Printf.printf "%s" ("\n Convid "^Ident.name convid) in 
@@ -883,8 +924,6 @@ let elabSRBind (re)(pre)(ve ) (StructuralRelation.T {id;params;mapp} as sr) =
                                                                                            
                                                   let (cs,tupTy,rexpr') = elabRExpr (re, extendedPRE, (tyDB), spsB, rexpr) in 
                                                  
-                                                  let () = Printf.printf "%s" "@here3-5  \n" in 
-                                           
                                                   let () = Printf.printf "%s" ("\n Tuple Type returned "^(TupSort.toString tupTy)) in 
                                                   let _ = assertEmptyCs cs in 
                                                   let relSPS = SPS.ColonArrow (datTyD, tupTy) in 
@@ -923,6 +962,8 @@ let elabSRBind (re)(pre)(ve ) (StructuralRelation.T {id;params;mapp} as sr) =
 
 
                                                   ((con, valop  , RelLang.Expr rexpr'), Some joined_relTyS)
+                                               with 
+                                                | CantInferType -> ((con, valop, rterm),relTySOp)   
 
                                               | _ -> raise (ElebEnvFail "Impossible case of valop -rterm :") ) in 
 
@@ -1135,6 +1176,8 @@ let elab_vbs (ve) (vb_list) =
         in
         VE.add (VE.remove ve fun_name) (fun_name,funspec)
 
+        (*Shall we also add the type of each placeholder variable v_i in the environment*)
+
     | _-> ve in 
   List.fold_left (elab_vb) ve vb_list      
 
@@ -1276,7 +1319,7 @@ let elaborate (tstr) (RelSpec.T {reldecs;primdecs;
                                  typespecs}) =
 
   let tstr_items = tstr.str_items in
-  let veWithBool =(*  bootStrapBools *) VE.empty in 
+  let veWithBool =  bootStrapBools VE.empty in 
   let veWithListCons = bootStrapCons veWithBool in 
 
 
@@ -1296,7 +1339,8 @@ let elaborate (tstr) (RelSpec.T {reldecs;primdecs;
          | Tstr_type (rec_flag, type_decl_list) -> 
             let () = Printf.printf "%s" "\n elaborating Tstr_type" in 
             List.fold_left (fun veacc ty_decl -> elabDataTypeDecl veacc ty_decl) ve type_decl_list   
-         
+         | Tstr_exception(ext_cons) ->
+            elabExceptionDecl ve ext_cons 
 
          |_ -> ve) veWithListCons tstr_items in 
 

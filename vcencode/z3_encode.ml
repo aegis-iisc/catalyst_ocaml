@@ -247,11 +247,11 @@ let mkSet (name,sorts) =
       (asts, fn ast -> L.str $ astToString ast))*)
     let sortStrs = List.map (fun s -> (sortToString s)) sorts  in 
     let sortStr = fun _ -> (List.fold_left (fun acc s ->  acc^","^s) "(" sortStrs)^")" in 
-    (* let errMsg = (fun _ -> "Type Mismatch. Set: "^name^".\n") in
+     let errMsg = (fun _ -> "Type Mismatch. Set: "^name^".\n") in
     let () = Printf.printf "%s" (" Testing assertion for "^name^" \n ") in 
     let () = Printf.printf "%s" (" ast length "^(string_of_int (Vector.length asts))^" \n ") in 
     let () = Printf.printf "%s" (" sorts length "^(string_of_int (Vector.length sortStrs))^" \n ") in 
-     *)
+    
     let _ = assert (Vector.length asts = Vector.length sorts) in 
     let _ = assert (List.for_all2 (fun ast s -> typeCheckAst (ast, s)) asts sorts ) in 
     let z3_asts = Vector.map (asts,astToZ3Ast) 
@@ -271,11 +271,11 @@ let mkStrucRel (name,sorts) =
     
   let  Set {ty;pred} = mkSet (name,sorts) in 
   let rel = fun ast -> 
-   (* let () = List.iter (fun s ->Printf.printf "%s" (Layout.toString (sort_layout s)) ) sorts in 
+   let () = List.iter (fun s ->Printf.printf "%s" (Layout.toString (sort_layout s)) ) sorts in 
      let () = Printf.printf "%s" ("domainTY for "^name) in 
     let () = Printf.printf "%s" (Layout.toString (sort_layout domainTy)) in 
    let () = Printf.printf "%s" (Layout.toString (ast_layout ast)) in 
-   *)
+  
     let _ = assert (typeCheckAst (ast,domainTy)) in 
               (*
                * Constructing (n-1)-arity set from an n-arity

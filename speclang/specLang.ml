@@ -38,20 +38,6 @@ module Con = struct
        *)
       | NamedCons of Ident.t
 
-(*let constant_to_string t = match t with 
-      Const_int i -> string_of_int i 
-    | Const_char c -> Char.escaped c
-    | Const_string  (s1, _) -> (s1^"::s2")
-      (*   match (s1,s2) with 
-         | (Some s1', Some s2') -> 
-         | (Some s1', None) -> (s1'^"::empty")
-         | (None, Some s2') -> ("empty::"^s2')
-         | (_,_) -> "_::_" *)
-    | Const_float fl -> fl
-    | Const_int32 i -> Int32.to_string i
-    | Const_int64 i -> Int64.to_string i  
-    | Const_nativeint n -> Nativeint.to_string n
-  *)  
 
   let toString t = match t with 
         Cons -> "::"
@@ -213,6 +199,7 @@ struct
         | Tfield of string * t
         | Tbool 
         | Tint
+        | Ttop 
 (*         | Tlink of t
  *)
   let makeTarrow (tdesc1, tdesc2) = Tarrow (tdesc1, tdesc2)
@@ -247,15 +234,20 @@ struct
       | Tfield (s,td) -> "Tfield ("^s^","^(visitType td)^")"
       | Tbool -> "Tbool"
       | Tint -> "Tint"
+      | Ttop -> "Ttop"
     
 
   let rec sametype t1 t2 = 
-     (*  let _ = Printf.printf "%s" ("Asked if "^(visitType t1)^" and "^(visitType t2)^" are sametypes\n") in 
-      *)   let rec sametypes tl1 tl2 = (List.length tl1 = List.length tl2) &&  
+      let _ = Printf.printf "%s" ("Asked if "^(visitType t1)^" and "^(visitType t2)^" are sametypes\n") in 
+        
+      let rec sametypes tl1 tl2 = 
+      (List.length tl1 = List.length tl2) &&  
           List.fold_left2 (fun flag t1 t2  -> (sametype t1 t2)) true tl1 tl2 
       in
       match (t1,t2) with 
-          (Tunknown,Tunknown) -> true
+         (Ttop, _) -> true 
+         | (_, Ttop) -> true         
+        |  (Tunknown,Tunknown) -> true
         | (Tvar v1, Tvar v2 ) -> Tyvar.equal(v1, v2)
         | (Tarrow (tda1,tdr1), Tarrow (tda2,tdr2)) -> 
             (sametype tda1 tda2) &&
@@ -291,6 +283,7 @@ struct
       | Tconstr (tc,tdl) -> (toStrings tdl)^" "^(Tycon.toString tc)
       | Tbool -> "bool"
       | Tint -> "int"
+      | Ttop -> "exception"
 
     
 
@@ -331,10 +324,20 @@ struct
            if Tycon.is_ident p then
             let constPath = Tycon.toString p  in
             (*A hack to handle Ttyp constructor  arguments .e.g Node of int * ... will have int defined as a Tconst rather than Tvar in Ocaml*)
-            if constPath = "int" then 
+            match constPath with 
+              | "int" -> Tvar (Tyvar.fromString "int") 
+              | "bool"-> Tbool 
+              | "exn" -> Ttop
+              | _ -> Tconstr (p, (List.map (fun te -> normalizeTypes te) tel))
+         (*    if constPath = "int" then 
               Tvar (Tyvar.fromString "int")
-            else   
-              Tconstr (p, (List.map (fun te -> normalizeTypes te) tel))
+            else
+              if constPath = "bool"
+                then Tbool 
+
+              else   
+                 Tconstr (p, (List.map (fun te -> normalizeTypes te) tel))
+          *)
           else 
             raise (TyConEx "Only Identities allows as paths")  
        | Types.Tfield (s,_, te1,_) -> Tfield (s, normalizeTypes te1) 
@@ -827,7 +830,6 @@ struct
     let subst v = List.fold_left (fun v (newEl, oldEl) -> 
          if (Ident.name oldEl = Ident.name v) then newEl else v) v substs in 
     let elemSubst elem = match elem with 
-
         Var v -> 
           Var (subst v)
       | c -> c in
@@ -1004,18 +1006,20 @@ struct
                                ^ (Var.toString v2)
       | Eq (Var v, Bool b) -> (Var.toString v) ^ " = " 
                               ^ (string_of_bool b)
+      | Eq (Var v, Int i) -> (Var.toString v) ^ " = " 
+                              ^ (string_of_int i)
+                              
       | Iff (t1,t2) -> (toString t1) ^ " <=> " ^ (toString t2) 
 
     let varEq (v1, v2) = Eq (Var v1, Var v2)
     let varBoolEq (v,b) = Eq (Var v, Bool b)
-
-    (* Talk about this with Gowtham currenly identity*)
-    let  applySubst subst t = 
+    let varIntEq (v, i) = Eq (Var v, Int i)
+    let rec  applySubst subst t = 
       let varSubst = varSubs subst in 
       match t with 
       |Eq (Var v1, Var v2) -> Eq (Var v1, Var v2)
       | Eq (Var v, e) -> Eq (Var v, e)
-      | Eq (e, Var v) -> Eq (e, Var v)
+      | Eq (e, Var v) -> Eq (e, Var  v)
       | Iff (t1,t2) -> Iff (t1, t2)
 
 
@@ -1131,17 +1135,25 @@ let rec  layout t = match t with
     match t with 
       True -> True
     | False -> False
-    | Base bp -> Base (BasePredicate.applySubst subst bp)
-    | Rel rp -> Rel (RelPredicate.applySubst subst rp)
-    | Exists (tyDB,t) -> if (TyDBinds.mem tyDB ol)
+    | Base bp ->
+          let () = Printf.printf "substituting Base" in  
+          Base (BasePredicate.applySubst subst bp)
+    | Rel rp ->
+           let () = Printf.printf "substituting Rel" in 
+         Rel (RelPredicate.applySubst subst rp)
+    | Exists (tyDB,t) -> 
+        let () = Printf.printf "substituting Exists" in 
+        if (TyDBinds.mem tyDB ol)
         then let expstr = ("Attempted substitution "^(Ident.name nw)^"  on existentially quantified variable "^(Ident.name ol)) in 
             raise (RelPredicateException expstr) 
         else Exists (tyDB,applySubst subst t)
     | Not t -> Not (applySubst subst t )
     | Conj (t1,t2) -> Conj (applySubst subst t1, applySubst subst t2)
     | Disj (t1,t2) -> Disj (applySubst subst t1, applySubst subst t2)
-    | If (t1,t2) -> If (applySubst subst t1, applySubst subst t2)
-    | Iff (t1,t2) -> Iff (applySubst subst t1, applySubst subst t2)
+    | If (t1,t2) ->
+          If (applySubst subst t1, applySubst subst t2)
+    | Iff (t1,t2) ->
+        Iff (applySubst subst t1, applySubst subst t2)
     | Dot (t1,t2) -> Dot (applySubst subst t1, applySubst subst t2)
 
   (* telescoped substitutions *)
@@ -1213,8 +1225,7 @@ struct
      let recRefTy = List.map (fun (td :TyD.t)->
         (emptyVar (), (fromTyD td))) tl in 
         Tuple recRefTy  
-    (* | Tlink td ->  Tuple [(genVar, fromTyD td)]
-     *)                 
+    | Ttop -> Base (genVar(), tyD, Predicate.truee())
     |  tyD -> Base (genVar(), tyD, Predicate.truee())
    
    let rec toTyD t = match t with

@@ -23,14 +23,14 @@ let ignore = fun _ -> ()
 
 let z3_log = Z3_encode.logz3
 
- 
+ (* 
 module Printf = struct 
   let printf f s = ()
   let originalPrint = Printf.printf 
 
 
 end  
- 
+  *)
 
 
 
@@ -49,6 +49,8 @@ let discharge (VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP)) =
   (*Adding missing tydbinds*)
   let bnew_x = (Var.fromString "x", TyD.Tvar (Tyvar.fromString "int") ) in 
   let bnew_xs = (Var.fromString "xs", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "int")]) ) in 
+  let bnew_l = (Var.fromString "l", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "int")]) ) in 
+ 
   let bnew_v_9 = (Var.fromString "v_9", TyD.Tvar (Tyvar.fromString "int") ) in 
   let bnew_el = (Var.fromString "el", TyD.Tvar (Tyvar.fromString "int") ) in 
   
@@ -61,8 +63,18 @@ let discharge (VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP)) =
 
  let bnew_v_12 = (Var.fromString "v_12", TyD.Tvar (Tyvar.fromString "int") ) in 
  let bnew_n = (Var.fromString "n", TyD.Tvar (Tyvar.fromString "int") ) in 
+  let bnew_v_1 = (Var.fromString "v_1", TyD.Tbool) in 
+let bnew_v_0 = (Var.fromString "v_0", TyD.Tbool) in 
+let bnew_v1 = (Var.fromString "v1", TyD.Tbool) in
+let bnew_vp = (Var.fromString "vp", TyD.Tbool) in
+
+ let bnew_v_10 = (Var.fromString "v_10", TyD.Tconstr(Tycon.fromString "pairList", []) ) in 
+let bnew_temp4108 = (Var.fromString "temp4108", TyD.Tvar (Tyvar.fromString "int") ) in 
+let bnew_temp4109 = (Var.fromString "temp4109", TyD.Tvar (Tyvar.fromString "int") ) in 
+ let bnew_v_17 = (Var.fromString "v_17", TyD.Tconstr(Tycon.fromString "pairList", []) ) in 
   
-    let tydbinds = (*bnew_el :: bnew_lt :: bnew_rt:: bnew_n:: bnew_v_12:: bnew_v11:: bnew_v13::*) bnew_v1:: (*  bnew_v_9:: bnew_x :: bnew_xs:: *)tydbinds in 
+
+    let tydbinds = (*bnew_el :: bnew_lt :: bnew_rt:: bnew_n:: bnew_v_12:: bnew_v11:: bnew_v13::*)(* bnwew_v_17 :: bnew_temp4108 :: bnew_temp4109 ::bnew_vp:: bnew_v_16:: bnew_x::bnew_l:: (*bnew_v1:: bnew_v_0 :: bnew_v_1:: *)(*  bnew_v_9:: bnew_x :: bnew_xs::*)*) bnew_v_10:: tydbinds in 
  
   let pred0 = Simple (Base (BP.Eq ( 
                               (Var (Var.fromString "n")), (Var (Var.fromString "v_12") )))) in 
@@ -93,9 +105,9 @@ let discharge (VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP)) =
 
   in     
   let sanitizedVC = sanitizeVC newVC in 
-  let _ = Printf.originalPrint "%s" ("Sanitized VCS") in 
-  let _ = Printf.originalPrint "%s" (L.toString (VC.layouts [sanitizedVC])) in 
-  let _ = Printf.originalPrint  "\n"  in 
+  let _ = Printf.printf "%s" ("Sanitized VCS") in 
+  let _ = Printf.printf "%s" (L.toString (VC.layouts [sanitizedVC])) in 
+  let _ = Printf.printf  "\n"  in 
 
 
   let VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP) = sanitizedVC in 
@@ -117,6 +129,7 @@ let discharge (VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP)) =
       
       let tyMap = TyMap.add tyMap (TyD.Tint) (Int (Z3_encode.mk_int_sort ())) in 
       let tyMap = TyMap.add tyMap (TyD.Tbool) (Bool (Z3_encode.mk_bool_sort ())) in 
+      let tyMap = TyMap.add tyMap (TyD.Tvar (Tyvar.fromString "int")) ( Int (Z3_encode.mk_int_sort ())) in 
 
 
       let addTyD tyMap tyd = 
@@ -269,7 +282,7 @@ let discharge (VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP)) =
 
     
     let processPrimEq (tyMap, constMap, relMap) (primR, def) =
-         let () = Printf.originalPrint "%s" (" \nprocessPrimEq PrimEq  ") in 
+         let () = Printf.printf "%s" (" \nprocessPrimEq PrimEq  ") in 
           
           (*
            * tbinds of VC.t are already processed. So Z3 relation
@@ -425,16 +438,37 @@ let discharge (VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP)) =
         let
           open BP in 
           let encodeBaseExpr bexp = 
+            let () = Printf.printf "%s " "\n $$$$$$$$$$$$$$$$$-encdode BaseExp " in 
+          
             match bexp with  
-             (Int i) -> mkConst(string_of_int i, int_sort)
-            | Bool true -> const_true 
-            | Bool false -> const_false
-            | Var v -> getConstForVar constMap v
+             (Int i) -> 
+              let () = Printf.printf "%s " "\n $$$$$$$$$$$$$$$$$-encdode BaseExp Int " in 
+          
+              mkConst(string_of_int i, int_sort)
+            | Bool true -> 
+              let () = Printf.printf "%s " "\n $$$$$$$$$$$$$$$$$-encdode BaseExp BoolT " in 
+          
+                const_true 
+            | Bool false -> 
+              let () = Printf.printf "%s " "\n $$$$$$$$$$$$$$$$$-encdode BaseExp BoolF" in 
+          
+              const_false
+            | Var v -> 
+              let () = Printf.printf "%s " ("\n $$$$$$$$$$$$$$$$$-encdode BaseExp var "^(Ident.name v)) in 
+          
+            getConstForVar constMap v
         in
+          let () = Printf.printf "%s " "\n $$$$$$$$$$$$$$$$$" in 
           match bp with
-           Eq (e1,e2) -> mkConstEqAssertion 
+           Eq (e1,e2) -> 
+            let () = Printf.printf "%s " "\n $$$$$$$$$$$$$$$$$-1 " in 
+          
+            mkConstEqAssertion 
               (encodeBaseExpr e1, encodeBaseExpr e2)
-           | Iff (bp1,bp2) -> mkIff ( (encodeBasePred (tyMap, constMap, relMap) bp1),
+           | Iff (bp1,bp2) -> 
+              let () = Printf.printf "%s " "\n $$$$$$$$$$$$$$$$$-2" in 
+          
+              mkIff ( (encodeBasePred (tyMap, constMap, relMap) bp1),
                 (encodeBasePred (tyMap, constMap, relMap) bp2))
         in 
         
@@ -543,8 +577,8 @@ let discharge (VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP)) =
       let expressions_list = Solver.get_assertions solverDischarged  in  
 
 
-      let () = Printf.originalPrint "%s" ("\n# of Z3 expressions "^(string_of_int (List.length expressions_list))) in   
-      let () = Printf.originalPrint "%s" ("\nsolver \n "^(Solver.to_string solverDischarged)) in   
+      let () = Printf.printf "%s" ("\n# of Z3 expressions "^(string_of_int (List.length expressions_list))) in   
+      let () = Printf.printf "%s" ("\nsolver \n "^(Solver.to_string solverDischarged)) in   
      
       let res =   Solver.check solverDischarged [] in
 (*        let unsat_core = Solver.get_unsat_core solverDischarged in 
