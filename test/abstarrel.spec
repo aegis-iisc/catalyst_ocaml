@@ -30,6 +30,6 @@ assume raise : ex -> {vex | true};
 
 
 
-parseABStar : a -> b -> src   ->  {v |  ( (Rpairs (v) = ({(a)} X {(b)})) \/ (Rpairs (v) = {()}) ) /\ (Robs(src) = Rfla(v)) /\ (Rmem(src) = Rplmem (v))};
+parseABStar : src   ->  {v |  ( (Rpairs (v) = ({(1)} X {(2)})) \/ (Rpairs (v) = {()}) ) /\ (Robs(src) = Rfla(v)) /\ (Rmem(src) = Rplmem (v))};
 
 

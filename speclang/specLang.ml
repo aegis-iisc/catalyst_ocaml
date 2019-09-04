@@ -90,7 +90,7 @@ module Var = struct
   let  count = ref 0
   let genVar = 
     fun _ ->
-      let id = "dummy"^(string_of_int !count) in 
+      let id = "_d"^(string_of_int !count) in 
     let _ = count := !count + 1
     in 
     Ident.create_persistent id

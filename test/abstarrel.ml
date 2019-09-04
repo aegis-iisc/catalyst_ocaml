@@ -7,8 +7,8 @@ type pairList =
          | L of pair
          | LCons of pair * pairList
         
-
-(*  
+(* 
+ 
 let pair_to_string pr = 
         match pr with   
         | Pair (x,y) -> " { "^(string_of_int x)^" ,"^(string_of_int y)^" } "  
@@ -46,42 +46,59 @@ let raise ex =
                                 let res = concat f1 f2 in 
                                 res
  *)
- 
-let rec parseABStar a b src = 
+ (* 
+let rec parseABStar src = 
     match src with 
         [] -> E  
-        | a :: xs1 -> (match xs1 with 
+        | 1 :: xs1 -> (match xs1 with 
                      [] -> raise TestExp
-                    | b :: xs2 ->   
-                                    let x_x_pair = Pair (a,b) in 
+                    | 2 :: xs2 ->   let const1 = 1 in 
+                                    let const2 = 2 in 
+                                    let x_x_pair = Pair (const1, const2) in 
                                     let fstpair = L x_x_pair  in 
-                                    let lptail = parseABStar a b xs2 in 
+                                    let lptail = parseABStar xs2 in 
                                     let res = LCons (x_x_pair, lptail) in 
-                                        res
+                                        lptail
                     )
-        | x :: xs -> raise TestExp
-(*  let rec parseABStar a b src =  
+        | x :: xs -> raise TestExp *)
+ let rec parseABStar  src =  
+    let const1 =1 in 
+    let const2 =2 in 
     match src with 
         [] -> E  
-        | a :: xs1 -> (match xs1 with 
+        | 1 :: xs1 -> (match xs1 with 
                      [] -> raise TestExp
-                    | b :: xs2 -> let x_x_pair = Pair (a,b) in 
+                    | 2 :: xs2 -> let x_x_pair = Pair (const1,const2) in 
                                   (match xs2 with 
 
                                     [] -> (*change this to E*)
                                             let eml = E in 
                                             let res1 = LCons (x_x_pair, eml) in 
                                         res1
-                                    | a :: xs3 -> 
+                                    | 1 :: xs3 -> 
                                         let em = [] in 
                                         let resl =(match xs3 with 
                                         [] -> raise TestExp
-                                        | b :: xs4 -> 
-                                            let x_x_pair' = Pair (a,b) in 
-                                            let sndpair = L x_x_pair'  in 
-                                            let lptail = parseABStar a b xs4 in 
-                                            let res = LCons (x_x_pair, sndpair) in 
-                                            res
+                                        | 2 :: xs4 -> 
+                                            ( match xs4 with 
+                                             [] ->let x_x_pair' = Pair (const1,const2) in 
+                                                let sndpair = L x_x_pair'  in 
+                                                let lptail = parseABStar xs4 in 
+                                                let res = LCons (x_x_pair, sndpair) in 
+                                                res
+ 
+                                            | 1 :: xs5 -> 
+                                                (match xs5 with 
+                                                [] -> 
+                                                    let x_x_pair' = Pair (const1,const2) in 
+                                                    let sndpair = L x_x_pair'  in 
+                                                    let lptail = parseABStar xs4 in 
+                                                    let res = LCons (x_x_pair, sndpair) in 
+                                                    res
+                                                )
+                                             
+
+                                            ) 
                                         )
                                         in
                                         resl 
@@ -92,19 +109,19 @@ let rec parseABStar a b src =
                      )                    
         | x :: xs1 -> raise TestExp                                
  
- *)
+
 (* 
 let () = 
       
-        let src = [1;2;1;2;2;1] in 
+        let src = [1;2;1;2;1;2] in 
        
  
-        let parsedList  = parseABStar 1 2 src  in 
+        let parsedList  = parseABStar src  in 
 
         let () = Printf.printf "%s" (pairlist_to_string parsedList) in 
 
 
         () 
 
-
- *) 
+ *)
+ 
