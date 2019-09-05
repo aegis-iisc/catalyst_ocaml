@@ -128,7 +128,7 @@ let rec unifyArgs ((argv ,argTy) as argBind,
 
   match (argTy, arg) with
   | (RefTy.Base (argName,_,_),_) -> 
-       let () = Printf.printf "%s" "\nBase RefinementType " in 
+       let () = Printf.printf "%s" "\n UnifyArgs Base RefinementType" in 
      (* let () = Printf.printf "%s" ("argv  "^Var.toString argName)   in 
       let () = Printf.printf "%s" ("Arg  "^Var.toString arg)   in 
       
@@ -190,11 +190,12 @@ let  rec unifyWithDisj refTy1  refTy2  =
       
           refTy1
         | (_,_)->
-          let pred_unify_result_vars = Predicate.Base (BP.varEq (bv1, bv2)) in 
-           let pred1 = Predicate.Conj (pred1, pred_unify_result_vars) in 
            (*let pred2 = Predicate.Conj (pred2, pred_unify_result_vars) in 
-        *)   let pred1' = Predicate.applySubst (bv2,bv1) pred1
-         in
+        *)   let pred1' = Predicate.applySubst (bv2,bv1) pred1 in
+            let pred_unify_result_vars = Predicate.Base (BP.varEq (bv1, bv2)) in 
+            let pred1' = Predicate.Conj (pred1', pred_unify_result_vars) in 
+          
+         
           Base (bv2,td2,Predicate.dot (pred1',pred2))
        in 
        unified_type   
@@ -1300,17 +1301,5 @@ let doIt_struct_items (ve_init, pre, tstr) =
   fst vcs_ve_pair 
 
 
-
-(*   let vcslist = 
-
-    let listof_vcs_ve = 
-      List.map (fun (st_item) -> doIt_struct_item (st_item)) struct_items in 
-      let folding_function = 
-        fun vcsacc (vcs, ves) -> (List.concat[vcsacc;vcs]) 
-      in 
-      List.fold_left (folding_function) [] listof_vcs_ve
-  in 
-  vcslist  
- *)
 
 let doIt (ve, pre, tstr) = doIt_struct_items (ve, pre, tstr)

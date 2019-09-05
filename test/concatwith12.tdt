@@ -1,0 +1,90 @@
+File "concatwith12.ml", line 2, characters 0-141:
+Warning 8: this pattern-matching is not exhaustive.
+Here is an example of a value that is not matched:
+0::_
+[
+  structure_item (concatwith12.ml[1,0+0]..concatwith12.ml[6,136+29])
+    Tstr_value Rec
+    [
+      <def>
+        pattern (concatwith12.ml[1,0+8]..concatwith12.ml[1,0+14])
+          Tpat_var "concat/1199"
+        expression (concatwith12.ml[1,0+15]..concatwith12.ml[6,136+29]) ghost
+          Texp_function
+          Nolabel
+          [
+            <case>
+              pattern (concatwith12.ml[1,0+15]..concatwith12.ml[1,0+17])
+                Tpat_var "l1/1200"
+              expression (concatwith12.ml[1,0+18]..concatwith12.ml[6,136+29]) ghost
+                Texp_function
+                Nolabel
+                [
+                  <case>
+                    pattern (concatwith12.ml[1,0+18]..concatwith12.ml[1,0+20])
+                      Tpat_var "l2/1201"
+                    expression (concatwith12.ml[2,24+0]..concatwith12.ml[6,136+29])
+                      Texp_match
+                      expression (concatwith12.ml[2,24+6]..concatwith12.ml[2,24+8])
+                        Texp_ident "l1/1200"
+                      [
+                        <case>
+                          pattern (concatwith12.ml[3,38+4]..concatwith12.ml[3,38+6])
+                            Tpat_construct "[]"
+                            []
+                          expression (concatwith12.ml[3,38+10]..concatwith12.ml[3,38+12])
+                            Texp_ident "l2/1201"
+                        <case>
+                          pattern (concatwith12.ml[4,51+4]..concatwith12.ml[4,51+10])
+                            Tpat_construct "::"
+                            [
+                              pattern (concatwith12.ml[4,51+4]..concatwith12.ml[4,51+5])
+                                Tpat_constant Const_int 1
+                              pattern (concatwith12.ml[4,51+7]..concatwith12.ml[4,51+10])
+                                Tpat_var "xs1/1202"
+                            ]
+                          expression (concatwith12.ml[4,51+15]..concatwith12.ml[6,136+29])
+                            Texp_let Nonrec
+                            [
+                              <def>
+                                pattern (concatwith12.ml[4,51+19]..concatwith12.ml[4,51+24])
+                                  Tpat_var "temp1/1203"
+                                expression (concatwith12.ml[4,51+27]..concatwith12.ml[4,51+40])
+                                  Texp_apply
+                                  expression (concatwith12.ml[4,51+27]..concatwith12.ml[4,51+33])
+                                    Texp_ident "concat/1199"
+                                  [
+                                    <arg>
+                                      Nolabel
+                                      expression (concatwith12.ml[4,51+34]..concatwith12.ml[4,51+37])
+                                        Texp_ident "xs1/1202"
+                                    <arg>
+                                      Nolabel
+                                      expression (concatwith12.ml[4,51+38]..concatwith12.ml[4,51+40])
+                                        Texp_ident "l2/1201"
+                                  ]
+                            ]
+                            expression (concatwith12.ml[5,95+16]..concatwith12.ml[6,136+29])
+                              Texp_let Nonrec
+                              [
+                                <def>
+                                  pattern (concatwith12.ml[5,95+20]..concatwith12.ml[5,95+25])
+                                    Tpat_var "temp2/1204"
+                                  expression (concatwith12.ml[5,95+28]..concatwith12.ml[5,95+36])
+                                    Texp_construct "::"
+                                    [
+                                      expression (concatwith12.ml[5,95+28]..concatwith12.ml[5,95+29])
+                                        Texp_constant Const_int 1
+                                      expression (concatwith12.ml[5,95+31]..concatwith12.ml[5,95+36])
+                                        Texp_ident "temp1/1203"
+                                    ]
+                              ]
+                              expression (concatwith12.ml[6,136+24]..concatwith12.ml[6,136+29])
+                                Texp_ident "temp2/1204"
+                      ]
+                      []
+                ]
+          ]
+    ]
+]
+

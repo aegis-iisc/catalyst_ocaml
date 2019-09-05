@@ -2,6 +2,8 @@
 module L = Layout (* define Layout *) 
 module Ty = Types (* link to the Types*)
 
+
+let debug = true 
 let ($) (f, arg) =  f arg
 let (<<) f g x = f (g x)
 (* td :: define Control *)
@@ -139,37 +141,6 @@ end
 exception SpecLangEx of string
 
 exception TyConEx of string 
-(* module Tycon = 
-struct
-  open Types
-  type t = Types.type_desc
-  let toString t  =
-    match t with 
-    | Tconstr (p , te_list, _) ->
-    let expr_list_types = List.map (fun te -> TyD.normalizeTypes te) te_list in 
-    let str_list = List.fold_left (fun acc tyd -> acc^";"^(TyD.toString tyd )) " [ " expr_list_types in 
-    ("Tconstr ["^str_list^"]"^(Path.name p))
-    | _ -> "@unknown constructor type"
-  
-  let sametypeExprs te1 te2 = if (string_of_int te1.id = string_of_int te2.id) then true else false
-
-  let equals (t1,t2) =
-      match (t1, t2) with 
-      | (Tconstr (p1, telist1, _) , Tconstr(p2, telist2, _)) ->
-                if (Path.name p1 = Path.name p2)
-                then true else false 
-             (*  ((List.length telist1 = List.length telist2) 
-              && 
-                try 
-                  let _ = List.iter2 (fun e1  e2 -> Printf.printf "%s" ((string_of_int e1.id)^":<>:"^(string_of_int e2.id))) telist1 telist2 in 
-                  let res = List.for_all2 sametypeExprs telist1 telist2  in 
-                  let _ =  Printf.printf "%s" (string_of_bool res) in 
-                  res
-              with 
-                | _ -> false) *)
-      | (_,_) -> false
-  end
- *)
 
 module Tycon= 
 struct
@@ -180,7 +151,6 @@ struct
   
   let is_ident  = Path.is_ident
   let fromString s = Path.mk_ident s 
-
 end
 
      
@@ -238,8 +208,9 @@ struct
     
 
   let rec sametype t1 t2 = 
-      let _ = Printf.printf "%s" ("Asked if "^(visitType t1)^" and "^(visitType t2)^" are sametypes\n") in 
-        
+        (* let _ = 
+          Printf.printf "%s" ("Asked if "^(visitType t1)^" and "^(visitType t2)^" are sametypes\n") in 
+         *)  
       let rec sametypes tl1 tl2 = 
       (List.length tl1 = List.length tl2) &&  
           List.fold_left2 (fun flag t1 t2  -> (sametype t1 t2)) true tl1 tl2 
@@ -290,18 +261,14 @@ struct
     let layout t = Layout.str (toString t)
 
 
-    (* let toString t = visitType t     
- *)
-
-  (* let instantiateTyvars substs : ((Tyd*Tyvar.t) list)  t = 
-   *)    
+        
   let instantiateTyvars substs tyd = 
       try 
       Tvar (List.assq tyd substs)
       with 
       | Not_found -> 
       let () = List.iter (fun (tyd1, tyvar) -> Printf.printf "%s" ((toString tyd1)^"|-> "^(Tyvar.toString tyvar))) substs in 
-        raise (SpecLangEx ( "Not present "^(toString tyd)))
+        raise (SpecLangEx ( "Type being Instantiated, Not present "^(toString tyd)))
    (*normalizeTypes : Types.type_expr -> TyD.t*)
 
       
@@ -329,15 +296,6 @@ struct
               | "bool"-> Tbool 
               | "exn" -> Ttop
               | _ -> Tconstr (p, (List.map (fun te -> normalizeTypes te) tel))
-         (*    if constPath = "int" then 
-              Tvar (Tyvar.fromString "int")
-            else
-              if constPath = "bool"
-                then Tbool 
-
-              else   
-                 Tconstr (p, (List.map (fun te -> normalizeTypes te) tel))
-          *)
           else 
             raise (TyConEx "Only Identities allows as paths")  
        | Types.Tfield (s,_, te1,_) -> Tfield (s, normalizeTypes te1) 
@@ -386,55 +344,7 @@ struct
       
               Tunknown
 
-  (* and uncurry_Tlink linkTyExp argList= 
-              match linkTyExp.desc with 
-              | Tlink te' -> 
-                List.fold_right uncurry_Tlink te' argList
-              
-              | _ -> (normalizeTypes linkTyExp) :: argList
-   *)          
-
-                     
-
-
-
-  
-
-  (* 
-  type t =Types.type_desc       
-  let idCount = ref 0
-   let getNewCount = fun _ ->
-    let id = !idCount in 
-    let _ = idCount := !idCount + 1 in id
-  let toString t  =
-    match t with 
-    | Tvar s -> (match s with Some s -> s | None -> "")
-    | Tarrow (_, e1, e2, _) -> "[e1 -> e2]"
-    | Ttuple listexp -> (let rec print_list = function 
-          [] -> " "
-        | e::l -> print_string (string_of_int e.id) ; print_string " " ; print_list l
-       in 
-       print_list listexp)
-    | Tbool -> "boolean"
-    | Tint -> "integer"
-    | _ -> "unKnown"
-
-  let makeExpFromDesc td = let c = getNewCount () in 
-    {desc=td;level= c ;id=c}
-
-
-  let sameTypeListFormat td1  td2 = toString td1 = toString td2           
-  
-  let sameType (td1, td2) = toString td1 = toString td2           
-  let makeTvar s = Tvar s
-  let makeTconstr (p, telist) = Types.Tconstr (p, List.map (fun td -> makeExpFromDesc td) telist, ref Types.Mnil)
-  let makeTarrow td1 td2 = Types.Tarrow ( Asttypes.Nolabel, makeExpFromDesc td1, makeExpFromDesc td2, Types.Cok)
-  let makeTtuple tl = 
-          let texp_list = List.map makeExpFromDesc tl in 
-      Types.Ttuple texp_list  
-
-
-   *)
+   
    (*In Ocaml all types are unifiable*)
   let unifiable (t1,t2) = 
     true
@@ -707,14 +617,9 @@ module ProjTypeScheme = struct
   let generalize (tyvars, ss) = T {tyvars=tyvars; sortscheme = ss}
   (*Instantiate returns the same ProjSortScheme*)
   let instantiate (T {tyvars;sortscheme=ss} as pts, tydlist) = 
-    let () = Printf.printf "%s" (toString pts) in
     let lentyDlist = (List.length tydlist) in
     let lentyvar = (List.length tyvars) in
-     
-    let () = Printf.printf "%s" ("_______") in
-    
-    let () = Printf.printf "%s" (string_of_int lentyDlist) in
-     let () = Printf.printf "%s" (string_of_int lentyvar) in
+
     (* let tyvmap = try 
       (List.map2 (fun x y  -> (x,y)) tydlist tyvars) with 
         _ -> raise (PTSInst "PTS : insufficient or more type args") in
@@ -727,7 +632,6 @@ module ProjTypeScheme = struct
   in 
  *)
     let PSS.T{sort = PS.T{paramsorts; sort = (SPS.ColonArrow (tyd, ts))}; svars} = ss in 
-    let () = Printf.printf "%s" ("@PTSInst1") in
     
     let sort' = SPS.ColonArrow (f tyd, TS.mapTyD ts f) in 
     let ps' = List.map (fun (SPS.ColonArrow (tyd, ts)) -> SPS.ColonArrow (f tyd, ts)) paramsorts in 
@@ -1017,8 +921,8 @@ struct
     let rec  applySubst subst t = 
       let varSubst = varSubs subst in 
       match t with 
-      |Eq (Var v1, Var v2) -> Eq (Var v1, Var v2)
-      | Eq (Var v, e) -> Eq (Var v, e)
+      |Eq (Var v1, Var v2) -> Eq (Var (varSubst v1), Var (varSubst v2))
+      | Eq (Var v, e) -> Eq (Var (varSubst v), e)
       | Eq (e, Var v) -> Eq (e, Var  v)
       | Iff (t1,t2) -> Iff (t1, t2)
 
@@ -1136,13 +1040,12 @@ let rec  layout t = match t with
       True -> True
     | False -> False
     | Base bp ->
-          let () = Printf.printf "substituting Base" in  
+          let () = Printf.printf "%s" "\n Base Subst" in 
           Base (BasePredicate.applySubst subst bp)
     | Rel rp ->
-           let () = Printf.printf "substituting Rel" in 
+         let () = Printf.printf "%s" "\n Rel Subst" in  
          Rel (RelPredicate.applySubst subst rp)
     | Exists (tyDB,t) -> 
-        let () = Printf.printf "substituting Exists" in 
         if (TyDBinds.mem tyDB ol)
         then let expstr = ("Attempted substitution "^(Ident.name nw)^"  on existentially quantified variable "^(Ident.name ol)) in 
             raise (RelPredicateException expstr) 
@@ -1153,6 +1056,7 @@ let rec  layout t = match t with
     | If (t1,t2) ->
           If (applySubst subst t1, applySubst subst t2)
     | Iff (t1,t2) ->
+        let () = Printf.printf "%s" "\n Iff Subst" in 
         Iff (applySubst subst t1, applySubst subst t2)
     | Dot (t1,t2) -> Dot (applySubst subst t1, applySubst subst t2)
 
@@ -1271,16 +1175,16 @@ struct
     
   let  rec mapBaseTy t f = match t with
       Base (v,t,p) -> 
-        let () = Printf.printf "%s" "\nBase substs" in 
-        let (x,y,z) = f (v,t,p) in 
+        (* let () = Printf.printf "%s" "\nBase substs" in 
+         *)let (x,y,z) = f (v,t,p) in 
         Base (x,y,z)
     | Tuple tv -> 
-      let () = Printf.printf "%s" "\nTuple substs" in 
-        Tuple (List.map (fun (v,t) -> 
+     (*  let () = Printf.printf "%s" "\nTuple substs" in 
+      *)   Tuple (List.map (fun (v,t) -> 
         (v,mapBaseTy t f)) tv)
     | Arrow ((v1,t1),t2) ->
-          let () = Printf.printf "%s" "\nArrow substs" in 
-           Arrow ((v1,mapBaseTy t1 f), 
+     (*      let () = Printf.printf "%s" "\nArrow substs" in 
+      *)      Arrow ((v1,mapBaseTy t1 f), 
                                    mapBaseTy t2 f)
 
   let mapTyD t f = mapBaseTy t (fun (v,t,p) -> 
@@ -1585,29 +1489,28 @@ module Bind = struct
     | None -> raise (BindException "SVar impossible case") in 
     let SPS.ColonArrow (_,TS.Tuple tts) = groundSort in 
 
-    let () = Printf.printf "%s" ("\n Size of tts "^(string_of_int (List.length tts))) in 
-
+(*     let () = Printf.printf "%s" ("\n Size of tts "^(string_of_int (List.length tts))) in 
+ *)
     let (bvs,rApps) = Vector.unzip (List.map ( fun tt -> 
         let v = genVar () in 
         match tt with 
           TS.T tyd -> (v,RelLang.rId v)
         | TS.S t -> (v, RelLang.appR (mapSVar t, empty (), v))
       ) tts) in 
-    let () = Printf.printf "%s" "-----------> " in
-    let () = List.iter (fun rApp -> Printf.printf "%s" ("\n Rapp "^RelLang.exprToString rApp)  
+(*     let () = List.iter (fun rApp -> Printf.printf "%s" ("\n Rapp "^RelLang.exprToString rApp)  
                ) rApps in 
-
+ *)
     let Some xexpr = List.fold_right 
         (fun rApp xop -> match xop with 
-          None -> let () = Printf.printf "%s" "@ this node None " in
+          None -> (*let () = Printf.printf "%s" "@ this node None " in
               let () = Printf.printf "%s" ("\n Rapp "^RelLang.exprToString rApp) in 
-              
+               *)
                Some rApp 
-        | Some xexpr -> let () = Printf.printf "%s" "@ this node Some " in 
+        | Some xexpr -> (* let () = Printf.printf "%s" "@ this node Some " in 
               let () = Printf.printf "%s" ("\n Rapp "^RelLang.exprToString rApp) in 
-              let () = Printf.printf "%s" ("\n xexpr "^RelLang.exprToString xexpr) in 
+              let () = Printf.printf "%s" ("\n xexpr "^RelLang.exprToString xexpr) in  *)
               Some (RelLang.crossprd (rApp,xexpr))
-        | _ -> let () = Printf.printf "%s" "@ this node Some " in raise (SpecLangEx "xepr case unhandled ") 
+        | _ -> let () = Printf.printf "%s" "@ this node Some " in raise (SpecLangEx "Unimpl :: xepr case unhandled ") 
         )rApps None 
 
      in 

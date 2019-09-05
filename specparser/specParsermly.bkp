@@ -65,7 +65,6 @@ start:
 
 spec:   
   |d = decsandtys  {
-                  let () = Printf.printf "%s" "spec***********" in 
                   d}
 
 decsandtys: 
@@ -88,7 +87,6 @@ decsandtys:
   | t=typespec SEMICOLON d=decsandtys
 
                 {
-                  let () = Printf.printf "%s" "typespec case &&&&&&&&" in 
                   match d with
                  RelSpec.T {reldecs; primdecs; 
                   typespecs} -> 
@@ -183,33 +181,26 @@ elem : ii=INT {Int(ii)}
 
 
 typespec : ASSUME i=ID COLON rt=refty {
-                                          print "case 1";
                                           TypeSpec.T {isAssume = true;
                                               name = (Var.fromString i);
                                               params = empty ();
                                               refty = rt}}
-         | i=ID COLON rt=refty {      let () = Printf.printf "%s" "case 2" in 
-                                      TypeSpec.T {isAssume = false;
+         | i=ID COLON rt=refty {      TypeSpec.T {isAssume = false;
                                        name = (Var.fromString i);
                                        params = empty ();
                                        refty = rt}}
          | LPAREN ps=paramseq RPAREN i=ID COLON rt=refty {
-                                  let () = Printf.printf "%s" "case 3" in 
                                   TypeSpec.T {isAssume = false;
                                 name = Var.fromString i;
                                 params = Vector.fromList ps; 
                                 refty = rt}};
 
-refty : rta=reftyatom { let () = Printf.printf "%s" " case 4-1" in rta}
-      | vrta=vartyatom ARROW rt=refty {  let () = Printf.printf "%s" " case 4-2" in 
-                                
+refty : rta=reftyatom { rta}
+      | vrta=vartyatom ARROW rt=refty {  
                                           RefTy.Arrow ((Var.noName , (snd vrta)), rt)};
 
-reftyatom : bt=basety {let () = Printf.printf "%s" "case  reftyAtom base" in 
-                         
-                        bt}
+reftyatom : bt=basety { bt}
           | LPAREN vas=vartyseq RPAREN  {
-                          let () = Printf.printf "%s" "case  reftyAtom other" in 
                          
                           match vas with
                                  
@@ -219,14 +210,12 @@ reftyatom : bt=basety {let () = Printf.printf "%s" "case  reftyAtom base" in
                         | _ -> RefTy.Tuple (Vector.fromList vas)};
 
 vartyatom : bt=basety {
-                      let () = Printf.printf "%s" " case  vartyatom base" in 
                          
                       match bt with 
                       RefTy.Base (v,_,_) -> (v,bt)
                     | _ -> raise (Failure "Impossible case of basety")}
            | LPAREN vas=vartyseq RPAREN  {
-                       let () = Printf.printf "%s" " case  vartyatom other" in 
-                     
+                      
                       match vas with
                           [x] -> x 
                         | _ -> (genVar (), RefTy.Tuple 

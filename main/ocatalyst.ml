@@ -29,7 +29,10 @@ let env =
   
 
 let get_abstract_syntax_tree ml_file  = 
- let ast = 
+  let () = Printf.printf "%s" ("\n\n ************************************") in 
+  let () = Printf.printf "%s" ("\n\n Building AST for the ml program") in 
+  let () = Printf.printf "%s" ("\n\n ************************************") in
+  let ast = 
   SpecFrontEnd.load_file ml_file  
   |> Lexing.from_string 
   |> Parse.implementation  
@@ -39,7 +42,9 @@ let get_abstract_syntax_tree ml_file  =
       Format.printf "@[Normalization failed "
      ; assert false 
    *)in
-                    
+  let () = Printf.printf "%s" ("\n\n ************************************") in
+  let () = Printf.printf "%s" ("\n\n Building Typedtree for AST program") in 
+  let () = Printf.printf "%s" ("\n\n ************************************") in
   let (tstr, _tsig, _newe) = 
     try 
     Typemod.type_structure env ast Location.none  
@@ -52,31 +57,43 @@ let get_abstract_syntax_tree ml_file  =
 let catalyst_elaborate_envs relspecs typedtree = 
     
     let speclang = relspecs in 
+    let () = Printf.printf "%s" ("\n\n **************************************************") in
+    let () = Printf.printf "%s" ("\n\n Buildiing Initial VarEv, RE and PRE using Typedtree and Specifications") in 
+    let () = Printf.printf "%s" ("\n\n ***************************************************") in
+  
     let (ve, re, pre) =  ElabVE.elaborate typedtree speclang in 
     let  _ = Printf.printf "\n Initial Var Env:\n" in 
     let  _ = Printf.printf "---------\n" in 
       
-      let  _ = Printf.printf "%s" ((VE.layout ve)) in 
-      let  _ = Printf.printf "\n Initial Rel Env:\n" in
-      let  _ = Printf.printf "-----------\n" in 
+    let  _ = Printf.printf "%s" ((VE.layout ve)) in 
+    let  _ = Printf.printf "\n Initial Rel Env:\n" in
+    let  _ = Printf.printf "-----------\n" in 
        
-      let _ = Printf.printf "%s" (L.toString (RE.layout re)) in 
-      let _ = Printf.printf "\n Initial Param Rel Env:\n" in
-      let  _ = Printf.printf "--------------\n" in 
+    let _ = Printf.printf "%s" (L.toString (RE.layout re)) in 
+    let _ = Printf.printf "\n Initial Param Rel Env:\n" in
+    let  _ = Printf.printf "--------------\n" in 
        
-      let _ = Printf.printf "%s" (L.toString (PRE.layout pre)) in 
-      let _ = Printf.printf  "\n" in 
+    let _ = Printf.printf "%s" (L.toString (PRE.layout pre)) in 
+    let _ = Printf.printf  "\n" in 
            
 
      (*get the  verification conditions*)
    
 
+    let () = Printf.printf "%s" ("\n\n **********************************************************************") in
+    let () = Printf.printf "%s" ("\n\n Buildiing Initial VC using the VE and typedtree and Typechecking Rules") in 
+    let () = Printf.printf "%s" ("\n\n ***********************************************************************") in
+  
     let initial_vcs = 
       try 
       SpecVerify.doIt(ve, PRE.empty , typedtree) 
       with 
       | e -> raise e
     in    
+  
+    let () = Printf.printf "%s" ("\n\n **************************************************") in
+    let () = Printf.printf "%s" ("\n\n Expanding the VCs using the VE and typedtree**********") in 
+    let () = Printf.printf "%s" ("\n\n ***************************************************") in
       
     let elaborated_vcs = 
         List.map (fun vc -> VC.elaborate (re,pre,vc)) initial_vcs in 
@@ -88,6 +105,10 @@ let catalyst_elaborate_envs relspecs typedtree =
      let _ = Printf.printf "%s" (L.toString (VC.layouts elaborated_vcs)) in 
       
 
+    let () = Printf.printf "%s" ("\n\n **************************************************") in
+    let () = Printf.printf "%s" ("\n\n Discharging the VCs to Z3**********") in 
+    let () = Printf.printf "%s" ("\n\n ***************************************************") in
+  
       let  dischargeVC i vc = 
       let _ = Printf.printf "%s" ("Discharging VCS "^(string_of_int (i+1))^" of "^(string_of_int (List.length elaborated_vcs))^"\n") in 
           

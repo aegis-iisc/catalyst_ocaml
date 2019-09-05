@@ -851,10 +851,10 @@ let elabSRBind (re)(pre)(ve ) (StructuralRelation.T {id;params;mapp} as sr) =
                                                   ((con, valop  , rterm), relTySOp) 
                                               | (None,RelLang.Star ie) ->
                                                   let () = Printf.printf "%s" "Case 2" in 
-                                                  
+                                              
                                                   let  _ = match relTySOp with
                                                       None -> ()
-                                                    | Some _ -> raise (ElebEnvFail "Ind uasge wrong") in 
+                                                    | Some _ -> raise (ElebEnvFail "Case of a wrong Star uasge") in 
 
                                                   let RelLang.RInst {rel;args;_} = ie in 
                                                   let  argRels = List.map (fun (RelLang.RInst {rel;_}) -> rel) args in 
