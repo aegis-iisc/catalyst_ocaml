@@ -44,7 +44,7 @@ let get_abstract_syntax_tree ml_file  =
     try 
     Typemod.type_structure env ast Location.none  
   with 
-  | _ -> raise (CompilerEx "TypeMod failed")
+  | _ -> raise (CompilerEx "The typedtree structure cannot be created for the given ast, look for some missing function definitions")
   in
   (tstr, _tsig, _newe)
 

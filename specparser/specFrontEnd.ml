@@ -21,8 +21,6 @@ let lex_and_parse s=
       | _ -> raise (ParserError "Error in Lexing ")
     in   
     let v = Lexing.lexeme lexbuf in 
-    let () = Printf.printf "%s" ("\nThe lexeme "^(v)) in 
-    let () = Printf.printf "%s" ("\n*****Lexeme ends *********") in 
     
     let ast = 
       try 

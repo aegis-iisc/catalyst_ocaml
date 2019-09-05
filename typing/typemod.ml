@@ -78,9 +78,7 @@ let extract_sig_open env loc mty =
 let type_open_ ?toplevel ovf env loc lid =
   let path, md = Typetexp.find_module env lid.loc lid.txt in
   let sg = extract_sig_open env lid.loc md.md_type in
-  let () = Printf.printf "%s" "@here" in           
-  
-  
+    
   path, Env.open_signature ~loc ?toplevel ovf path sg env
 
 let type_open ?toplevel env sod =
@@ -1211,7 +1209,6 @@ and type_structure ?(toplevel = false) funct_body anchor env sstr scope =
   let names = new_names () in
 
   let type_str_item env srem {pstr_loc = loc; pstr_desc = desc} =
-    let () = Printf.printf "%s" "TyMod 1" in 
         
     match desc with
     | Pstr_eval (sexpr, attrs) ->
@@ -1221,8 +1218,7 @@ and type_structure ?(toplevel = false) funct_body anchor env sstr scope =
         in
         Tstr_eval (expr, attrs), [], env
     | Pstr_value(rec_flag, sdefs) ->
-         let () = Printf.printf "%s" "TyMod Pstr_value " in 
-   
+        
         let scope =
           match rec_flag with
           | Recursive ->
@@ -1236,13 +1232,11 @@ and type_structure ?(toplevel = false) funct_body anchor env sstr scope =
               in
               Some (Annot.Idef {scope with Location.loc_start = start})
         in
-         let () = Printf.printf "%s" "TyMod Pstr_value -2 " in 
-   
+        
         let (defs, newenv) =
           Typecore.type_binding env rec_flag sdefs scope in
 
-        let () = Printf.printf "%s" "TyMod Pstr_value -3 " in 
-   
+        
         (* Note: Env.find_value does not trigger the value_used event. Values
            will be marked as being used during the signature inclusion test. *)
         Tstr_value(rec_flag, defs),
