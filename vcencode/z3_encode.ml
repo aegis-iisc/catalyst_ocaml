@@ -45,9 +45,12 @@ let sort_layout = fun s ->
           match s with 
             Int s -> Layout.str (Z3Sort.to_string s)    
           | Bool s ->  Layout.str (Z3Sort.to_string s)    
-          | T (str, s) -> Layout.str (str^"::"^(Z3Sort.to_string s))  
+          | T (str, s) -> Layout.str (str^" :: "^(Z3Sort.to_string s))  
 (*The ast in the older version of the z3 is replaced with expressions *)
 type ast = AST of Z3.Expr.expr * sort
+
+let ast_expr_sort_pair = fun (AST (ex, so)) -> (ex, so) 
+
 let ast_layout = fun (AST (exp, s)) ->
   let str_expr = Z3.Expr.to_string exp in 
   let str_sort = Layout.toString (sort_layout s) in 
@@ -360,9 +363,11 @@ let dischargeAssertion assr =
 
 let assertSetProp (sorts,prop) =
   dischargeAssertion (Quantifier.expr_of_quantifier (mkSetProp (sorts,prop)))
+(* 
 
+let assertNumericProp (sorts, prop) = 
 
-
+ *)
 let mkNullSet = fun () -> Null
 
 let mkEmptySet sorts = 
@@ -397,6 +402,29 @@ let  mkSingletonSet asts =
 let mkMultiPatterns multipatlist = List.map (fun terms -> mk_pattern terms) multipatlist
 
 let mkSimplePatterns patlist = List.map (fun pat -> mk_pattern [pat]) patlist
+
+
+let rec mkEqAssertion (s1,s2) = 
+    match  (s1,s2) with 
+    (Null,Null) -> truee
+  | (Null,Set {ty;_}) -> mkEqAssertion (mkEmptySet ty, s2)
+  | (Set {ty;_},Null) -> mkEqAssertion (s1, mkEmptySet ty)
+  | (Set {ty=sorts1;pred=pred1}, Set {ty=sorts2;pred=pred2}) -> 
+      (* let () = Printf.printf "%s" "@mkSetEqAssertion" in 
+       *)    (*
+           * Pre-condition of sorts1 = sorts2 is automatically
+           * checked when pred1 and pred2 are applied
+           *)
+     let setPropQuantifier=  mkSetProp (sorts1, fun bvAsts -> 
+
+          let fnapp1 = pred1 bvAsts in 
+          let fnapp2 = pred2 bvAsts in 
+          let iff = mk_iff fnapp1 fnapp2 in 
+          let pats = mkSimplePatterns [fnapp1;fnapp2]
+          in
+          (pats,iff)) in 
+
+     Quantifier.expr_of_quantifier setPropQuantifier
 
 
 let rec mkSetEqAssertion (s1,s2) = 
@@ -460,6 +488,23 @@ let mkSubSetAssertion (s1,s2) = match (s1,s2) with
 (pats,implies))
       in 
       Quantifier.expr_of_quantifier setPropQuantifier
+
+let mkAddition = function 
+        | (Null,s2) -> s2 
+        | (s1,Null) -> s1 
+        | (Set {ty=sorts1;pred=pred1}, Set {ty=sorts2;pred=pred2}) ->
+          let Set {ty;pred} as s  = mkSet (genSetName (), sorts1) in 
+          let _ = assertSetProp (ty, fun bvAsts ->
+          let fnapp = pred bvAsts in 
+          let fnapp1 = pred1 bvAsts in 
+          let fnapp2 = pred2 bvAsts in 
+          let add = mk_add [fnapp1;fnapp2] in 
+          let pats = mkSimplePatterns [fnapp; fnapp1; fnapp2]
+          in
+      (pats, add)
+    )
+  in
+  s
 
 let mkUnion = function 
         | (Null,s2) -> s2 
@@ -705,4 +750,77 @@ let mkConstEqAssertion (AST (x1,s1) as ast1, AST (x2,s2)) =
 let mkInt i = AST (Symbol.mk_int i,  mk_int_sort)
  *)
 
+(****************** Encoding Numeric Expressions ***************)
+(*
+(declare-fun rlen (Int) Int)
+(declare-const a0 Int)
+(declare-const b1 Int)
+(declare-const xs Int)
+(declare-const l1 Int)
+(declare-const l2 Int)
+(declare-const t1 Int)
+(declare-const t2 Int)
+(declare-fun u (Int Int) Int)
+
+(assert (= b1 1))
+(assert (= (rlen l1) (u (rlen xs) b1)))
+(assert (= (rlen t1) (u (rlen xs) (rlen l2))))
+(assert (= (rlen t2) (u (rlen t1) b1)))
+
+(assert (not (= (rlen t2) (u (rlen l1) (rlen l2)))))
+(check-sat)
+(get-model)***)
+
+
+let mk_Numeric_constant i = 
+    let const1 = Integer.mk_numeral_i !ctx i in
+    const1 
+
+let mk_Integer_var_constant name = 
+  let const1 =  Expr.mk_const !ctx (mkSym name) (mk_int_sort ())in    
+  const1
+
+let mk_Integer_func_decl (name, arg_sorts, res_sort) = 
+  let relnfunc = FuncDecl.mk_func_decl !ctx (mkSym name) arg_sorts res_sort in    
+  relnfunc
+
+let mk_Integer_rel_app (relfunc, args) =
+  let () = Printf.printf "%s" "\n mk_int_rel_app" in 
+  mk_app relfunc args   
+  
+let mk_Integer_addition (arg1, arg2) = 
+    let addition = mk_add  [arg1;arg2] in 
+    addition
+let mk_Integer_eq (e1, e2) = 
+  let eqexpr =mk_eq e1 e2 in 
+  eqexpr   
+
+let mk_arithmetic_const name sort = 
+  let const =   Expr.mk_const !ctx (mkSym name) (sort) in
+  const
+
+(* 
+let mk_length_assertions () = 
+    
+    let relnfunc = FuncDecl.mk_func_decl !ctx (mkSym "rlen") [mk_int_sort ()] (mk_int_sort()) in 
+    let const0 = Expr.mk_const !ctx (mkSym "a0") (mk_int_sort ())in 
+    let const1 = Expr.mk_const !ctx (mkSym "b1") (mk_int_sort ()) in 
+    let constxs = Expr.mk_const !ctx (mkSym "xs") (mk_int_sort ())in 
+    let constl1 = Expr.mk_const !ctx (mkSym "l1") (mk_int_sort ())in 
+    let constl2 = Expr.mk_const !ctx (mkSym "l2") (mk_int_sort()) in
+    let constt1 = Expr.mk_const !ctx (mkSym "t1") (mk_int_sort()) in 
+    let constt2 = Expr.mk_const !ctx (mkSym "t2") (mk_int_sort()) in 
+
+    let ass1 = mk_eq const1 (Integer.mk_numeral_i !ctx 1) in 
+    let ()  = dischargeAssertion ass1  in 
+    let ass2 = mk_eq (mk_app relnfunc [constl1]) (mk_add  [(mk_app relnfunc [constxs]);  const1])  in 
+    let () = dischargeAssertion ass2 in 
+    let ass3 = mk_eq (mk_app relnfunc [constt1]) (mk_add  [(mk_app relnfunc [constxs]);  (mk_app relnfunc [constl2])])  in 
+    let () = dischargeAssertion ass3 in 
+    let ass4 = mk_eq (mk_app relnfunc [constl1]) (mk_add  [(mk_app relnfunc [constt1]);  const1])  in 
+    let () = dischargeAssertion ass4 in 
+
+    let assfinal = mk_not (mk_eq (mk_app relnfunc [constt2]) (mk_add  [(mk_app relnfunc [constl1]) ; (mk_app relnfunc [constl2])])) in 
+    dischargeAssertion assfinal
+ *)
 

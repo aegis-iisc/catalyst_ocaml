@@ -1,4 +1,6 @@
 exception TestExp
+
+
 type pair = Pair of int * int 
 
 
@@ -7,8 +9,8 @@ type pairList =
          | L of pair
          | LCons of pair * pairList
         
-(* 
- 
+
+(*  
 let pair_to_string pr = 
         match pr with   
         | Pair (x,y) -> " { "^(string_of_int x)^" ,"^(string_of_int y)^" } "  
@@ -46,8 +48,8 @@ let raise ex =
                                 let res = concat f1 f2 in 
                                 res
  *)
- 
-(* let rec parseABStar src = 
+ (*A correct parser*)
+(* let rec parseOneTwoStar src = 
     match src with 
         [] -> E  
         | 1 :: xs1 -> (match xs1 with 
@@ -56,15 +58,23 @@ let raise ex =
                                     let const2 = 2 in 
                                     let x_x_pair = Pair (const1, const2) in 
                                     let fstpair = L x_x_pair  in 
-                                    let lptail = parseABStar xs2 in 
+                                    let lptail = parseOneTwoStar xs2 in 
                                     let res = LCons (x_x_pair, lptail) in 
-                                        lptail
+                                        res (*Change this to lptail to get a failing typechecking*)
                     )
-        | x :: xs -> raise TestExp
-
+        | x1 :: xs1 -> raise TestExp
  *)
- (*An incorrect Parser which will typecheck with relational properties*)       
- let rec parseABStar  src =  
+
+ (*An incorrect Parser which will typecheck with relational properties
+ but fails to typecheck when using Length properties
+parseOneTwoStar src 
+    [] -> [()]
+    | [1;2] -> [(1,2)]
+    | [1;2;1;2;{1,2}] -> [(1,2);(1,2)]
+
+*)  
+
+(*  let rec parseOneTwoStar  src =  
     let const1 =1 in 
     let const2 =2 in 
     match src with 
@@ -94,8 +104,8 @@ let raise ex =
                                                     [] -> 
                                                         let x_x_pair' = Pair (const1,const2) in 
                                                         let sndpair = L x_x_pair'  in 
-                                                        (* let lptail = parseABStar xs4 in 
-                                                         *)let res = LCons (x_x_pair, sndpair) in 
+                                                       (*  let lptail = parseOneTwoStar xs4 in 
+                                                        *) let res = LCons (x_x_pair, sndpair) in 
                                                          (*retrun sndpair to see the typechecking failing*)
                                                         res
                                                     | x6:: xs6 -> raise TestExp     
@@ -122,12 +132,53 @@ let raise ex =
                    | x2 :: xs2 -> raise TestExp                 
                      )                    
         | x1 :: xs1 -> raise TestExp                                
- 
+  *)
+(*A correct version of the parser*)
+  let rec parseOneTwoStar  src =  
+    let const1 =1 in 
+    let const2 =2 in 
+    match src with 
+        [] -> E  
+        | 1 :: xs1 -> (match xs1 with 
+                     [] -> raise TestExp
+                    | 2 :: xs2 -> let x_x_pair = Pair (const1,const2) in 
+                                  (match xs2 with 
+
+                                    [] -> (*change this to E*)
+                                            let eml = E in 
+                                            let res1 = LCons (x_x_pair, eml) in 
+                                        res1
+                                    | 1 :: xs3 -> 
+                                        (match xs3 with 
+                                            [] -> raise TestExp
+                                            | 2 :: xs4 -> 
+                                                ( match xs4 with 
+                                                 [] ->let x_x_pair' = Pair (const1,const2) in 
+                                                    let sndpair = L x_x_pair'  in 
+                                                    (* let lptail = parseOneTwoStar xs4 in 
+                                                     *)let res = LCons (x_x_pair, sndpair) in 
+                                                    res
+     
+                                                
+                                                | x5::xs5 -> raise TestExp 
+
+                                                )
+                                            | x4 :: xs4 -> raise TestExp    
+                                         )
+
+                                    | x3 :: xs3 -> raise TestExp    
+                                    )
+                   | x2 :: xs2 -> raise TestExp                 
+                     )                    
+        | x1 :: xs1 -> raise TestExp                                
+  
+
 
 (* 
+
 let () = 
       
-        let src = [1;2;1;2;2] in 
+        let src = [1;2;1;2;1] in 
        
  
         let parsedList  = parseABStar src  in 

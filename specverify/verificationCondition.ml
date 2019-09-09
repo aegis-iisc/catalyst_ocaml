@@ -560,6 +560,7 @@ let elaborate (re,pre,vc) =
     | RelLang.X (x,y) -> mapSnd (fun (x,y) -> RelLang.X (x,y)) (g (x,y))
     | RelLang.U (x,y) -> mapSnd (fun (x,y) -> RelLang.U (x,y)) (g (x,y))
     | RelLang.D (x,y) -> mapSnd (fun (x,y) -> RelLang.D (x,y)) (g (x,y))
+    | RelLang.ADD (x,y) -> mapSnd (fun (x,y) -> RelLang.ADD (x,y)) (g (x,y))
     | RelLang.R (ie,v) -> 
 
         let (rit',newRel) = doItIE ie rit in 

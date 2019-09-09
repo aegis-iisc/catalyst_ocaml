@@ -662,6 +662,7 @@ struct
             | X of expr * expr 
             | U of expr * expr 
             | D of expr * expr 
+            | ADD of expr * expr
             | R of instexpr * Ident.t
 
   type term = Expr of expr
@@ -702,7 +703,7 @@ struct
 
     | D (e1, e2) -> "(" ^ (exprToString e1) ^ " - " ^ (exprToString e2) ^ ")"      
 
-
+    | ADD (e1, e2) ->   "(" ^ (exprToString e1) ^ " + " ^ (exprToString e2) ^ ")"
     | R (ie, arg) ->  
         (ieToString ie) ^ "(" ^ (arg.name) ^ ")"
 
@@ -717,7 +718,9 @@ struct
   let union (e1, e2) = U (e1,e2)
   let crossprd (e1,e2) = X (e1,e2)
   let diff (e1,e2) = D (e1,e2)
+  let add (e1, e2) = ADD (e1, e2)
   let rNull _ = T []
+
 
 
   let (%) = fun f g x  -> f (g x)  
@@ -733,7 +736,8 @@ struct
     let doIt = applySubsts substs  in 
     let subst v = List.fold_left (fun v (newEl, oldEl) -> 
          if (Ident.name oldEl = Ident.name v) then newEl else v) v substs in 
-    let elemSubst elem = match elem with 
+    let elemSubst elem = 
+      match elem with 
         Var v -> 
           Var (subst v)
       | c -> c in
@@ -742,6 +746,7 @@ struct
     | X (e1, e2) -> X (doIt e1, doIt e2)
     | U (e1, e2) -> U (doIt e1, doIt e2)
     | D (e1, e2) -> D (doIt e1, doIt e2)
+    | ADD (e1, e2) -> ADD (doIt e1, doIt e2)
     | R (ie, argvar) -> R (ieApplySubsts substs ie, subst argvar)
 
   let rec mapInstExpr t f = 
@@ -752,6 +757,7 @@ struct
       X (x, y) ->  X ( g x, g y) 
     | U (x, y) -> U (g x, g y)
     | D (x, y) -> D (g x, g y)
+    | ADD (x,y) -> ADD (g x, g y)
     | T _ -> t
     | R (ie, x) -> R (f ie, x) 
 
@@ -1481,12 +1487,18 @@ module Bind = struct
   let makeBindDef (id,params,pts) : def =
     let PTS.T {sortscheme = PSS.T {sort = PS.T {paramsorts = 
                                                   paramSorts; sort=groundSort}; _}; tyvars} = pts in 
+
     (* SVar to RelId map *)
+
     let svarMap = List.map2 (fun (SPS.ColonArrow (_,TS.Tuple [TS.S t])) rid -> (t,rid)) paramSorts params  in 
+  
     let mapSVar = fun t -> match Vector.peekMap (svarMap,  
-                                                 fun (t',rid) -> if (SVar.eq t t') then Some rid else None) with
-      Some rid -> rid 
-    | None -> raise (BindException "SVar impossible case") in 
+                                                fun (t',rid) -> if (SVar.eq t t') then Some rid else None) with
+      Some rid -> 
+          let () = Printf.printf "%s" ("\n********Rel Id "^(RelId.toString rid)) in 
+          rid 
+    | None -> raise (BindException "No Bind definition found for ") in 
+  
     let SPS.ColonArrow (_,TS.Tuple tts) = groundSort in 
 
 (*     let () = Printf.printf "%s" ("\n Size of tts "^(string_of_int (List.length tts))) in 

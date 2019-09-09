@@ -163,12 +163,14 @@ instexprs : LBRACE ie=instexpr RBRACE {[ie]}
 rexpr : ra=ratom CROSSPRD re=rexpr {X(ra,re)}
       | ra=ratom UNION re=rexpr {U(ra,re)}
       | ra=ratom MINUS re=rexpr {D(ra,re)}
+      | ra=ratom PLUS re=rexpr {ADD(ra,re)}
       | ra=ratom {ra};
 
 ratom : LCURLY LPAREN RPAREN RCURLY {T(Vector.fromList [])}
       | LCURLY LPAREN els=elemseq RPAREN RCURLY {T(Vector.fromList els)}
       | ie=instexpr LPAREN i=ID RPAREN {R (ie, Var.fromString i)}
       | LPAREN re=rexpr RPAREN {re};
+      | LPAREN el= elem RPAREN {T[el]}
 
 elemseq : el=elem {[el]}
         | el=elem COMMA els=elemseq {el::els};

@@ -191,7 +191,7 @@ let  rec unifyWithDisj refTy1  refTy2  =
           refTy1
         | (_,_)->
            (*let pred2 = Predicate.Conj (pred2, pred_unify_result_vars) in 
-        *)   let pred1' = Predicate.applySubst (bv2,bv1) pred1 in
+        *)  let pred1' = Predicate.applySubst (bv2,bv1) pred1 in
             let pred_unify_result_vars = Predicate.Base (BP.varEq (bv1, bv2)) in 
             let pred1' = Predicate.Conj (pred1', pred_unify_result_vars) in 
           
@@ -270,7 +270,8 @@ let  wellFormedType (marker, markedVE , ty) =
         let () = Printf.printf "%s" ("Var : Ty "^Ident.name exvar^" :: "^RefTy.toString exty) in 
         match exty with 
           RefTy.Base (bv,extd,pred) -> (TyDBinds.add clos exvar extd,
-                                        Predicate.conj (pred',Predicate.applySubst (exvar,bv) pred))
+                                        (*Look at this change , commented it to handle let t0 = [] in ... with this it resulted in t0= t0*)
+                                        Predicate.conj (pred',(* Predicate.applySubst (exvar,bv) *) pred))
         | RefTy.Tuple _ -> raise (SpecVerifyExc "Tuple flattening incorrect\n")
         | _ -> (clos,pred')
 
@@ -545,9 +546,13 @@ let rec  type_synth_exp (ve, pre, exp) =
       let extendedVE = List.fold_left (
           fun veacc (var, refty) -> 
             (*we should also have Eq (P1, bv T1) to the constraints and should add the bv : baseOf (T1)*)
-           let (newrefTy, bvBind) =  match refty with 
-             RefTy.Base (bv, tyd, pred) -> let pred' = Predicate.Base (BP.varEq (var, bv)) in
+           let (newrefTy, bvBind) =  
+            match refty with 
+             RefTy.Base (bv, tyd, pred) -> 
+                                        
+                                         let pred' = Predicate.Base (BP.varEq (var, bv)) in
                                         (RefTy.Base (bv, tyd, Predicate.Conj(pred, pred')),( bv, toRefTyS (RefTy.Base (bv, tyd, Predicate.truee()) )))
+                                       
             | _ -> raise (SpecVerifyExc "The type of the let RHS expression must be a Base type")    
            in  
            let tsrefty  = toRefTyS newrefTy in 
@@ -556,6 +561,8 @@ let rec  type_synth_exp (ve, pre, exp) =
             ve'' 
 
         ) markedVE value_type_list in 
+
+
 
       let (vcs2, type_body_exp) = type_synth_exp (extendedVE, pre, exp) in 
 
@@ -578,10 +585,6 @@ let rec  type_synth_exp (ve, pre, exp) =
       let open SpecLang in 
       let newTyVar = Tyvar.newSVar () in
       let new_Tvar = TyD.Tvar newTyVar in  
-      (*Change this to general extension of the parameters to the *)
-      (* let ve = VE.add ve (  (Var.fromString "x"), (toRefTyS (RefTy.fromTyD (new_Tvar))) ) in 
-      let ve = VE.add ve ( (Var.fromString "xs"), (toRefTyS (RefTy.fromTyD (TyD.makeTconstr ((Tycon.fromString "list"), [(new_Tvar)] )))) )in 
-       *)  
         
       let folding_function = fun  (vcs,wftypes) ({c_lhs;c_rhs;_}) ->
         let pat = c_lhs in 
@@ -989,7 +992,14 @@ and doIt_pat_testexp_bind (ve, pre, pat_exp_bind)  =
          match arg_pat.pat_desc with 
            | Tpat_var (id, _) -> let ()= Printf.printf "%s" ("\n Arg_pat_name for the constructor "^(Ident.name id)) in 
               let sub = (id, fargId) :: sub in
-              let ve' = VE.add ve (id, toRefTyS (RefTy.fromTyD arg_pat_normaltype)) in 
+              (*A bug here for the case tail of a list*)
+              let fargIdType = 
+                try 
+                  VE.find ve fargId
+                with 
+                _ -> toRefTyS (RefTy.fromTyD arg_pat_normaltype)
+              in 
+              let ve' = VE.add ve (id, fargIdType) in 
               (sub, ve') 
            | Tpat_constant ci -> 
               match ci with 

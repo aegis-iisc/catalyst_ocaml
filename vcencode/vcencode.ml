@@ -57,6 +57,8 @@ let discharge (VC.T ({tbinds=tydbinds;rbinds=pre}, anteP, conseqP)) =
   let bnew_v1 = (Var.fromString "v_1", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "int")]) ) in 
  let bnew_v13 = (Var.fromString "v_13", TyD.Tconstr(Tycon.fromString "btree", []) ) in 
  let bnew_lt = (Var.fromString "lt", TyD.Tconstr(Tycon.fromString "btree", []) ) in 
+  let bnew_v5 = (Var.fromString "v_5", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "int")]) ) in 
+
 
  let bnew_v11 = (Var.fromString "v_11", TyD.Tconstr(Tycon.fromString "btree", []) ) in 
   let bnew_rt = (Var.fromString "rt", TyD.Tconstr(Tycon.fromString "btree", []) ) in 
@@ -73,9 +75,10 @@ let bnew_temp4108 = (Var.fromString "temp4108", TyD.Tvar (Tyvar.fromString "int"
 let bnew_temp4109 = (Var.fromString "temp4109", TyD.Tvar (Tyvar.fromString "int") ) in 
  let bnew_v_15 = (Var.fromString "v_15", TyD.Tconstr(Tycon.fromString "pairList", []) ) in 
   let bnew_b = (Var.fromString "b", TyD.Tbool ) in 
+ let bnew_v_8 = (Var.fromString "v_8", TyD.Tbool ) in 
   
 
-    let tydbinds = (*bnew_el :: bnew_lt :: bnew_rt:: bnew_n:: bnew_v_12:: bnew_v11:: bnew_v13::*)bnew_b:: bnew_v_15 :: (*bnew_temp4108 :: bnew_temp4109 ::bnew_vp:: bnew_v_16:: bnew_x::*)bnew_l:: (*bnew_v1:: bnew_v_0 :: bnew_v_1:: *)(*  bnew_v_9:: bnew_x :: bnew_xs::*) bnew_v_10:: tydbinds in 
+    let tydbinds = (*bnew_el :: bnew_lt :: bnew_rt:: bnew_n:: bnew_v_12:: bnew_v11:: bnew_v13::*)bnew_v_10:: bnew_v5:: (* bnew_b:: *) bnew_v_15 :: bnew_v_8 :: (*bnew_temp4108 :: bnew_temp4109 ::bnew_vp:: bnew_v_16:: bnew_x::*)bnew_l:: (*bnew_v1:: bnew_v_0 :: bnew_v_1:: *)(*  bnew_v_9:: bnew_x :: bnew_xs::*) tydbinds in 
  
   let pred0 = Simple (Base (BP.Eq ( 
                               (Var (Var.fromString "n")), (Var (Var.fromString "v_12") )))) in 
@@ -220,8 +223,8 @@ let bnew_temp4109 = (Var.fromString "temp4109", TyD.Tvar (Tyvar.fromString "int"
         in
           (tyMap, constMap, relMap, const)
          in 
-        (**ERROR*)
-        let encodeStrucRel (tyMap, constMap, relMap) (rid ,TyD.Tarrow (t1,_))  =
+        (**ERROR, Encode the Length relation as a function like decl_fun rlen ...*)
+      let encodeStrucRel (tyMap, constMap, relMap) (rid ,TyD.Tarrow (t1,_))  =
           let open TyD in 
           let  rstr = RI.toString rid in 
           let (tyMap, constMap, relMap,sorts) = 
@@ -510,18 +513,115 @@ let bnew_temp4109 = (Var.fromString "temp4109", TyD.Tvar (Tyvar.fromString "int"
       
               mkDiff ( (encodeRelExpr (tyMap, constMap, relMap) e1), 
                 (encodeRelExpr (tyMap, constMap, relMap) e2))
+            | ADD (e1, e2) ->
+               raise (VCEex "ADDITION CALLED ")
+
+               mkAddition ( (encodeRelExpr (tyMap, constMap, relMap) e1), 
+                (encodeRelExpr (tyMap, constMap, relMap) e2)) 
             | R (RInst {rel=rid;_},v) -> 
               let () = Printf.printf "%s" (" \n ******encodeRelExpr R *****") in 
               
-              (* try 
+              let srforR = getStrucRelForRelId relMap rid in 
+              let SR{ty;rel} = srforR in 
+               let list_layout_ty = List.map (fun sor-> sort_layout sor) ty in 
+               let str_ty  = (List.fold_left (fun acc l -> acc^(Layout.toString l) ) "{" list_layout_ty)^" }" in 
+
+              let ()  = Printf.printf "%s" ("Type "^str_ty) in 
+            (* try 
                *)mkStrucRelApp (
                 (getStrucRelForRelId relMap rid), (getConstForVar constMap v))
               (*  with 
               | _ -> raise (VCEex "failed at mkStrucRel")
  *)
-        in 
+      in 
+      
+      let rec encodeNumericExpr (tyMap, constMap, relMap) (e) = 
+        let () = Printf.printf "%s" (" \n ******encodeNumericExpr *****") in 
+        let open RelLang in 
+        let encodeNumericElem (tyMap, constMap, relMap) = fun x -> 
+          match x with 
+            | (Int i) -> mk_Numeric_constant i 
+            | Bool true -> raise (VCEex ("Incorrect argument to a numeric expression "^(RelLang.exprToString e) ))
+            | Bool false -> raise (VCEex ("Incorrect argument to a numeric expression "^(RelLang.exprToString e) ))
+            | Var v -> let astforconst = getConstForVar constMap v in 
+                        let (ast_exp, ast_sort) =ast_expr_sort_pair astforconst in 
+                         ast_exp 
+             
 
+        in
+        match e with 
+            T els -> 
+                let () = Printf.printf "%s" (" \n ******encodeNumericExpr T *****") in 
+                (
+                match Vector.length els with 
+                    0 -> raise (VCEex ("Incorrect numeric expression "^(RelLang.exprToString e) )) 
+                    | 1 -> let numericValue = encodeNumericElem (tyMap, constMap, relMap) (List.hd els) in 
+                            let () = Printf.printf "%s" (" \n Numeric Value "^(string_of_int (Z3.Arithmetic.Integer.get_int numericValue))) in 
+                            numericValue
+                    | _ -> raise (VCEex ("Incorrect number of numeric arguments "^(RelLang.exprToString e) ))
+                  )
+            | ADD (e1, e2) ->
+               mk_Integer_addition ( (encodeNumericExpr (tyMap, constMap, relMap) e1), 
+                (encodeNumericExpr (tyMap, constMap, relMap) e2)) 
+            
+            | R (RInst {rel=rid;_},v) -> 
+              let () = Printf.printf "%s" (" \n ******encodeNumericExpr R *****") in 
+              (*get the function for the numeric relation if present, else add the function to tthe relMap
+              create the function application*)
+               let srforR = getStrucRelForRelId relMap rid in 
+              let SR{ty;rel} = srforR in 
+               let list_layout_ty = List.map (fun sor-> sort_layout sor) ty in 
+               let str_ty  = (List.fold_left (fun acc l -> acc^(Layout.toString l) ) "{" list_layout_ty)^" }" in 
+
+              let ()  = Printf.printf "%s" ("Type "^str_ty) in 
+              let () = Printf.printf "%s" ("argument Name"^(Ident.name v)) in 
+
+              let argument = getConstForVar constMap v in 
+              let astLayout = ast_layout argument in 
+              let (arg_exp, arg_sort) =ast_expr_sort_pair argument in 
+              
         
+              let reln_required_arg_sort = sortToZ3Sort arg_sort in 
+              let ()  = Printf.printf "%s" ("argument Sort "^(Z3.Sort.to_string reln_required_arg_sort)) in 
+         
+              
+              let relate = mk_Integer_func_decl (RelId.toString rid, [reln_required_arg_sort], (mk_int_sort())) in 
+              let ()  = Printf.printf "%s" ("relation "^(FuncDecl.to_string relate)) in 
+              
+              let ()  = Printf.printf "%s" ("arguments "^(Expr.to_string arg_exp)) in 
+              let ()  = Printf.printf "%s" ("argument Sort "^(Z3.Sort.to_string reln_required_arg_sort)) in 
+             
+               let relApp = mk_Integer_rel_app  (relate, [arg_exp]) in 
+                let ()  = Printf.printf "%s" ("relation App Done ") in
+                relApp 
+              
+                
+            | _ ->  raise (VCEex ("Incorrect numeric expression "^(RelLang.exprToString e) ))
+             
+          
+
+        in 
+      let encodeNumericEqAssertion (tyMap, constMap, relMap) (e1, e2) = 
+            let () = Printf.printf "%s" (" \n ******encodeNumericEqAssertion *****") in 
+               
+          let encoding_lhs =  encodeNumericExpr (tyMap, constMap, relMap) e1 in 
+            let () = Printf.printf "%s" (" \n ******encodeNumericEqAssertion LHS done *****") in 
+        
+        let () = Printf.printf "%s" (" \n ******encodeNumericEqAssertion RHS  *****") in 
+      
+          let encoding_rhs = encodeNumericExpr (tyMap, constMap, relMap) e2 in 
+        let () = Printf.printf "%s" (" \n ******encodeNumericEqAssertion RHS done *****") in 
+        
+        
+        let () = Printf.printf "%s" (" \n ******encodeNumericEqAssertion creating EQ  *****") in 
+               
+        let eq_assertion = mk_Integer_eq (encoding_lhs,  encoding_rhs) in 
+        let () = Printf.printf "%s" (" \n ******encodeNumericEqAssertion creating EQ  DONE*****") in 
+        
+          eq_assertion
+
+      in
+
       let encodeRelPred (tyMap, constMap, relMap) (rp:RP.t)  =
                 let () = Printf.printf "%s" (" \n ******encodeRelPred *****") in 
 
@@ -530,7 +630,55 @@ let bnew_temp4109 = (Var.fromString "temp4109", TyD.Tvar (Tyvar.fromString "int"
         let  open RP in 
         
         match  rp with 
-          Eq (e1,e2) -> mkSetEqAssertion (f e1, f e2)
+          (*Eq is overloaded, it can be SetEq or Arithmetic Eq*)
+          (*Ashsih , A hack, encode a Rlen here itself*)
+          Eq (e1,e2) -> (*if either of e1 or e2 is an arithmatic relation like rlen, then make arithmeticEqAssertion*)
+              (match (e1, e2) with 
+                (_, ADD (_,_)) ->
+                        let () = Printf.printf "%s" ("\n NUMERICAL EXPRESSION "^(RelLang.exprToString ( e1) )^" = "^(RelLang.exprToString (e2) ) ) in  
+                        encodeNumericEqAssertion (tyMap, constMap, relMap) (e1, e2)
+                | (ADD (_,_), _) -> 
+                       let () = Printf.printf "%s" ("\n NUMERICAL EXPRESSION "^(RelLang.exprToString (e1) )^" = "^(RelLang.exprToString (e2) ) ) in  
+                       
+                      encodeNumericEqAssertion (tyMap, constMap, relMap) (e1, e2)
+                 (*Relation is Rlen, the general case should be any relation in arithmetic domain*) 
+                 | (R (rie, id), _) ->
+                    let RInst {rel;_} = rie in
+                    let relId = RelId.toString rel in 
+                    let () = Printf.printf "%s" ("\n NUMERICAL EXPRESSION CASE 1"^relId) in  
+                    if (relId = "Rlen" || relId = "Rplen")
+                     then 
+                      let () = Printf.printf "%s" ("\n NUMERICAL EXPRESSION TRUE"^relId) in  
+                     
+                       encodeNumericEqAssertion (tyMap, constMap, relMap) (e1, e2)
+                     else
+
+                      let () = Printf.printf "%s" ("\n NUMERICAL EXPRESSION FALSE"^relId) in  
+                                            mkSetEqAssertion (f e1, f e2)    
+
+
+                | (_, R (rie, id))  ->               
+                      let RInst {rel;_} = rie in 
+                    let relId = RelId.toString rel in 
+                  let () = Printf.printf "%s" ("\n NUMERICAL EXPRESSION CASE 2"^relId) in 
+                  if (relId = "Rlen" || relId = "Rplen")
+                     then 
+                       let () = Printf.printf "%s" ("\n NUMERICAL EXPRESSION TRUE"^relId) in  
+                    
+                       encodeNumericEqAssertion (tyMap, constMap, relMap) (e1, e2)
+                     else
+                        let () = Printf.printf "%s" ("\n NUMERICAL EXPRESSION FALSE"^relId) in  
+                    
+                     mkSetEqAssertion (f e1, f e2)    
+ 
+                   
+                | (_,_) -> 
+                   let () = Printf.printf "%s" ("\n RELATIONAL EXPRESSION CASE "^(RelLang.exprToString ( e1) )^" = "^(RelLang.exprToString (e2) )) in 
+                (*   let lhs_rel_expression = f e1 in 
+                  let rhs_rel_expression = f e2 in 
+                  if 
+                 *)  mkSetEqAssertion (f e1, f e2)
+              )
           | Sub (e1,e2) -> mkSubSetAssertion (f e1, f e2)
           | SubEq (e1,e2) -> (fun s -> mkOr( Vector.new2 (mkSetEqAssertion s,
               mkSubSetAssertion s))) (f e1, f e2)
@@ -573,7 +721,9 @@ let bnew_temp4109 = (Var.fromString "temp4109", TyD.Tvar (Tyvar.fromString "int"
       (*
        * We check the SAT of ¬conseqP
        *)
-      let _ = dischargeAssertion (mkNot (encodeVCPred (tyMap, constMap, relMap) conseqP)) in 
+
+(*       let _ = mk_length_assertions() in  
+       *)let _ = dischargeAssertion (mkNot (encodeVCPred (tyMap, constMap, relMap) conseqP)) in 
       let solverDischarged = getSolver () in 
       let expressions_list = Solver.get_assertions solverDischarged  in  
 
