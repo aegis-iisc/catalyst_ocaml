@@ -37,7 +37,7 @@ parseOneTwoStar src
                     | 2 :: xs2 -> let x_x_pair = Pair (const1,const2) in 
                                   (match xs2 with 
 
-                                    [] -> (*change this to E*)
+                                    [] -> (*change this to E for typechecking failing*)
                                             let eml = E in 
                                             let res1 = LCons (x_x_pair, eml) in 
                                         res1
