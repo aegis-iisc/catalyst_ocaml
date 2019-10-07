@@ -2,6 +2,7 @@ open VerificationCondition
 open SpecLang 
 open Z3_encode
 
+exception SolverTimeout
 module TyD = TyD
 
   module RI = RelId
@@ -23,14 +24,14 @@ let ignore = fun _ -> ()
 
 let z3_log = Z3_encode.logz3
 
- (* 
+ 
 module Printf = struct 
   let printf f s = ()
   let originalPrint = Printf.printf 
 
 
 end  
-  *)
+ 
 
 
 
@@ -76,9 +77,10 @@ let bnew_temp4109 = (Var.fromString "temp4109", TyD.Tvar (Tyvar.fromString "int"
  let bnew_v_15 = (Var.fromString "v_15", TyD.Tconstr(Tycon.fromString "pairList", []) ) in 
   let bnew_b = (Var.fromString "b", TyD.Tbool ) in 
  let bnew_v_8 = (Var.fromString "v_8", TyD.Tbool ) in 
+ let bnew_lf = (Var.fromString "lf", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "int")]) ) in 
   
 
-    let tydbinds = (*bnew_el :: bnew_lt :: bnew_rt:: bnew_n:: bnew_v_12:: bnew_v11:: bnew_v13::*)bnew_v_10:: bnew_v5:: (* bnew_b:: *) bnew_v_15 :: bnew_v_8 :: (*bnew_temp4108 :: bnew_temp4109 ::bnew_vp:: bnew_v_16:: bnew_x::*)bnew_l:: (*bnew_v1:: bnew_v_0 :: bnew_v_1:: *)(*  bnew_v_9:: bnew_x :: bnew_xs::*) tydbinds in 
+    let tydbinds = (*bnew_el :: bnew_lt :: bnew_rt:: bnew_n:: bnew_v_12:: bnew_v11:: bnew_v13::*)bnew_lf:: bnew_v_10:: bnew_v5:: (* bnew_b:: *) bnew_v_15 :: bnew_v_8 :: (*bnew_temp4108 :: bnew_temp4109 ::bnew_vp:: bnew_v_16:: bnew_x::*)bnew_l:: (*bnew_v1:: bnew_v_0 :: bnew_v_1:: *)(*  bnew_v_9:: bnew_x :: bnew_xs::*) tydbinds in 
  
   let pred0 = Simple (Base (BP.Eq ( 
                               (Var (Var.fromString "n")), (Var (Var.fromString "v_12") )))) in 
@@ -729,14 +731,9 @@ let bnew_temp4109 = (Var.fromString "temp4109", TyD.Tvar (Tyvar.fromString "int"
 
 
       let () = Printf.printf "%s" ("\n# of Z3 expressions "^(string_of_int (List.length expressions_list))) in   
-      let () = Printf.printf "%s" ("\nsolver \n "^(Solver.to_string solverDischarged)) in   
+      let () = Printf.originalPrint "%s" ("\nsolver \n "^(Solver.to_string solverDischarged)) in   
      
       let res =   Solver.check solverDischarged [] in
-(*        let unsat_core = Solver.get_unsat_core solverDischarged in 
- 
-       let () = Printf.printf "%s" ("\nUnsat_core  ") in   
-      let () = List.iter (fun exp -> Printf.printf  "%s" ("\n "^Z3_encode.Expr.to_string exp)) unsat_core in 
- *)       
  
       let () = Solver.reset solverDischarged in 
      
@@ -745,7 +742,7 @@ let bnew_temp4109 = (Var.fromString "temp4109", TyD.Tvar (Tyvar.fromString "int"
            SATISFIABLE -> Failure 
          | UNKNOWN -> Undef 
          | UNSATISFIABLE -> Success
-        | _ -> failwith "Integer received when Z3_lbool expected"
+        | _ -> raise SolverTimeout
 
 
  

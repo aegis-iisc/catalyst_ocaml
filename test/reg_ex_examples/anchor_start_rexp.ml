@@ -20,12 +20,13 @@
                    else raise TestExp
 
 
-  (*One incorrect implementation *)
-  (* let rec anchor_start e l1 = match l1 with 
+  (*An incorrect implementation *)
+(*   let rec anchor_start e l1 = match l1 with 
       | [] -> raise TestExp
       | x :: xs -> 
             let chr  = check_hd e l1 in 
 
             if (chr) 
                    then [] (*returning an empty list*)
-                   else raise TestExp                  *)
+                   else raise TestExp                 
+ *)

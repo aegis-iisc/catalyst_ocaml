@@ -9,6 +9,7 @@ module VCE = Vcencode
  
 exception CompilerEx of string
 exception CantDischargeVC
+exception SolverTimeout
 let ppf = Format.err_formatter 
 
 let elaborateSMLWithSpec  =
@@ -115,7 +116,9 @@ let catalyst_elaborate_envs relspecs typedtree =
           (*    if ( (* i = 0 || i = 1 || i= 2 || i=3 || i=4 || i=5|| *)i=6 || i=7 ||  i = 8  ) then Printf.printf "Skipping VC1 " 
            else 
     *)
-          match VCE.discharge vc with
+          match 
+
+        VCE.discharge vc with
           VCE.Success -> 
             Printf.printf  "%s" ("VC# "^(string_of_int (i+1))^" discharged\n")
         | VCE.Undef -> (Printf.printf "%s" ("Solver timeout  while trying to \

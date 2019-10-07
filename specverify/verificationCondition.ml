@@ -23,6 +23,14 @@ module RE = RelEnv
 module TyD = TyD
 
 
+module Printf = struct 
+  let printf f s = ()
+  let originalPrint = Printf.printf 
+
+
+end  
+ 
+
 
 exception TrivialVC (* raised when antecedent has false *)
 exception Failed of string

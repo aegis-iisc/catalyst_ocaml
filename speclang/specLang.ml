@@ -1046,10 +1046,8 @@ let rec  layout t = match t with
       True -> True
     | False -> False
     | Base bp ->
-          let () = Printf.printf "%s" "\n Base Subst" in 
           Base (BasePredicate.applySubst subst bp)
     | Rel rp ->
-         let () = Printf.printf "%s" "\n Rel Subst" in  
          Rel (RelPredicate.applySubst subst rp)
     | Exists (tyDB,t) -> 
         if (TyDBinds.mem tyDB ol)
@@ -1062,7 +1060,6 @@ let rec  layout t = match t with
     | If (t1,t2) ->
           If (applySubst subst t1, applySubst subst t2)
     | Iff (t1,t2) ->
-        let () = Printf.printf "%s" "\n Iff Subst" in 
         Iff (applySubst subst t1, applySubst subst t2)
     | Dot (t1,t2) -> Dot (applySubst subst t1, applySubst subst t2)
 
@@ -1495,7 +1492,6 @@ module Bind = struct
     let mapSVar = fun t -> match Vector.peekMap (svarMap,  
                                                 fun (t',rid) -> if (SVar.eq t t') then Some rid else None) with
       Some rid -> 
-          let () = Printf.printf "%s" ("\n********Rel Id "^(RelId.toString rid)) in 
           rid 
     | None -> raise (BindException "No Bind definition found for ") in 
   

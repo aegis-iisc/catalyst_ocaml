@@ -44,29 +44,10 @@ let rec flatten pl =
                                 let f1 = flatten spl in 
                                 let f2 = flatten pl' in 
                                 let res = concat f1 f2 in 
-                                res  
+                                res
 
 
-(*An incorrect implementation*)
-(* let rec flatten pl = 
-        match pl with 
-        E -> [] 
-        | L p -> (match p with 
-                        | Pair (a, b) -> 
-                            let em = [] in 
-                            let bl = b :: em in
-                            let listp = a :: bl in 
-                            listp 
 
-
-                        )
-        | LCons (p1 , pl') ->   let spl = L p1 in  
-                                let f1 = flatten spl in 
-                                let f2 = flatten pl' in 
-                                let res = concat f1 f2 in 
-                                f1  
-
- *)
 
 (* 
 

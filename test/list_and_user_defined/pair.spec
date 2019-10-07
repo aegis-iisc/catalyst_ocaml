@@ -29,7 +29,7 @@ concat : l1 -> l2 -> { l | Rmem(l) = Rmem(l1) U Rmem(l2) /\
 
 
 
-flatten : pl-> { lf | Rmem (lf) = Rplmem(pl) /\ Robs (lf) = Rfla (pl)};
+flatten : plist -> { lf | Rmem (lf) = Rplmem(plist) /\ Robs (lf) = Rfla (plist)};
 
 
 

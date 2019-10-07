@@ -91,6 +91,7 @@ let () =
         let parsedList  = parseOneTwoStar src  in 
 
         let () = Printf.printf "%s" (pairlist_to_string parsedList) in 
+        let () = Printf.printf "%s" ("\n") in 
 
 
         () 

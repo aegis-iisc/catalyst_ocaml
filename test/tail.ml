@@ -1,6 +1,7 @@
 let tail l =
    match l with 
         [] -> []
-     | x :: xs1 -> xs1 
+     | x :: xs -> xs
+         
                  
                 
