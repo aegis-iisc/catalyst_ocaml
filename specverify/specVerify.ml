@@ -369,7 +369,7 @@ let rec  type_synth_exp (ve, pre, exp) =
 
     (*create phi_false*)
     let predtestfalse = Predicate.Base (BP.varBoolEq (testId, false)) in 
-    let dummyRefTy_false = RefTy.Base (Var.noName, TyD.Tbool, predtesttrue) in 
+    let dummyRefTy_false = RefTy.Base (Var.noName, TyD.Tbool, predtestfalse) in 
 
     let dummyTyDbind_false = (Var.genVar() , toRefTyS dummyRefTy_false) in 
 
