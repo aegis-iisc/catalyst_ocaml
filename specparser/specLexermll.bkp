@@ -53,11 +53,14 @@ rule token = parse
 |(".")  {debug "dot"; Tokens.DOT}
 |("+")  {debug "plus"; Tokens.PLUS}
 |("-")  {debug "minus"; Tokens.MINUS}
+|("--") {debug "ar-minus"; Tokens.ARMINUS}
 |("U")  {debug "union"; Tokens.UNION}
 |("X")  {debug "crossprd"; Tokens.CROSSPRD}
 |("C=")  {debug "subseteq"; Tokens.SUBSETEQ}
 |("C")  {debug "subset"; Tokens.SUBSET}
 |("=")  {debug "equalop";Tokens.EQUALOP}
+|("<") {debug "lessthanop"; Tokens.LESSTHAN}
+|(">") {debug "lessthanop"; Tokens.GREATERTHAN}
 |("=>")  {debug "implies";Tokens.IMPL}
 |("<=>") {debug "iff";Tokens.IFF}
 |("/\\")  {debug "conj";Tokens.CONJ}

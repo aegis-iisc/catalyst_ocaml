@@ -1,0 +1,159 @@
+Verification Conditions:
+ bindings 	 
+  Robs : ({intint  int list,,,}) -> (bool)
+   Rob : ({intint  int list,,,}) -> (bool)
+    Rmem : ({int  int list,,}) -> (bool)
+     Rhd : ({int  int list,,}) -> (bool)
+      Rmem : ({int  int list,,}) -> (bool)
+       b : bool
+        _d3 : bool
+	 y : bool
+	  veq : bool
+	   y : bool
+	    _d1 :   int list
+	     xs :   int list
+	      x : int
+	       true : bool
+	        false : bool
+		 v_0 : bool
+		  v_1 : bool
+		   [] :   int list
+		    nil :   int list
+		     TestExp : exception
+		      [] :   int list
+		       [] :   int list
+		        [] :   int list
+			 [] :   int list
+			  e : int
+			   l1 :   int list
+			    v : bool
+			      in 	 
+			       b = v 
+			          v = true  ->  NOT [ (Rmem)(xs) = {()} ] 
+				     {(e)} C (Rmem)(xs) 
+				      
+				         b = v 
+					    v = true  ->  NOT [ (Rmem)(xs) = {()} ] 
+					       {(e)} C (Rmem)(xs) 
+					        
+						   y = veq 
+						      veq = true  ->  {(e)} = {(x)} 
+						         y = false 
+							    y = veq 
+							       veq = true  ->  {(e)} = {(x)} 
+							          (Rhd)(l1) = {(x)} 
+								     (Rmem)(l1) = ({(x)} U ({()} U (Rmem)(xs))) 
+								        (Rob)(l1) = ({(x)} X (Rmem)(xs)) 
+									   (Robs)(l1) = (({(x)} X (Rmem)(xs)) U ({()} U (Robs)(xs))) 
+									      true = true 
+									         false = false 
+										    (Robs)([]) = {()} 
+										       (Rob)([]) = {()} 
+										          (Robs)([]) = {()} 
+											     (Rmem)([]) = {()} 
+											        (Rob)([]) = {()} 
+												   (Robs)([]) = {()} 
+												      (Rhd)([]) = {()} 
+												         (Rmem)([]) = {()} 
+													    (Rob)([]) = {()} 
+													       (Robs)([]) = {()} 
+													        => v = true  ->  NOT [ (Rmem)(l1) = {()} ] 
+														   {(e)} C (Rmem)(l1) 
+														    
+														       bindings 	 
+														        Robs : ({intint  int list,,,}) -> (bool)
+															 Rob : ({intint  int list,,,}) -> (bool)
+															  Rmem : ({int  int list,,}) -> (bool)
+															   Rhd : ({int  int list,,}) -> (bool)
+															    Rmem : ({int  int list,,}) -> (bool)
+															     _d2 : bool
+															      y : bool
+															       veq : bool
+															        y : bool
+																 _d1 :   int list
+																  xs :   int list
+																   x : int
+																    true : bool
+																     false : bool
+																      v_0 : bool
+																       v_1 : bool
+																        [] :   int list
+																	 nil :   int list
+																	  TestExp : exception
+																	   [] :   int list
+																	    [] :   int list
+																	     [] :   int list
+																	      [] :   int list
+																	       e : int
+																	        l1 :   int list
+																		 v : bool
+																		   in 	 
+																		    v_0 = v 
+																		       v = true 
+																		          y = veq 
+																			     veq = true  ->  {(e)} = {(x)} 
+																			        y = true 
+																				   y = veq 
+																				      veq = true  ->  {(e)} = {(x)} 
+																				         (Rhd)(l1) = {(x)} 
+																					    (Rmem)(l1) = ({(x)} U ({()} U (Rmem)(xs))) 
+																					       (Rob)(l1) = ({(x)} X (Rmem)(xs)) 
+																					          (Robs)(l1) = (({(x)} X (Rmem)(xs)) U ({()} U (Robs)(xs))) 
+																						     true = true 
+																						        false = false 
+																							   (Robs)([]) = {()} 
+																							      (Rob)([]) = {()} 
+																							         (Robs)([]) = {()} 
+																								    (Rmem)([]) = {()} 
+																								       (Rob)([]) = {()} 
+																								          (Robs)([]) = {()} 
+																									     (Rhd)([]) = {()} 
+																									        (Rmem)([]) = {()} 
+																										   (Rob)([]) = {()} 
+																										      (Robs)([]) = {()} 
+																										       => v = true  ->  NOT [ (Rmem)(l1) = {()} ] 
+																										          {(e)} C (Rmem)(l1) 
+																											   
+																											      bindings 	 
+																											       Robs : ({intint  int list,,,}) -> (bool)
+																											        Rob : ({intint  int list,,,}) -> (bool)
+																												 Rmem : ({int  int list,,}) -> (bool)
+																												  Rhd : ({int  int list,,}) -> (bool)
+																												   _d0 :   int list
+																												    true : bool
+																												     false : bool
+																												      v_0 : bool
+																												       v_1 : bool
+																												        [] :   int list
+																													 nil :   int list
+																													  TestExp : exception
+																													   [] :   int list
+																													    [] :   int list
+																													     [] :   int list
+																													      [] :   int list
+																													       e : int
+																													        l1 :   int list
+																														 v : bool
+																														   in 	 
+																														    v_1 = v 
+																														       v = false 
+																														          (Rhd)(l1) = {()} 
+																															     (Rmem)(l1) = {()} 
+																															        (Rob)(l1) = {()} 
+																																   (Robs)(l1) = {()} 
+																																      true = true 
+																																         false = false 
+																																	    (Robs)([]) = {()} 
+																																	       (Rob)([]) = {()} 
+																																	          (Robs)([]) = {()} 
+																																		     (Rmem)([]) = {()} 
+																																		        (Rob)([]) = {()} 
+																																			   (Robs)([]) = {()} 
+																																			      (Rhd)([]) = {()} 
+																																			         (Rmem)([]) = {()} 
+																																				    (Rob)([]) = {()} 
+																																				       (Robs)([]) = {()} 
+																																				        => v = true  ->  NOT [ (Rmem)(l1) = {()} ] 
+																																					   {(e)} C (Rmem)(l1) 
+																																					    
+

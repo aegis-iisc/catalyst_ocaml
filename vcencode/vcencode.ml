@@ -26,7 +26,7 @@ let z3_log = Z3_encode.logz3
 
  
 module Printf = struct 
-  let printf f s = ()
+  let printf  = Printf.printf 
   let originalPrint = Printf.printf 
 
 
@@ -74,13 +74,15 @@ let bnew_vp = (Var.fromString "vp", TyD.Tbool) in
  let bnew_v_10 = (Var.fromString "v_10", TyD.Tconstr(Tycon.fromString "pairList", []) ) in 
 let bnew_temp4108 = (Var.fromString "temp4108", TyD.Tvar (Tyvar.fromString "int") ) in 
 let bnew_temp4109 = (Var.fromString "temp4109", TyD.Tvar (Tyvar.fromString "int") ) in 
- let bnew_v_15 = (Var.fromString "v_15", TyD.Tconstr(Tycon.fromString "pairList", []) ) in 
+ (* let bnew_v_15 = (Var.fromString "v_15", TyD.Tconstr(Tycon.fromString "pairList", []) ) in 
+  *) 
+  let bnew_v_15 = (Var.fromString "v_15", TyD.Tvar (Tyvar.fromString "int") ) in 
   let bnew_b = (Var.fromString "b", TyD.Tbool ) in 
  let bnew_v_8 = (Var.fromString "v_8", TyD.Tbool ) in 
  let bnew_lf = (Var.fromString "lf", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "int")]) ) in 
   
 
-    let tydbinds = (*bnew_el :: bnew_lt :: bnew_rt:: bnew_n:: bnew_v_12:: bnew_v11:: bnew_v13::*)bnew_lf:: bnew_v_10:: bnew_v5:: (* bnew_b:: *) bnew_v_15 :: bnew_v_8 :: (*bnew_temp4108 :: bnew_temp4109 ::bnew_vp:: bnew_v_16:: bnew_x::*)bnew_l:: (*bnew_v1:: bnew_v_0 :: bnew_v_1:: *)(*  bnew_v_9:: bnew_x :: bnew_xs::*) tydbinds in 
+    let tydbinds = (*bnew_el :: bnew_lt :: bnew_rt:: bnew_n:: bnew_v_12:: bnew_v11:: bnew_v13::*)(* bnew_0::bnew_1::bnew_lf:: bnew_v_10:: bnew_v5:: *) (* bnew_b:: *)(*  bnew_v_15 :: bnew_v_8 :: *) (*bnew_temp4108 :: bnew_temp4109 ::bnew_vp:: bnew_v_16:: bnew_x::*)(* bnew_l:: *) (*bnew_v1:: bnew_v_0 :: bnew_v_1:: *)(*  bnew_v_9:: bnew_x :: bnew_xs::*) tydbinds in 
  
   let pred0 = Simple (Base (BP.Eq ( 
                               (Var (Var.fromString "n")), (Var (Var.fromString "v_12") )))) in 
@@ -136,7 +138,7 @@ let bnew_temp4109 = (Var.fromString "temp4109", TyD.Tvar (Tyvar.fromString "int"
       let tyMap = TyMap.add tyMap (TyD.Tint) (Int (Z3_encode.mk_int_sort ())) in 
       let tyMap = TyMap.add tyMap (TyD.Tbool) (Bool (Z3_encode.mk_bool_sort ())) in 
       let tyMap = TyMap.add tyMap (TyD.Tvar (Tyvar.fromString "int")) ( Int (Z3_encode.mk_int_sort ())) in 
-
+      
 
       let addTyD tyMap tyd = 
                 let sortToUninterpretedSort = 
@@ -490,7 +492,7 @@ let bnew_temp4109 = (Var.fromString "temp4109", TyD.Tvar (Tyvar.fromString "int"
             | Bool false -> const_false
             | Var v -> getConstForVar constMap v
         in
-          let () = Printf.printf "%s" (" \n ******encodeRelExpr here *****") in 
+          let () = Printf.printf "%sort" (" \n ******encodeRelExpr here *****") in 
     
          match e with 
             T els -> 
@@ -542,11 +544,20 @@ let bnew_temp4109 = (Var.fromString "temp4109", TyD.Tvar (Tyvar.fromString "int"
         let open RelLang in 
         let encodeNumericElem (tyMap, constMap, relMap) = fun x -> 
           match x with 
-            | (Int i) -> mk_Numeric_constant i 
+            | (Int i) -> 
+                    let () = Printf.printf "%s" "\n Encoding Numeric Elem \n " in 
+                    let res = mk_Numeric_constant i in 
+                    let () = Printf.printf "%s" "\n Encoding Numeric Elem Success \n " in 
+                      res
             | Bool true -> raise (VCEex ("Incorrect argument to a numeric expression "^(RelLang.exprToString e) ))
             | Bool false -> raise (VCEex ("Incorrect argument to a numeric expression "^(RelLang.exprToString e) ))
-            | Var v -> let astforconst = getConstForVar constMap v in 
+            | Var v -> 
+                        let () = Printf.printf "%s" "\n Encoding Numeric Elem Var Case \n " in 
+                        let () = Printf.printf "%s" ("\n "^(Ident.name v)) in 
+                        let astforconst = getConstForVar constMap v in 
+                        let () = Printf.printf "%s" ("\n astforconst calculated ") in 
                         let (ast_exp, ast_sort) =ast_expr_sort_pair astforconst in 
+                         let () = Printf.printf "%s" ("\n ast sort pair calculated") in 
                          ast_exp 
              
 
@@ -558,7 +569,8 @@ let bnew_temp4109 = (Var.fromString "temp4109", TyD.Tvar (Tyvar.fromString "int"
                 match Vector.length els with 
                     0 -> raise (VCEex ("Incorrect numeric expression "^(RelLang.exprToString e) )) 
                     | 1 -> let numericValue = encodeNumericElem (tyMap, constMap, relMap) (List.hd els) in 
-                            let () = Printf.printf "%s" (" \n Numeric Value "^(string_of_int (Z3.Arithmetic.Integer.get_int numericValue))) in 
+                            (*bug if the integer is not a constant but a variable*)
+                            (* let () = Printf.printf "%s" (" \n Numeric Value "^(string_of_int (Z3.Arithmetic.Integer.get_int numericValue))) in  *)
                             numericValue
                     | _ -> raise (VCEex ("Incorrect number of numeric arguments "^(RelLang.exprToString e) ))
                   )
@@ -648,7 +660,7 @@ let bnew_temp4109 = (Var.fromString "temp4109", TyD.Tvar (Tyvar.fromString "int"
                     let RInst {rel;_} = rie in
                     let relId = RelId.toString rel in 
                     let () = Printf.printf "%s" ("\n NUMERICAL EXPRESSION CASE 1"^relId) in  
-                    if (relId = "Rlen" || relId = "Rplen")
+                    if (relId = "Rlen" || relId = "Rplen" || relId = "Rlentail")
                      then 
                       let () = Printf.printf "%s" ("\n NUMERICAL EXPRESSION TRUE"^relId) in  
                      

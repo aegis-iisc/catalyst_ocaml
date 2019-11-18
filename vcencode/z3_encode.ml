@@ -137,9 +137,9 @@ let typeCheckAst (AST (ast,sort),sort') =
       *)      
         true
   | (T (name1,_), T (name2, _)) ->  
-          (* (Printf.printf "%s" ("Sort Checking named , named "^(sortToString sort)
+          (Printf.printf "%s" ("Sort Checking named , named "^(sortToString sort)
                               ^" vs "^(sortToString sort')));
-           *)name1 = name2
+          name1 = name2
   | _ -> (Printf.printf "%s" ("Sort mismatch: other , other  "^(sortToString sort)
                               ^" vs "^(sortToString sort')); false)
 

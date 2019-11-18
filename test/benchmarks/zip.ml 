@@ -1,0 +1,7 @@
+type pair = Pair of int * int 
+
+let eq x1 y1 = true
+   
+exception TestExp
+   let raise ex = 
+   		[]

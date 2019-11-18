@@ -19,7 +19,8 @@ module PRE = ParamRelEnv
 
 (*comment this out to print  Printf messages*)
 module Printf = struct
-  let printf f s = ()
+  (* let printf f s = () *)
+  let printf = Printf.printf
   let originalPrint = Printf.printf 
 
 

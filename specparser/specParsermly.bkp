@@ -28,11 +28,14 @@ let print msg = let () = Printf.printf "%s" msg in ()
  %token  DOT  
  %token PLUS  
  %token MINUS  
+ %token ARMINUS
  %token UNION 
  %token  CROSSPRD  
  %token SUBSETEQ   
  %token SUBSET  
  %token EQUALOP  
+ %token LESSTHAN
+ %token GREATERTHAN
  %token  IMPL  
  %token  IFF   
  %token CONJ  
@@ -164,7 +167,8 @@ rexpr : ra=ratom CROSSPRD re=rexpr {X(ra,re)}
       | ra=ratom UNION re=rexpr {U(ra,re)}
       | ra=ratom MINUS re=rexpr {D(ra,re)}
       | ra=ratom PLUS re=rexpr {ADD(ra,re)}
-      | ra=ratom {ra};
+      | ra=ratom ARMINUS re=expr {SUBS(ra,re)} 
+      |ra=ratom {ra};
 
 ratom : LCURLY LPAREN RPAREN RCURLY {T(Vector.fromList [])}
       | LCURLY LPAREN els=elemseq RPAREN RCURLY {T(Vector.fromList els)}
@@ -266,8 +270,7 @@ bpatom : LBRACE i1=ID EQUALOP i2=ID RBRACE {Predicate.BasePredicate.varEq
 rpatom : re1=rexpr EQUALOP re2=rexpr {Predicate.RelPredicate.Eq(re1,re2)}
        | re1=rexpr SUBSET re2=rexpr {Predicate.RelPredicate.Sub(re1,re2)}
        | re1=rexpr SUBSETEQ re2=rexpr {Predicate.RelPredicate.SubEq(re1,re2)};
-
-
+       
 
 
 

@@ -663,6 +663,7 @@ struct
             | U of expr * expr 
             | D of expr * expr 
             | ADD of expr * expr
+            | SUBS of expr * expr
             | R of instexpr * Ident.t
 
   type term = Expr of expr
@@ -704,6 +705,8 @@ struct
     | D (e1, e2) -> "(" ^ (exprToString e1) ^ " - " ^ (exprToString e2) ^ ")"      
 
     | ADD (e1, e2) ->   "(" ^ (exprToString e1) ^ " + " ^ (exprToString e2) ^ ")"
+    | SUBS (e1, e2) ->   "(" ^ (exprToString e1) ^ " -- " ^ (exprToString e2) ^ ")"
+    
     | R (ie, arg) ->  
         (ieToString ie) ^ "(" ^ (arg.name) ^ ")"
 
@@ -719,6 +722,7 @@ struct
   let crossprd (e1,e2) = X (e1,e2)
   let diff (e1,e2) = D (e1,e2)
   let add (e1, e2) = ADD (e1, e2)
+  let subs (e1, e2) = SUBS(e1, e2)
   let rNull _ = T []
 
 
@@ -747,6 +751,7 @@ struct
     | U (e1, e2) -> U (doIt e1, doIt e2)
     | D (e1, e2) -> D (doIt e1, doIt e2)
     | ADD (e1, e2) -> ADD (doIt e1, doIt e2)
+    | SUBS(e1, e2) -> SUBS (doIt e1, doIt e2)
     | R (ie, argvar) -> R (ieApplySubsts substs ie, subst argvar)
 
   let rec mapInstExpr t f = 
@@ -758,6 +763,7 @@ struct
     | U (x, y) -> U (g x, g y)
     | D (x, y) -> D (g x, g y)
     | ADD (x,y) -> ADD (g x, g y)
+    | SUBS (x,y) -> SUBS (g x, g y)
     | T _ -> t
     | R (ie, x) -> R (f ie, x) 
 
