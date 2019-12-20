@@ -81,8 +81,17 @@ let bnew_temp4109 = (Var.fromString "temp4109", TyD.Tvar (Tyvar.fromString "int"
  let bnew_v_8 = (Var.fromString "v_8", TyD.Tbool ) in 
  let bnew_lf = (Var.fromString "lf", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "int")]) ) in 
   
+  let bnew_0 = (Var.fromString "0", TyD.Tvar (Tyvar.fromString "int") ) in
+  let bnew_1 = (Var.fromString "1", TyD.Tvar (Tyvar.fromString "int") ) in
+   
+  let bnew_v_14 = (Var.fromString "v_14", TyD.Tconstr(Tycon.fromString "listPair", []) ) in
+  let bnew_n = (Var.fromString "n", TyD.Tvar (Tyvar.fromString "int") ) in 
+  let bnew_ac = (Var.fromString "ac", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "int")]) ) in 
+  let bnew_l1 = (Var.fromString "l1", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "int")]) ) in 
+  let bnew_inpc = (Var.fromString "inpc", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "int")]) ) in 
 
-    let tydbinds = (*bnew_el :: bnew_lt :: bnew_rt:: bnew_n:: bnew_v_12:: bnew_v11:: bnew_v13::*)(* bnew_0::bnew_1::bnew_lf:: bnew_v_10:: bnew_v5:: *) (* bnew_b:: *)(*  bnew_v_15 :: bnew_v_8 :: *) (*bnew_temp4108 :: bnew_temp4109 ::bnew_vp:: bnew_v_16:: bnew_x::*)(* bnew_l:: *) (*bnew_v1:: bnew_v_0 :: bnew_v_1:: *)(*  bnew_v_9:: bnew_x :: bnew_xs::*) tydbinds in 
+  
+    let tydbinds =   bnew_inpc:: bnew_l1::bnew_ac :: bnew_n::  bnew_v_14 ::  (*  bnew_0 :: bnew_1 :: *)(*bnew_el :: bnew_lt :: bnew_rt:: bnew_n:: bnew_v_12:: bnew_v11:: bnew_v13::*)(* bnew_0::bnew_1::bnew_lf:: bnew_v_10:: bnew_v5:: *) (* bnew_b:: *)(*  bnew_v_15 :: bnew_v_8 :: *) (*bnew_temp4108 :: bnew_temp4109 ::bnew_vp:: bnew_v_16:: bnew_x::*)(* bnew_l:: *) (*bnew_v1:: bnew_v_0 :: bnew_v_1:: *)(*  bnew_v_9:: bnew_x :: bnew_xs::*) tydbinds in 
  
   let pred0 = Simple (Base (BP.Eq ( 
                               (Var (Var.fromString "n")), (Var (Var.fromString "v_12") )))) in 
@@ -451,8 +460,13 @@ let bnew_temp4109 = (Var.fromString "temp4109", TyD.Tvar (Tyvar.fromString "int"
             match bexp with  
              (Int i) -> 
               let () = Printf.printf "%s " "\n $$$$$$$$$$$$$$$$$-encdode BaseExp Int " in 
-          
-              mkConst(string_of_int i, int_sort)
+              let i_const = mkInt i in 
+              let (i_const_exp, iconst_sort) =ast_expr_sort_pair i_const in 
+              let i_const_eq_i = mk_Integer_eq (i_const_exp, mk_Numeric_constant i) in
+              let _ = dischargeAssertion  i_const_eq_i in 
+              i_const
+              
+              (* mkConst(string_of_int i, int_sort) *)
             | Bool true -> 
               let () = Printf.printf "%s " "\n $$$$$$$$$$$$$$$$$-encdode BaseExp BoolT " in 
           
@@ -469,12 +483,10 @@ let bnew_temp4109 = (Var.fromString "temp4109", TyD.Tvar (Tyvar.fromString "int"
           let () = Printf.printf "%s " "\n $$$$$$$$$$$$$$$$$" in 
           match bp with
            Eq (e1,e2) -> 
-            let () = Printf.printf "%s " "\n $$$$$$$$$$$$$$$$$-1 " in 
-          
-            mkConstEqAssertion 
-              (encodeBaseExpr e1, encodeBaseExpr e2)
+            let () = Printf.printf "%s " ("\n $$$$$$$$$$$$$$$$$ BasePredicate Eq  "^(BP.toString bp)^" \n ") in 
+              mkConstEqAssertion (encodeBaseExpr e1, encodeBaseExpr e2)
            | Iff (bp1,bp2) -> 
-              let () = Printf.printf "%s " "\n $$$$$$$$$$$$$$$$$-2" in 
+              let () = Printf.printf "%s "  ("\n $$$$$$$$$$$$$$$$$ BasePredicate Iff  "^ (BP.toString bp)^" \n ") in 
           
               mkIff ( (encodeBasePred (tyMap, constMap, relMap) bp1),
                 (encodeBasePred (tyMap, constMap, relMap) bp2))
@@ -483,23 +495,24 @@ let bnew_temp4109 = (Var.fromString "temp4109", TyD.Tvar (Tyvar.fromString "int"
      let rec encodeRelExpr (tyMap, constMap, relMap) (e) =
     
       let () = Printf.printf "%s" (" \n ******encodeRelExpr *****") in 
+      let () = Printf.printf "%s "  ("\n RelExp  "^ (RelLang.exprToString e)^" \n ") in 
     
         let open RelLang in 
         let encodeRelElem (tyMap, constMap, relMap) = fun x -> 
+          let () = Printf.printf "%s" (" \n ******encodeRelElem  *****") in 
+    
           match x with 
             | (Int i) -> mkInt i 
             | Bool true -> const_true 
             | Bool false -> const_false
             | Var v -> getConstForVar constMap v
         in
-          let () = Printf.printf "%sort" (" \n ******encodeRelExpr here *****") in 
+          let () = Printf.printf "%s" (" \n ******encodeRelExpr here *****") in 
     
          match e with 
             T els -> 
                 let () = Printf.printf "%s" (" \n ******encodeRelExpr T *****") in 
-      
-                (
-                match Vector.length els with 
+                (match Vector.length els with 
                     0 -> mkNullSet ()
                     | _ -> mkSingletonSet(Vector.map (els,(encodeRelElem (tyMap, constMap, relMap)))))
             | X (e1,e2) -> 
@@ -518,11 +531,24 @@ let bnew_temp4109 = (Var.fromString "temp4109", TyD.Tvar (Tyvar.fromString "int"
               mkDiff ( (encodeRelExpr (tyMap, constMap, relMap) e1), 
                 (encodeRelExpr (tyMap, constMap, relMap) e2))
             | ADD (e1, e2) ->
-               raise (VCEex "ADDITION CALLED ")
-
+              let () = Printf.printf "%s" (" \n ******encodeRelExpr ADD *****") in 
+               
                mkAddition ( (encodeRelExpr (tyMap, constMap, relMap) e1), 
                 (encodeRelExpr (tyMap, constMap, relMap) e2)) 
-            | R (RInst {rel=rid;_},v) -> 
+         (*    | SUBS (e1, e2) ->
+              let () = Printf.printf "%s" (" \n ******encodeRelExpr SUBS *****") in 
+                let get_numeric_value_of_singleton e =
+                  match e with 
+                    |   T numels ->
+                      (match Vector.length numels with 
+                        0 -> mkNullSet ()
+                      | _ ->  
+                    
+                    | _ -> raise (VCEex "Substraction only defined on values and not expressions") 
+                 mk_Integer_substraction( (encodeRelExpr (tyMap, constMap, relMap) e1), 
+                (encodeRelExpr (tyMap, constMap, relMap) e2)) 
+
+          *)   | R (RInst {rel=rid;_},v) -> 
               let () = Printf.printf "%s" (" \n ******encodeRelExpr R *****") in 
               
               let srforR = getStrucRelForRelId relMap rid in 
@@ -531,12 +557,16 @@ let bnew_temp4109 = (Var.fromString "temp4109", TyD.Tvar (Tyvar.fromString "int"
                let str_ty  = (List.fold_left (fun acc l -> acc^(Layout.toString l) ) "{" list_layout_ty)^" }" in 
 
               let ()  = Printf.printf "%s" ("Type "^str_ty) in 
-            (* try 
-               *)mkStrucRelApp (
-                (getStrucRelForRelId relMap rid), (getConstForVar constMap v))
-              (*  with 
-              | _ -> raise (VCEex "failed at mkStrucRel")
- *)
+              let const = getConstForVar constMap v in 
+              let out = mkStrucRelApp (
+                (getStrucRelForRelId relMap rid), (getConstForVar constMap v)) in 
+              
+              
+
+              let () = Printf.printf "%s" (" \n ******encodeRelExpr made rel exp  *****") in
+              out 
+               
+              
       in 
       
       let rec encodeNumericExpr (tyMap, constMap, relMap) (e) = 
@@ -555,9 +585,7 @@ let bnew_temp4109 = (Var.fromString "temp4109", TyD.Tvar (Tyvar.fromString "int"
                         let () = Printf.printf "%s" "\n Encoding Numeric Elem Var Case \n " in 
                         let () = Printf.printf "%s" ("\n "^(Ident.name v)) in 
                         let astforconst = getConstForVar constMap v in 
-                        let () = Printf.printf "%s" ("\n astforconst calculated ") in 
                         let (ast_exp, ast_sort) =ast_expr_sort_pair astforconst in 
-                         let () = Printf.printf "%s" ("\n ast sort pair calculated") in 
                          ast_exp 
              
 
@@ -569,13 +597,15 @@ let bnew_temp4109 = (Var.fromString "temp4109", TyD.Tvar (Tyvar.fromString "int"
                 match Vector.length els with 
                     0 -> raise (VCEex ("Incorrect numeric expression "^(RelLang.exprToString e) )) 
                     | 1 -> let numericValue = encodeNumericElem (tyMap, constMap, relMap) (List.hd els) in 
-                            (*bug if the integer is not a constant but a variable*)
-                            (* let () = Printf.printf "%s" (" \n Numeric Value "^(string_of_int (Z3.Arithmetic.Integer.get_int numericValue))) in  *)
                             numericValue
                     | _ -> raise (VCEex ("Incorrect number of numeric arguments "^(RelLang.exprToString e) ))
                   )
             | ADD (e1, e2) ->
                mk_Integer_addition ( (encodeNumericExpr (tyMap, constMap, relMap) e1), 
+                (encodeNumericExpr (tyMap, constMap, relMap) e2)) 
+            
+            | SUBS (e1, e2) ->
+               mk_Integer_substraction ( (encodeNumericExpr (tyMap, constMap, relMap) e1), 
                 (encodeNumericExpr (tyMap, constMap, relMap) e2)) 
             
             | R (RInst {rel=rid;_},v) -> 
@@ -637,7 +667,7 @@ let bnew_temp4109 = (Var.fromString "temp4109", TyD.Tvar (Tyvar.fromString "int"
       in
 
       let encodeRelPred (tyMap, constMap, relMap) (rp:RP.t)  =
-                let () = Printf.printf "%s" (" \n ******encodeRelPred *****") in 
+                let () = Printf.printf "%s" (" \n ******encodeRelPred  *****"^(RP.toString rp)) in 
 
           let  open RelLang in 
         let f = (encodeRelExpr (tyMap, constMap, relMap)) in 
@@ -649,18 +679,63 @@ let bnew_temp4109 = (Var.fromString "temp4109", TyD.Tvar (Tyvar.fromString "int"
           Eq (e1,e2) -> (*if either of e1 or e2 is an arithmatic relation like rlen, then make arithmeticEqAssertion*)
               (match (e1, e2) with 
                 (_, ADD (_,_)) ->
-                        let () = Printf.printf "%s" ("\n NUMERICAL EXPRESSION "^(RelLang.exprToString ( e1) )^" = "^(RelLang.exprToString (e2) ) ) in  
+                        let () = Printf.printf "%s" ("\n NUMERICAL EXPRESSION ADD "^(RelLang.exprToString ( e1) )^" = "^(RelLang.exprToString (e2) ) ) in  
                         encodeNumericEqAssertion (tyMap, constMap, relMap) (e1, e2)
                 | (ADD (_,_), _) -> 
-                       let () = Printf.printf "%s" ("\n NUMERICAL EXPRESSION "^(RelLang.exprToString (e1) )^" = "^(RelLang.exprToString (e2) ) ) in  
+                       let () = Printf.printf "%s" ("\n NUMERICAL EXPRESSION ADD "^(RelLang.exprToString (e1) )^" = "^(RelLang.exprToString (e2) ) ) in  
                        
                       encodeNumericEqAssertion (tyMap, constMap, relMap) (e1, e2)
+                 
+
+                | (_, SUBS(_,_))->
+                        let () = Printf.printf "%s" ("\n NUMERICAL EXPRESSION SUBS "^(RelLang.exprToString ( e1) )^" = "^(RelLang.exprToString (e2) ) ) in  
+                        encodeNumericEqAssertion (tyMap, constMap, relMap) (e1, e2)
+                
+                | (SUBS(_,_), _)->    
+
+                      let () = Printf.printf "%s" ("\n NUMERICAL EXPRESSION SUBS "^(RelLang.exprToString (e1) )^" = "^(RelLang.exprToString (e2) ) ) in  
+                      encodeNumericEqAssertion (tyMap, constMap, relMap) (e1, e2)
+                     
                  (*Relation is Rlen, the general case should be any relation in arithmetic domain*) 
-                 | (R (rie, id), _) ->
+                 
+                 |(R (rie1, id1) as r1, R (rie2, id2) as r2 ) ->
+                     let () = Printf.printf "%s" ("\n Case :: Both Rel Exp ") in  
+                 
+                     let RInst {rel;_} = rie1 in
+                     let relId1 = RelId.toString rel in 
+                      
+                     let RInst {rel;_} = rie2 in
+                     let relId2 = RelId.toString rel in 
+                     
+                    if ( (relId1 = "Rlen" || relId1 = "Rplen" || relId1 = "Rlentail" || relId1 = "Rhdn" || relId1 = "Rsum")
+                          && (not (relId2 = "Rlen" || relId2 = "Rplen" || relId2 = "Rlentail" || relId2 = "Rhdn" || relId2 = "Rsum"))
+                       ) then (*case R1 is Numeric but R2 is not*)   
+                      let () = Printf.printf "%s" ("\n case R1 is Numeric but R2 is non-numeric") in  
+                      mkSetEqAssertion (f e1, f e2)      
+                      
+                    else 
+                      if( not (relId1 = "Rlen" || relId1 = "Rplen" || relId1 = "Rlentail" || relId1 = "Rhdn"|| relId1 = "Rsum")
+                          && (relId2 = "Rlen" || relId2 = "Rplen" || relId2 = "Rlentail" || relId2 = "Rhdn"|| relId2 = "Rsum"))
+                        then 
+                      (*case R1 is non Numeric but R2 is numeric*)
+                      
+                      let () = Printf.printf "%s" ("\n case R1 is non Numeric but R2 is numeric") in  
+                       mkSetEqAssertion (f e1, f e2)       
+                 (*      encodeNumericEqAssertion (tyMap, constMap, relMap) (e1, e2)
+                  *)     (* raise (VCEex "Fail2") *)
+                    else 
+                      if ((relId1 = "Rlen" || relId1 = "Rplen" || relId1 = "Rlentail"|| relId1 = "Rhdn"|| relId1 = "Rsum")
+                          && (relId2 = "Rlen" || relId2 = "Rplen" || relId2 = "Rlentail" || relId2 = "Rhdn"|| relId2 = "Rsum"))
+                        then (*case R1 and R2 is numeric*)     
+                       encodeNumericEqAssertion (tyMap, constMap, relMap) (e1, e2)
+                    else 
+                      mkSetEqAssertion (f e1, f e2)      
+
+                 |(R (rie, id), _) ->
                     let RInst {rel;_} = rie in
                     let relId = RelId.toString rel in 
                     let () = Printf.printf "%s" ("\n NUMERICAL EXPRESSION CASE 1"^relId) in  
-                    if (relId = "Rlen" || relId = "Rplen" || relId = "Rlentail")
+                    if (relId = "Rlen" || relId = "Rplen" || relId = "Rlentail" || relId = "Rhdn" || relId = "Rsum" )
                      then 
                       let () = Printf.printf "%s" ("\n NUMERICAL EXPRESSION TRUE"^relId) in  
                      
@@ -675,7 +750,7 @@ let bnew_temp4109 = (Var.fromString "temp4109", TyD.Tvar (Tyvar.fromString "int"
                       let RInst {rel;_} = rie in 
                     let relId = RelId.toString rel in 
                   let () = Printf.printf "%s" ("\n NUMERICAL EXPRESSION CASE 2"^relId) in 
-                  if (relId = "Rlen" || relId = "Rplen")
+                  if (relId = "Rlen" || relId = "Rplen" || relId = "Rlentail" || relId = "Rhdn"|| relId = "Rsum")
                      then 
                        let () = Printf.printf "%s" ("\n NUMERICAL EXPRESSION TRUE"^relId) in  
                     
@@ -684,14 +759,18 @@ let bnew_temp4109 = (Var.fromString "temp4109", TyD.Tvar (Tyvar.fromString "int"
                         let () = Printf.printf "%s" ("\n NUMERICAL EXPRESSION FALSE"^relId) in  
                     
                      mkSetEqAssertion (f e1, f e2)    
- 
+                  (*Case singleton set expression*)
+                | (T el1, T el2) ->
+                    let () = Printf.printf "%s" ("\n singleton Set Eq CASE "^(RelLang.exprToString ( e1) )^" = "^(RelLang.exprToString (e2) )) in 
+                    encodeNumericEqAssertion (tyMap, constMap, relMap) (e1, e2)
+                
                    
                 | (_,_) -> 
                    let () = Printf.printf "%s" ("\n RELATIONAL EXPRESSION CASE "^(RelLang.exprToString ( e1) )^" = "^(RelLang.exprToString (e2) )) in 
-                (*   let lhs_rel_expression = f e1 in 
-                  let rhs_rel_expression = f e2 in 
-                  if 
-                 *)  mkSetEqAssertion (f e1, f e2)
+                    mkSetEqAssertion (f e1, f e2)
+
+                    
+
               )
           | Sub (e1,e2) -> mkSubSetAssertion (f e1, f e2)
           | SubEq (e1,e2) -> (fun s -> mkOr( Vector.new2 (mkSetEqAssertion s,
@@ -751,11 +830,11 @@ let bnew_temp4109 = (Var.fromString "temp4109", TyD.Tvar (Tyvar.fromString "int"
      
     
       match  res with 
-           SATISFIABLE -> Failure 
+           SATISFIABLE -> Failure
          | UNKNOWN -> Undef 
          | UNSATISFIABLE -> Success
         | _ -> raise SolverTimeout
 
 
- 
+
     

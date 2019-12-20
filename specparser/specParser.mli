@@ -19,6 +19,7 @@ type token =
   | NOT
   | MINUS
   | LPAREN
+  | LESSTHAN
   | LCURLY
   | LBRACE
   | LAMBDA
@@ -26,6 +27,7 @@ type token =
   | IMPL
   | IFF
   | ID of (string)
+  | GREATERTHAN
   | FALSE
   | EQUALOP
   | EOL
@@ -38,6 +40,7 @@ type token =
   | COLON
   | ASSUME
   | ARROW
+  | ARMINUS
 
 (* This exception is raised by the monolithic API functions. *)
 

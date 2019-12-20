@@ -167,7 +167,7 @@ rexpr : ra=ratom CROSSPRD re=rexpr {X(ra,re)}
       | ra=ratom UNION re=rexpr {U(ra,re)}
       | ra=ratom MINUS re=rexpr {D(ra,re)}
       | ra=ratom PLUS re=rexpr {ADD(ra,re)}
-      | ra=ratom ARMINUS re=expr {SUBS(ra,re)} 
+      | ra=ratom ARMINUS re=rexpr {SUBS(ra,re)} 
       |ra=ratom {ra};
 
 ratom : LCURLY LPAREN RPAREN RCURLY {T(Vector.fromList [])}
@@ -259,6 +259,7 @@ patom : TRUE {Predicate.truee()}
       | LPAREN pr=pred RPAREN {pr}
       | ra=rpatom {Predicate.Rel ra}
       | ba=bpatom {Predicate.Base ba};
+      
 
 bpatom : LBRACE i1=ID EQUALOP i2=ID RBRACE {Predicate.BasePredicate.varEq 
                       (Var.fromString i1, Var.fromString i2)}

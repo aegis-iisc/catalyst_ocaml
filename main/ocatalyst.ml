@@ -113,7 +113,7 @@ let catalyst_elaborate_envs relspecs typedtree =
       let  dischargeVC i vc = 
       let _ = Printf.printf "%s" ("Discharging VCS "^(string_of_int (i+1))^" of "^(string_of_int (List.length elaborated_vcs))^"\n") in 
           
-          (*    if ( (* i = 0 || i = 1 || i= 2 || i=3 || i=4 || i=5|| *)i=6 || i=7 ||  i = 8  ) then Printf.printf "Skipping VC1 " 
+            (*  if ( (* i = 0 || i = 1 || i= 2 || i=3 || *)i=4 || i=5|| i=6 || i=7 ||  i = 8  ) then Printf.printf "Skipping VC1 " 
            else 
     *)
           match 

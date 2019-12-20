@@ -199,8 +199,8 @@ let bool_sort = Bool (mk_bool_sort ())
 let mkConst (name,sort) =
   let z3_sort = sortToZ3Sort sort in 
   let const = Expr.mk_const (!ctx) (mkSym name) (z3_sort) in 
-  let _ = logz3 ("(declare-const "^(Expr.to_string (const))^" "^(Sort.to_string (z3_sort))^")") in 
-  let _ = logz3 "\n"
+  let _ = Printf.printf "%s" ("(declare-const "^(Expr.to_string (const))^" "^(Sort.to_string (z3_sort))^")") in 
+  let _ = Printf.printf "%s" "\n"
   in
   AST (const, sort)
 
@@ -790,6 +790,10 @@ let mk_Integer_rel_app (relfunc, args) =
 let mk_Integer_addition (arg1, arg2) = 
     let addition = mk_add  [arg1;arg2] in 
     addition
+
+let mk_Integer_substraction (arg1, arg2) = 
+    let subs = mk_sub  [arg1;arg2] in 
+    subs   
 let mk_Integer_eq (e1, e2) = 
   let eqexpr =mk_eq e1 e2 in 
   eqexpr   

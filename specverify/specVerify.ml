@@ -316,6 +316,7 @@ let is_excecption_call fucntionexp =
       
     | _ -> raise (SpecVerifyExc "Unimpl, function call requires the function to be an identity, unimplemented general case ")  
   in 
+  (*TODO : This is a hack to check raise *)
   if Ident.name function_id = "raise" then true else false  
 
 

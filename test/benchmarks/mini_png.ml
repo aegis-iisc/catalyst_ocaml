@@ -1,6 +1,6 @@
 exception TestExp of string 
 
-
+(*the return type for a parser (ParsedValue, Remaining List)*)
 type listPair  = Pair of (int list) * (int list)
 
 
@@ -33,7 +33,7 @@ match l1 with
                         temp2 
 
 
-(*The size of the input must be less than the parameter n*)
+(*The size of the input must be greater than the parameter n*)
 (*parse_chunk : {n : int | n >= 0} -> {l1 | Rlen(l1) >= n} -> {v |
 													Rlenfst (v)) = n /\ 
 														Rlensnd (v) = (Rlen(l1) - n)}*)
@@ -89,11 +89,28 @@ let parse_png inp =
 
 
 
-
+(* 
 let () = 
 		let src = [-8;51;1;2;3;4;5;6;7;8] in 
         let parsedList  = parse_png src  in 
         let () = List.iter (fun i -> Printf.printf "%s" (string_of_int i)) parsedList in 
         () 
 
- 
+  *)
+  let rec string_of_intlist ls = 
+    match ls with 
+      []-> "[]"
+      | x :: xs -> "[ "^(string_of_int x)^" : "^(string_of_intlist xs)^" ]" 
+
+(*@param src : list header, followed by a data, such that header gives the length of the remaining data*)
+      
+let ()  = 
+	  let src = [-8;51;1;2;3;4;5;6;7;8] in 
+      
+      let parsedList  = parse_png src  in 
+      let () = Printf.printf "%s" ("\n test1 ") in 
+      let () = Printf.printf "%s" ("\ninput list "^(string_of_intlist src)) in 
+      let () = Printf.printf "%s" ("\nparsed list "^(string_of_intlist parsedList)) in 
+     
+        ()  
+
