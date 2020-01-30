@@ -501,6 +501,8 @@ let rec  type_synth_exp (ve, pre, exp) =
       let () = Printf.printf "%s" ("ident "^(Ident.name ident_var)) in   
       let idRefTyS = VE.find ve ident_var in
       let idRefTy = RefTyS.specializeRefTy (idRefTyS) in 
+      let () = Printf.printf "%s" ("idRefTys "^(RefTyS.toString idRefTyS)) in   
+      let () = Printf.printf "%s" ("idRefTys "^(RefTy.toString idRefTy)) in 
       ([], idRefTy)
   | Texp_constant c -> 
        let () = Printf.originalPrint "%s" "\n \t ******* type synthesis : T-CONST ******  \n" in 
