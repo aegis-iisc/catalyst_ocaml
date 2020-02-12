@@ -23,13 +23,13 @@ module RE = RelEnv
 module TyD = TyD
 
 
-module Printf = struct 
+(* module Printf = struct 
   let printf f s = ()
   let originalPrint = Printf.printf 
 
 
 end  
- 
+ *) 
 
 
 exception TrivialVC (* raised when antecedent has false *)
@@ -269,12 +269,12 @@ let rec fromTypeCheck (ve, pre, subTy, supTy)  =
              * Second, substitute actuals for formals in p2
              *)
 
-        let () = Printf.printf "%s" ("Actual typevar "^Ident.name v1) in      
-        let () = Printf.printf "%s" ("Formal typevar "^Ident.name v2) in 
-        let () = Printf.printf "%s" ("Predicate before "^(Layout.toString (P.layout p2))) in 
+        let () = Printf.printf "%s" ("\n Actual typevar "^Ident.name v1) in      
+        let () = Printf.printf "%s" ("\n Formal typevar "^Ident.name v2) in 
+        let () = Printf.printf "%s" ("\n Predicate before "^(Layout.toString (P.layout p2))) in 
         
         let p2 = P.applySubst (v1,v2) p2 in 
-        let () = Printf.printf "%s" ("Predicate after "^(Layout.toString (P.layout p2))) in 
+        let () = Printf.printf "%s" ("\n Predicate after "^(Layout.toString (P.layout p2))) in 
             
              (* let _ = Printf.printf "\n\nAnteP********************: " in 
              let _ = Printf.printf "%s" (Layout.toString (P.layout p2)) in 

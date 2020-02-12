@@ -417,7 +417,7 @@ let rec  type_synth_exp (ve, pre, exp) =
           
 
          let (vcs1,fty) = type_synth_exp (ve, pre, fexp) in 
-         let () = Printf.printf "%s" "\n######### F type ####### \n" in 
+         let () = Printf.printf "%s" "\n######### Formal type ####### \n" in 
          let () = Printf.printf "%s" (RefTy.toString fty) in 
          
         (*uncurry the type*)

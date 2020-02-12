@@ -1503,41 +1503,49 @@ module Bind = struct
   
     let SPS.ColonArrow (_,TS.Tuple tts) = groundSort in 
 
-(*     let () = Printf.printf "%s" ("\n Size of tts "^(string_of_int (List.length tts))) in 
- *)
+    let () = Printf.printf "%s" ("\n Size of tts "^(string_of_int (List.length tts))) in 
+ 
     let (bvs,rApps) = Vector.unzip (List.map ( fun tt -> 
         let v = genVar () in 
         match tt with 
           TS.T tyd -> (v,RelLang.rId v)
         | TS.S t -> (v, RelLang.appR (mapSVar t, empty (), v))
       ) tts) in 
-(*     let () = List.iter (fun rApp -> Printf.printf "%s" ("\n Rapp "^RelLang.exprToString rApp)  
+     let () = List.iter (fun rApp -> Printf.printf "%s" ("\n Rapp "^RelLang.exprToString rApp)  
                ) rApps in 
- *)
-    let Some xexpr = List.fold_right 
-        (fun rApp xop -> match xop with 
-          None -> (*let () = Printf.printf "%s" "@ this node None " in
-              let () = Printf.printf "%s" ("\n Rapp "^RelLang.exprToString rApp) in 
-               *)
+ 
+    let () = Printf.printf "%s" ("\n >>>><<<<<<") in 
+ 
+    let xexpr = List.fold_right 
+        (fun rApp xop -> 
+          match xop with 
+              None -> let () = Printf.printf "%s" "@ this node None " in
+                let () = Printf.printf "%s" ("\n Rapp "^RelLang.exprToString rApp) in 
                Some rApp 
-        | Some xexpr -> (* let () = Printf.printf "%s" "@ this node Some " in 
-              let () = Printf.printf "%s" ("\n Rapp "^RelLang.exprToString rApp) in 
-              let () = Printf.printf "%s" ("\n xexpr "^RelLang.exprToString xexpr) in  *)
-              Some (RelLang.crossprd (rApp,xexpr))
-        | _ -> let () = Printf.printf "%s" "@ this node Some " in raise (SpecLangEx "Unimpl :: xepr case unhandled ") 
+            | Some xexpr ->  let () = Printf.printf "%s" "@ this node Some " in 
+                let () = Printf.printf "%s" ("\n Rapp "^RelLang.exprToString rApp) in 
+                let () = Printf.printf "%s" ("\n xexpr "^RelLang.exprToString xexpr) in  
+                Some (RelLang.crossprd (rApp,xexpr))
+            | _ -> let () = Printf.printf "%s" "@ this node Some " in 
+                  None 
         )rApps None 
 
      in 
-   (*  let xexpr = match  xexpr with
+      let xexpr = match  xexpr with
       | Some s -> s 
-      | None  -> None 
-    in    
-    *) let bv = genVar () in 
+      | None  ->  raise (SpecLangEx "No expr to bind")
+    in 
+    let () = Printf.printf "%s" ("\n >>>><<<<<<") in 
+    let bv = genVar () in 
+ 
     let fr = Fr (bvs,xexpr) in 
+ 
     let targs = List.map (TyD.makeTvar) tyvars in 
     let bindex = Expr {ground = (id,targs,bv); fr=fr} in 
     let bindabs = Abs (bv,bindex)
     in
+    let () = Printf.printf "%s" ("\n >>>><<<<<<") in 
+ 
     Def {tyvars=tyvars; params=params; abs=bindabs}
 
   let instantiate (Def {tyvars;params;abs},tydvec,ridvec) : abs =

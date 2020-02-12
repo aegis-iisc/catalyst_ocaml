@@ -1208,8 +1208,10 @@ let rec type_module ?(alias=false) sttn funct_body anchor env smod =
 and type_structure ?(toplevel = false) funct_body anchor env sstr scope =
   let names = new_names () in
 
+
   let type_str_item env srem {pstr_loc = loc; pstr_desc = desc} =
-        
+  
+
     match desc with
     | Pstr_eval (sexpr, attrs) ->
         let expr =
@@ -1222,6 +1224,8 @@ and type_structure ?(toplevel = false) funct_body anchor env sstr scope =
         let scope =
           match rec_flag with
           | Recursive ->
+              let () = Printf.printf "%s" ("\n Rec Flag >>>>><<<<<<") in 
+ 
               Some (Annot.Idef {scope with
                                 Location.loc_start = loc.Location.loc_start})
           | Nonrecursive ->
@@ -1233,9 +1237,13 @@ and type_structure ?(toplevel = false) funct_body anchor env sstr scope =
               Some (Annot.Idef {scope with Location.loc_start = start})
         in
         
+        let () = Printf.printf "%s" ("\n >>>>><<<<<<") in 
+ 
         let (defs, newenv) =
           Typecore.type_binding env rec_flag sdefs scope in
 
+        let () = Printf.printf "%s" ("\n H >>>>><<<<<<") in 
+  
         
         (* Note: Env.find_value does not trigger the value_used event. Values
            will be marked as being used during the signature inclusion test. *)
@@ -1303,6 +1311,7 @@ and type_structure ?(toplevel = false) funct_body anchor env sstr scope =
                     }, Trec_not)],
         newenv
     | Pstr_recmodule sbind ->
+        let () = Printf.printf "%s" ("\n rec >>>>><<<<<<") in 
         let sbind =
           List.map
             (function

@@ -33,6 +33,7 @@ let get_abstract_syntax_tree ml_file  =
   let () = Printf.printf "%s" ("\n\n ************************************") in 
   let () = Printf.printf "%s" ("\n\n Building AST for the ml program") in 
   let () = Printf.printf "%s" ("\n\n ************************************") in
+  (*returns a ParseTree.structure*)
   let ast = 
   SpecFrontEnd.load_file ml_file  
   |> Lexing.from_string 
@@ -48,9 +49,11 @@ let get_abstract_syntax_tree ml_file  =
   let () = Printf.printf "%s" ("\n\n ************************************") in
   let (tstr, _tsig, _newe) = 
     try 
-    Typemod.type_structure env ast Location.none  
+    let ast_head = List.hd ast in 
+    let loc = ast_head.pstr_loc in 
+    Typemod.type_structure env ast loc  
   with 
-  | _ -> raise (CompilerEx "The typedtree structure cannot be created for the given ast, look for some missing function definitions")
+  | e -> raise e  (* raise (CompilerEx "The typedtree structure cannot be created for the given ast, look for some missing function definitions") *)
   in
   (tstr, _tsig, _newe)
 

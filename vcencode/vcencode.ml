@@ -94,8 +94,18 @@ let bnew_v_55 = (Var.fromString "v_55", TyD.Tvar (Tyvar.fromString "int") ) in
   let bnew_ac = (Var.fromString "ac", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "int")]) ) in 
   let bnew_l1 = (Var.fromString "l1", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "int")]) ) in 
   let bnew_inpc = (Var.fromString "inpc", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "int")]) ) in 
+  let bnew_vs = (Var.fromString "vs", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "int")]) ) in 
+ let bnew_vfws = (Var.fromString "vfws", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "int")]) ) in 
+ let bnew_lst = (Var.fromString "lst", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "int")]) ) in 
+ let bnew_lst' = (Var.fromString "lst'", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "int")]) ) in 
+ let bnew_lsn = (Var.fromString "lsn", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "int")]) ) in 
+let bnew_inp = (Var.fromString "inp", TyD.Tconstr(Tycon.fromString "list",[TyD.Tvar (Tyvar.fromString "int")]) ) in 
+  
 
-  let tydbinds =   bnew_inpc::bnew_ac :: bnew_n::  bnew_v_14 :: bnew_v_49 ::bnew_v_51 :: bnew_v_55 ::bnew_l1 :: (*  bnew_0 :: bnew_1 :: *)(*bnew_el :: bnew_lt :: bnew_rt:: bnew_n:: bnew_v_12:: bnew_v11:: bnew_v13::*)(* bnew_0::bnew_1::bnew_lf:: bnew_v_10:: bnew_v5:: *) (* bnew_b:: *)(*  bnew_v_15 :: bnew_v_8 :: *) (*bnew_temp4108 :: bnew_temp4109 ::bnew_vp:: bnew_v_16:: bnew_x::*)(* bnew_l:: *) (*bnew_v1:: bnew_v_0 :: bnew_v_1:: *)(*  bnew_v_9:: bnew_x :: bnew_xs::*) tydbinds in 
+let bnew_v = (Var.fromString "v", TyD.Tconstr(Tycon.fromString "output", []) ) in 
+let bnew_res = (Var.fromString "res", TyD.Tconstr(Tycon.fromString "output", []) ) in 
+let bnew_ret = (Var.fromString "ret", TyD.Tconstr(Tycon.fromString "output", []) ) in 
+  let tydbinds = (* bnew_inp::  bnew_lsn ::bnew_v :: *)bnew_vs :: (* bnew_res :: bnew_ret :: bnew_vfws:: bnew_lst :: bnew_lst':: *)(* bnew_inpc::bnew_ac :: bnew_n::  bnew_v_14 :: bnew_v_49 ::bnew_v_51 :: bnew_v_55 ::bnew_l1 :: *) (*  bnew_0 :: bnew_1 :: *)(*bnew_el :: bnew_lt :: bnew_rt:: bnew_n:: bnew_v_12:: bnew_v11:: bnew_v13::*)(* bnew_0::bnew_1::bnew_lf:: bnew_v_10:: bnew_v5:: *) (* bnew_b:: *)(*  bnew_v_15 :: bnew_v_8 :: *) (*bnew_temp4108 :: bnew_temp4109 ::bnew_vp:: bnew_v_16:: bnew_x::*)(* bnew_l:: *) (*bnew_v1:: bnew_v_0 :: bnew_v_1:: *)(*  bnew_v_9:: bnew_x :: bnew_xs::*) tydbinds in 
  
   let pred0 = Simple (Base (BP.Eq ( 
                               (Var (Var.fromString "n")), (Var (Var.fromString "v_12") )))) in 
