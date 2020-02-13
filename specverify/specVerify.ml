@@ -167,7 +167,9 @@ let rec unifyArgs ((argv ,argTy) as argBind,
 (*Takes two refinement types and returns a unified type*)
 let  rec unifyWithDisj refTy1  refTy2  =
    let () = Printf.originalPrint "%s" "\n*******Performing Unification with Disjunction *********\n" in 
-       
+   let () = Printf.printf "%s" ("\n \n ty of fst  "^RefTy.toString refTy1) in      
+   let () = Printf.printf "%s" ("\n \n ty of snd "^RefTy.toString refTy2) in      
+           
   let open RefTy in 
   match (refTy1, refTy2) with
     (Base (_, TyD.Tunknown, _),_) -> refTy2
@@ -192,9 +194,9 @@ let  rec unifyWithDisj refTy1  refTy2  =
         | (_,_)->
            (*let pred2 = Predicate.Conj (pred2, pred_unify_result_vars) in 
         *)  let pred1' = Predicate.applySubst (bv2,bv1) pred1 in
-            let pred_unify_result_vars = Predicate.Base (BP.varEq (bv1, bv2)) in 
+            (* let pred_unify_result_vars = Predicate.Base (BP.varEq (bv1, bv2)) in 
             let pred1' = Predicate.Conj (pred1', pred_unify_result_vars) in 
-          
+           *)
          
           Base (bv2,td2,Predicate.dot (pred1',pred2))
        in 
@@ -498,11 +500,11 @@ let rec  type_synth_exp (ve, pre, exp) =
       let ident_var = match p with 
           Pident id -> id
         | _ -> raise (SpecVerifyExc "Only Pident handled ")in 
-      let () = Printf.printf "%s" ("ident "^(Ident.name ident_var)) in   
+      let () = Printf.printf "%s" ("\n ident "^(Ident.name ident_var)) in   
       let idRefTyS = VE.find ve ident_var in
       let idRefTy = RefTyS.specializeRefTy (idRefTyS) in 
-      let () = Printf.printf "%s" ("idRefTys "^(RefTyS.toString idRefTyS)) in   
-      let () = Printf.printf "%s" ("idRefTys "^(RefTy.toString idRefTy)) in 
+      let () = Printf.printf "%s" ("\n idRefTys "^(RefTyS.toString idRefTyS)) in   
+      let () = Printf.printf "%s" ("\n RefTys for id "^(RefTy.toString idRefTy)) in 
       ([], idRefTy)
   | Texp_constant c -> 
        let () = Printf.originalPrint "%s" "\n \t ******* type synthesis : T-CONST ******  \n" in 
@@ -549,9 +551,15 @@ let rec  type_synth_exp (ve, pre, exp) =
            let (newrefTy, bvBind) =  
             match refty with 
              RefTy.Base (bv, tyd, pred) -> 
+                                        let  _ = Printf.printf "%s" ("\n BoundVar \n"^(Ident.name bv)) in 
+                                        let  _ = Printf.printf "%s" ("\n Applied Var \n"^(Ident.name var)) in 
                                         
-                                         let pred' = Predicate.Base (BP.varEq (var, bv)) in
-                                        (RefTy.Base (bv, tyd, Predicate.Conj(pred, pred')),( bv, toRefTyS (RefTy.Base (bv, tyd, Predicate.truee()) )))
+                                        
+
+                                        let pred' = Predicate.applySubst (var,bv) pred in
+                                        let pred_eq = Predicate.Base (BP.varEq (var, bv)) in
+                                        (RefTy.Base (var, tyd, Predicate.Conj(pred_eq, pred')),( bv, toRefTyS (RefTy.Base (bv, tyd, pred) ))) 
+                                    (*    (RefTy.Base (bv, tyd, Predicate.Conj(pred, pred')),( bv, toRefTyS (RefTy.Base (bv, tyd, Predicate.truee()) ))) *)
                                        
             | _ -> raise (SpecVerifyExc "The type of the let RHS expression must be a Base type")    
            in  
@@ -1100,8 +1108,8 @@ and type_check_function (ve, pre, fexp, ty)  =
         RefTy.Arrow (x,y) -> (x,y) 
       | _ -> raise (SpecVerifyExc ("Function with non-arrow type"^(RefTy.toString ty)))
     in 
-    let () = Printf.printf "%s" ("$$ArgTy "^(RefTy.toString argRefTy)) in 
-    let () = Printf.printf "%s" ("$$resRefTy "^(RefTy.toString resRefTy)) in 
+    let () = Printf.printf "%s" ("\n Formal ArgTy "^(RefTy.toString argRefTy)) in 
+    let () = Printf.printf "%s" ("\n Formal resRefTy "^(RefTy.toString resRefTy)) in 
 
     let (arg, fexp_body) = 
       (*The function body will be a list of bindings*)
@@ -1117,15 +1125,15 @@ and type_check_function (ve, pre, fexp, ty)  =
       in
       ( c_lhs, c_rhs) 
      in  
-     let () = Printf.printf "%s" (" \n Arg :: "^(Var.toString (get_var_from_pattern arg)))    
+     let () = Printf.printf "%s" (" \n Arguments  :: "^(Var.toString (get_var_from_pattern arg)))    
      in 
-    let extendedVE = VE.add ve ((get_var_from_pattern arg), toRefTyS argRefTy) in
+     let extendedVE = VE.add ve ((get_var_from_pattern arg), toRefTyS argRefTy) in
    
     let (binds, substs) = unifyArgs (argBind, (get_var_from_pattern arg)) in 
     
     let _ = assert (List.length binds = 1) in 
     let resRefTy' = RefTy.applySubsts substs resRefTy in 
-    let () = Printf.printf "%s" ("$$resRefTy' "^(RefTy.toString resRefTy')) in 
+    let () = Printf.printf "%s" ("\n Substituted resRefTy' "^(RefTy.toString resRefTy')) in 
 
        (*
        * Γ[arg↦argRefTy] ⊢ body <= resRefTy
@@ -1157,7 +1165,7 @@ and type_check_exp (ve, pre, exp, tyexp)  =
         let () = Printf.printf "%s" ("\n \n refinement Type synthesized for exp ::: "^(RefTy.toString expRefTy)) in    
         let () = Printf.printf "%s" ("\n \nrefinement Type provided for tyexp :::"^(RefTy.toString tyexp)) in    
 
-        let () = Printf.printf "%s" "Γ ⊢ expRefTy <: ty" in    
+        let () = Printf.printf "%s" "\n \n Γ ⊢ expRefTy <: ty" in    
 
         let new_vcs = VC.fromTypeCheck (ve, pre, expRefTy, tyexp)  in 
        List.concat [expvcs;new_vcs]

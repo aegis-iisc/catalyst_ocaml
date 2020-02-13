@@ -1021,8 +1021,8 @@ let rec  layout t = match t with
       | False -> L.str "false" 
       | Base bp -> L.str (BasePredicate.toString bp)
       | Rel rp -> L.str (RelPredicate.toString rp )
-      | Exists (binds,t) -> let bindstr = List.fold_left (fun acc (k,v) -> (acc^ "Key ="^(Var.toString k)^" Value = "^(TyD.toString v))) "" binds in 
-                                    L.seq [L.str "Exists";L.str bindstr ; L.str " such that ";layout t] 
+      | Exists (binds,t) -> let bindstr = List.fold_left (fun acc (k,v) -> (acc^ "Key ="^(Var.toString k)^" Value = "^(TyD.toString v))) "\n" binds in 
+                                    L.seq [L.str "\t Exists";L.str bindstr ; L.str " \n such that ";layout t] 
 
       | Not t -> L.seq [L.str "not ("; layout t; L.str ")"]
       | Conj (e1,e2) -> L.align (L.separateLeft ([(layout e1); (
@@ -1034,7 +1034,7 @@ let rec  layout t = match t with
       | Iff (e1,e2) -> L.align (L.separateLeft ([(layout e1); (
           layout e2)]," <=> "))
       | Dot (e1,e2) -> L.align (L.separateLeft ([(layout e1); (
-          layout e2)]," o "))
+          layout e2)]," o \n \t  "))
 
 
 
@@ -1078,7 +1078,8 @@ let rec  layout t = match t with
 
   let dot (t1,t2) = Dot (t1,t2)
 
-
+  let disj (t1, t2) = Disj (t1,t2)
+  
   let rec mapRP t f = match t with  
       Rel rp -> Rel (f rp)
     | Exists (tyDB,t) -> Exists (tyDB, mapRP t f)

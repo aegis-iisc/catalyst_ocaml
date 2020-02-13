@@ -269,8 +269,8 @@ let rec fromTypeCheck (ve, pre, subTy, supTy)  =
              * Second, substitute actuals for formals in p2
              *)
 
-        let () = Printf.printf "%s" ("\n Actual typevar "^Ident.name v1) in      
-        let () = Printf.printf "%s" ("\n Formal typevar "^Ident.name v2) in 
+        let () = Printf.printf "%s" ("\n Subtype typevar "^Ident.name v1) in      
+        let () = Printf.printf "%s" ("\n Supertype typevar "^Ident.name v2) in 
         let () = Printf.printf "%s" ("\n Predicate before "^(Layout.toString (P.layout p2))) in 
         
         let p2 = P.applySubst (v1,v2) p2 in 
@@ -326,13 +326,21 @@ let rec fromTypeCheck (ve, pre, subTy, supTy)  =
                        (fun (v1,t1) (v2,t2) -> 
                           fromTypeCheck (ve,pre,t1,t2)) t1v t2v )
     | (Arrow ((arg1,t11),t12),Arrow ((arg2,t21),t22)) -> 
+
         let
           vcs1 = fromTypeCheck (ve,pre,t21,t11) in 
         (* 
              * Typecheck results modulo argvar
               *)
+
+        let () = Printf.printf "%s" ("\n RefType res subty before "^(RefTy.toString t12)) in 
+        
+        (*get the argument from t11 and t12*)
+
+
         let t12' = RefTy.applySubsts (Vector.new1 (arg2,arg1)) t12 in 
-            (*
+           
+         let () = Printf.printf "%s" ("\n RefType res subty Afetr "^(RefTy.toString t12')) in   (*
              * Extend the environment with type for arg2
              *)
         let ve'  = VE.add ve (arg2, RefTyS.generalize 

@@ -88,7 +88,7 @@ let genTypeName = mkGenName (0,"T")
 let genSetName = mkGenName (0,"set")
 
 let mkDefaultContext () =
-  let cfg = [("model", "true"); ("proof", "true"); ("timeout", "20000")(* ;("smt.macro-finder","true") *)] in 
+  let cfg = [("model", "true"); ("proof", "true"); ("timeout", "200000")(* ;("smt.macro-finder","true") *)] in 
   let ctx = mk_context cfg
   in
   ctx

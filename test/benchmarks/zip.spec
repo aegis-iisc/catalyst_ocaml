@@ -47,9 +47,9 @@ relation Rsndonly (E) = {()}
                   | (LCons (p, pl)) = Rsnd(p) U Rsndonly(pl);
 
 
-relation zip : l1 -> l2 -> {l | (Rmem(l1) C= Rplmem(l)) /\ 
+zip : l1 -> l2 -> {l | (Rmem(l1) C= Rplmem(l)) /\ 
                                 (Rmem(l2) C= Rplmem(l)) /\ 
                                 (Rplen(l) = Rlen(l1)) /\ 
                                 (Rplen(l) = Rlen(l2)) /\
                                 (Rfstonly(l) C= Rmem(l1)) /\
-                                (Rsndonly(l) C= Rmem(l2))}
+                                (Rsndonly(l) C= Rmem(l2)) };

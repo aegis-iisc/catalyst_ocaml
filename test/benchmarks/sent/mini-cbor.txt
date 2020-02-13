@@ -1,0 +1,68 @@
+Mini-CBOR
+
+CBOR is a binary data encoding that is similar to JSON, but designed
+for machine consumption. It's defined in RFC 7049:
+https://tools.ietf.org/html/rfc7049 . The CBOR data model is very
+similar to JSON, including text strings, numbers, key-value data
+mappings, and arrays of further values. It also includes binary data
+literals and has a provision for tagging e.g. strings that represent
+dates. Unlike JSON, CBOR is usually a self-delimiting format: instead
+of using balanced delimiters, a CBOR object begins with a header that
+specifies its length. The "usually" is because the format does allow
+the length to be initially unknown, with a closing delimiter, but the
+text of the RFC suggests that this is primarily intended for streaming
+applications where the size is not known at the time of encoding.
+
+Here's a small version of CBOR, called "mini-CBOR". I believe that all
+mini-CBOR documents are valid CBOR documents, but not the other way
+around. Mini-CBOR does not include indeterminate-length values.
+
+Mini-CBOR has the following datatypes:
+
+ - UTF-8 strings
+ - IEEE floating-point numbers
+ - Arrays of values
+ - Maps of values (like JSON objects)
+
+All data are finite.
+
+Every serialized object begins with a single byte. The three most
+significant bits determine the major type, and the five least
+significant bits are additional information to be interpreted based on
+the major type.
+
+The major types in mini-CBOR are:
+
+ - 3: UTF-8 string. The additional information is the length of the
+   string in bytes when that length is less than or equal to 23. So,
+   for instance, the string containing "hello" would begin with
+   0b011_00101. When the additional information is 24, the length is
+   given by the next byte. Strings longer than 255 bytes are
+   unrepresentable in mini-CBOR. The UTF-8-encoded string follows the
+   value header immediately.
+
+ - 4: Array. The additional information provides the number of
+   subsequent values in the array, if there are 23 or fewer of
+   them. Otherwise, additional information 24 indicates that the next
+   byte contains the number of values in the array. The values follow
+   the header immediately.
+
+ - 5: Map (called "object" in JSON). The additional information
+   provides the number of subsequent key-value pairs. If there are 23
+   or fewer, it is the length; otherwise, the value is 24 and the
+   number of pairs is given by the next byte. Unlike JSON, keys may be
+   any value. Repeated keys are considered invalid. The key-value
+   pairs follow the header immediately.
+
+ - 7: Floating point number. In mini-CBOR, there are only 32-bit IEEE
+   754 floats. The additional information is always 26. The value of
+   the float is in the next four bytes, in network (big-endian) byte
+   order.
+
+
+
+
+
+
+
+

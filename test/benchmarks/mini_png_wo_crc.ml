@@ -16,19 +16,19 @@ let projr lp =
 
 (*Pervasive library functions, 
 comment to typecheck, uncomment to excute the tests*)
-let eq x1 y1 = x1 = y1
+(* let eq x1 y1 = x1 = y1
 let minus_one n1 = n1 - 1
-		
+ *)		
 (* uncomment to typecheck*) 
-(* let eq x1 y1 = true
+let eq x1 y1 = true
 let minus_one n1 = n1
 let raise ex = 
 		let em = [] in 
 		let resex = Pair (em,em) in 
 		resex
- *)
+
 (*printing utilities, comment to typecheck uncomment to excute the test*)
-let rec string_of_intlist ls = 
+(* let rec string_of_intlist ls = 
     match ls with 
       []-> "[]"
       | x :: xs -> "[ "^(string_of_int x)^" : "^(string_of_intlist xs)^" ]" 
@@ -37,7 +37,7 @@ let rec string_of_pair p =
 	match p with 
 		Pair (l1, l2) -> "{ parsed "^(string_of_intlist l1)^", \n remaining "^(string_of_intlist l2)^" }" 
 
-
+ *)
 let rec concat l1 l2 = 
 match l1 with
     [] -> l2
@@ -114,11 +114,13 @@ let parse_png hd inp =
 					 	raise TestExp  	
 
  
+
+ 
  
 (*@param src : list header, followed by a data, such that header gives the length of the remaining data*)
-      
+    (*    
 let ()  = 
-	  let src = [88;3;1;2;1;4;2;3;4;5] in 
+	  let src = [88;3;0;1;0;4;1;1;0;0] in 
       
       let parsedList  = parse_png 88 src  in 
       let () = Printf.printf "%s" ("\n test1 ") in 
@@ -126,4 +128,5 @@ let ()  =
       let () = Printf.printf "%s" ("\nparsed list "^(string_of_pair parsedList)) in 
      
         ()  
-
+ 
+ *)

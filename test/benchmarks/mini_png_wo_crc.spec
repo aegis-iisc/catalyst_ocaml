@@ -16,7 +16,7 @@ relation Rmemsnd (Pair (l, r)) = Rmem (r);
 
 
 assume raise : ex -> {vex | true};
-assume eq : x1 -> y1 -> {veq | [veq=true] <=> {(x1)} = {(y1)}};
+assume eq : x1 -> y1 -> {veq | [veq=true] <=> ({(x1)} = {(y1)}) /\ (x1) = (y1)};
 assume minus_one : n1 -> {vn | (vn) = (n1) -- (1)};
 
 assume projl : p0 -> {pl | Rmem (pl) = Rmemfst (p0)/\
@@ -30,11 +30,12 @@ concat : l1 -> l2 -> { l |  Rlen (l) = Rlen (l1) + Rlen(l2) /\
 							Rmem(l) = Rmem(l1) U Rmem(l2) /\ 
 							Robs(l) = Robs(l1) U Robs(l2) U (Rmem(l1) X Rmem(l2))};
 
-parse_chunk : ac -> n -> l1 -> {v1 | Rlenfst(v1) =  Rlen(ac) + (n) /\ 
+assume parse_chunk : ac -> n -> l1 -> {v1 |
+									 Rlenfst(v1) =  Rlen(ac) + (n) /\ 
 									 Rlen(l1) =  Rlensnd (v1) + (n) /\
 									 Rmemfst(v1) C= (Rmem (ac) U Rmem (l1))};
 
-p_star : acc -> 
+assume p_star : acc -> 
 				inpc ->
 						
 						(ac -> n ->  l1 -> 
