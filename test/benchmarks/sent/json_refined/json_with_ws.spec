@@ -49,11 +49,10 @@ parse_spaces : ls -> {vs| ((Rmem(ls) - Rmem(vs) = {(32)}) \/
 							(Rmem(ls) - Rmem(vs) = {()})) 
 							/\ (Rmem(vs) C= Rmem(ls))
 							/\
-							 (
+							 (     
 							 	((Robs(ls) - Robs(vs)) C= ({(32)} X {(32)}) 
 							 								U ({(32)} X Rmem(ls))) 
-							 								\/ 
-							 	((Robs(ls) - Robs(vs)) = {()})								
+							 									
 							 )	
 
 							 };

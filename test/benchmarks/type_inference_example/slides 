@@ -1,0 +1,120 @@
+State of the art 
+
+type str = 
+	|Empty 
+	| S of int 
+
+Rnumstr (Empty) = {(\epsilon)} | (S i) = {(i)}; 
+
+s1 : str -> {n | Rnumstr(str) = {(n)}};
+
+parse_num : inp : list -> {(v, rem) | (v >= 0 /\ (Rmem(rem) C= Rmem(inp)) \/ Failing_case ( v = \epsilon /\ Rmem(rem) = {()})};
+
+parse_data : inp -> {(vp, rem)| (Rhd(inp) = {(vp)} /\ Rmem(rem) C= Rmem(inp)) \/ Failing_case }
+
+parse_n_data : (inp : list) -> (n : int | n > 0)  ->   {((n', vod), rem)| (Rmem(rem) C= Rmem(inp) /\ (Rlen(rem) = Rlen(inp) - n) /\ n' = 0 /\
+															Rmem(inp)-Rmem(vod) C= Rmem(rem)) 
+														\/ Failing_case = (n' > 0 /\ Rem(rem) = {()} /\ Rmem(vod) = {()}});	
+
+																	 }
+for_all x. 'R1(x) => 'R2(x) where 'R1, 'R2 : int -> bool  _dot : (inp : list) -> 
+			(p1 : in1 -> {(n1, r1)| (...) 'R (n1) } -> 
+			(p2 : in2 -> ({n:int | n > 0 /\ Incorrect (n1 > 0) 'R2 (n)}) -> {(n2, v2), r2)| ... }) 
+             -> {(n_dot, v_dot), rem_dot)|  
+		Success_case = n_dot = (n1 - n) /\ n_dot = 0 /\ Incorrect (v_dot = v2) /\ Incorrect Rmem (rem_dot, r2)  
+		\/ Failing_Case_p1 := (n_dot = \epsilon) /\ Rmem(rem) = {()} /\ Rmem(v_dot) = {()} 
+		\/ Failing_Case p2 := (n_dot > 0) /\ Rmem(rem) = {()} /\ Rmem(v_dot) = {()}}
+
+
+parse_ntimes : (inp : list) -> (n : int| n > 0) -> (p : in -> {(vp, rem)| (R1(in) = vp /\ R2 (in) = rem}) \/ Faling_Case) ->  {((n',vo2), rem) | (R1(inp) = vo2 /\ R2 (inp) = rem /\ n' = 0 /\ n' <= n) \/ ( Failing case : (n' > 0 /\ n' <= n ) /\ Rmem(rem) = {()}}; 
+
+_dot : (inp : list) -> (p1 : in1 -> {(n1, r1)| (...) } -> ( p2 : in2 -> ({n:int | (n = n1)}) -> (p: (in3 -> {(vp, rem)| ...})) -> {(n_dot, v_dot) rem_dot)|  Success_case \/ Failing_Case}   
+
+(n_dot > 0 => v_dot = [] \/ n_dot = 0 =>  )
+
+
+slide 3 ::
+
+Problems: 
+	1) We do not have abstract notion of relations/refinments and a way to bound them using some notion parametric relations/bounds
+	2) Now suppose, we do have these, we have some notion of bounds 
+	now to define _dot we need to define multiple abstract binding relations like following 
+
+	3) The specifications are too lowlevel, too operational at some sense and two distant from the semantics on the other 
+		The notion of sets and binary relations made sense when we had a close correspondance between the computation (match-case, function-without effects, etc.)
+slide 4 :: 
+
+Alternative 
+	1. 
+	Use Monadic Parsing library like modular /lego structures 
+	MIter : inp -> State a  
+	MExc : inp -> Maybe a 
+
+	Maction : a -> State a 		
+
+	Monad Transformer Stack (MaybeT StateT StateT...StateT)
+
+	Problem : These transformers do not compose well and reasonoing about these stack is beyond the state of the art automatic verification systems.
+		
+			>>= :: (R1(q1,R),  R2 (q1 p2), R3(q1 q2 q))
+				 m:M <p, q1> a -> k:(x:a<R> -> M <p2 x, q2 x> b) -> M <p, q> b
+
+			o :: (>>=iter) >>= (>>=action)   
+
+	2.
+		Use a single mega Monad M<pre, post> with states S  = (r, r1, r2) and (pre : S -> bool) and (post a : S -> a -> S -> bool) and carry it along, now, specifiying the prpoperty of interest. This is very similar to the specifications given in Relations.
+			return :: z :a -> M <p, post_ret z> a where post_ret z = \s x s' -> s == s' /\ x = z
+			return x = \lamda s -> (x, s)
+			
+			>>= :: (R1(q1,R),  R2 (q1 p2), R3(q1 q2 q))
+				 m:M <p, q1> a -> k:(x:a<R(r, r1, r2)> -> M <p2 x, q2 x> b) -> M <p, q> b
+
+		Instantiating these equations will be a hard task, e.g as we saw, that we had to redundantly carry along the failing case 	 
+slide 5 ::
+
+	So we can either have our cake (Modularity of the parsing functions) or eat it (verify  its correctness). 
+	We want the modularity of the Monadic Transformatins , treating each Monad differently, but have compositional way of reasoning over them. which none of the automatic verification systems provide.
+
+slide 6 ::
+	However, there are a couple of insights from our experience :
+	1. 
+	common knowledge: 
+	Parsers are inherently modular, each rule NT -> nt1 nt2 .... is an operation on the subparses and semantic actions (often) also operate on values from the actions of subparses.
+	e.g. SA_dot := \x. op_dot( y <- op_num x, op_many_n ( y, op_data))
+
+	"We generate some value and that value locally and that value is being transformed by the semantic action for the current non-terminal"
+	2. The iterator monad is redundantly captured in each parser specification. this can be axiomatized.
+
+	3. The general case is too hard to automatically verify, so we need to restrict the semantic actions through possible in our langugae. 
+
+	4. The specifications are too low level.
+slide 7: 
+Approach , These insights give the motivation for our approach.
+	The substructural property of parsing gives us an insight that this behavior is more closely related to the particlar flavor of effects, called as algebraic effects.
+	Algebraic effects can be seen as set of syntactic operations (effectful), which are given semantics through corresponding handlers. 
+	They form this nice algebraic property that handler  of an operation is defined as an operation over the tree of handlers for sub-operations.
+	Show thin in image form.
+
+	ANother important property, these do not suffer from the compositional problem of Monad transformer. But a refinement type systems for  these effects has not yet been explored.
+
+	"So we aim to combine the modularity of monadic parser, with the compositionality of algebraic-effect systems" -Goal
+
+slide 8 ::
+	Solution format 
+	A DSL which 
+		1. Restricts the domain of the parser and its semantic action , has high level specification (Pickle ???)
+			a. this will give us some starting point about what kind of specifications do parser writers want and, is there a pattern in semantic actions which could be enforced as a restriction in this language.
+		2. A refinement type system over monads and algebraic effects, to compositionally reason about the correctness of these high level modular parsers.
+
+	The flow of appraoch in my mind is  
+		[DSL + type and effect system over algebraic_effect] Translate this ---------> 
+		([current implemetation wo bounds/abstract relations] + (parametricity/bound) using theory of sets and relations)
+slide 9 :: 
+
+	POPL July 9 
+	Implementation June 1 
+	Th
+
+
+
+

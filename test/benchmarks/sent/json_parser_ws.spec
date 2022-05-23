@@ -45,25 +45,28 @@ assume concat : l1 -> l2 -> { l |  Rmem(l) = Rmem(l1) U Rmem(l2) /\
 
 
 (*checks if the input char is a ws, i.e. tab or space, I have used 'ws' as a symbol for whitespace characters *)
+
 parse_space : inp -> {ps | [ps=true] <=> Rhd(inp) = {(ws)}}; 
 
 
 (*the relations try to capture the notion, that the parsing of whitespaces, gives a new input list with ws character removed from the head of the list
 1. This may lead to removal of ws from the membership (if ws is only in the beginning , for example [_ _ _ 1 3 4]) or not , for example [_ _ _ 1 _ 3_ 4], using _ for ws
 2 .Similarly, the ordering relations are also defined*)
-parse_spaces : ls -> {v | Rhd (ls) = {(ws)} /\ 
+
+
+parse_spaces : ls -> {v |  
 							((Rem(ls) - (Rmem(v)) = {(ws)}) \/ ((Rem(ls) - (Rmem(v)) = {()}) (*the difference is only ws*)
 							/\ 
-							(Robs(ls) - (Robs (v)) = ({(ws)} X Rmem (ls)) U () (Rmem (ls) X {(ws)}) U ({(ws)} X {(ws)})) 
+							(Robs(ls) - (Robs (v)) = ({(ws)} X Rmem (ls)) U (Rmem (ls) X {(ws)}) U ({(ws)} X {(ws)})) 
 							/\ 
-							(Rlen(v) <= Rlen (ls))}
+							(Rlen(v) <= Rlen (ls)) ) }
 
 
 (*a token function, which takes a parser and an input list, removes ws from  the input and applies the parser on the trimmed list*)
-token : (ls -> vp) -> {inp  | (*relation input is ls with some possible whitespaces*) \phi } ->  
+token : f: (ls -> vp) -> {inp | (*relation input is ls with some possible whitespaces*) \phi } ->  
 																						{v |   (*the output of the token is same as the output of the input parser*)
 																						RmemfstRes(v) = RmemfstRes(vp) /\ 
-																						RobsfstRes(v) = RobsfstRes(vp) /\
+																						RobsfstRes(v) = RobsfsResf(vp) /\
 																						RmemsndRes(v) = RmemsndRes(vp) /\ 
 																						RobssndRes(v) = RobssndRes(vp) };
 

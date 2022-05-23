@@ -173,8 +173,18 @@ rexpr : ra=ratom CROSSPRD re=rexpr {X(ra,re)}
 ratom : LCURLY LPAREN RPAREN RCURLY {T(Vector.fromList [])}
       | LCURLY LPAREN els=elemseq RPAREN RCURLY {T(Vector.fromList els)}
       | ie=instexpr LPAREN i=ID RPAREN {R (ie, Var.fromString i)}
-      | LPAREN re=rexpr RPAREN {re};
-      | LPAREN el= elem RPAREN {T[el]}
+      | ie=instexpr LPAREN ps=funparamas RPAREN {MultiR (ie, ps)} 
+      | LPAREN re=rexpr RPAREN {re}
+      | LPAREN el=elem RPAREN {T[el]}
+      | el=elem {V (el)};
+
+hatom : SEL h=ID v=ID  {}
+	| UPD h=ID v1=ID re=rexpr {}
+
+funparams : p=funparam {[p]}
+	| p=funparam COMMA ps=funparams {p::ps};	
+
+funparam : i=ID {Var.fromString i};
 
 elemseq : el=elem {[el]}
         | el=elem COMMA els=elemseq {el::els};
@@ -203,7 +213,8 @@ typespec : ASSUME i=ID COLON rt=refty {
 
 refty : rta=reftyatom { rta}
       | vrta=vartyatom ARROW rt=refty {  
-                                          RefTy.Arrow ((Var.noName , (snd vrta)), rt)};
+                                          RefTy.Arrow ((Var.noName , (snd vrta)), rt)}
+      | mtype=compty {mty};
 
 reftyatom : bt=basety { bt}
           | LPAREN vas=vartyseq RPAREN  {
@@ -216,10 +227,9 @@ reftyatom : bt=basety { bt}
                         | _ -> RefTy.Tuple (Vector.fromList vas)};
 
 vartyatom : bt=basety {
-                         
                       match bt with 
-                      RefTy.Base (v,_,_) -> (v,bt)
-                    | _ -> raise (Failure "Impossible case of basety")}
+                       RefTy.Base (v,_,_) -> (v,bt)
+                       | _ -> raise (Failure "Impossible case of basety")}
            | LPAREN vas=vartyseq RPAREN  {
                       
                       match vas with
@@ -237,6 +247,7 @@ varty : rt=refty {let open RefTy in
                           Base (v,_,_) -> (v,alphaRename rt)
                         | Tuple _ -> (genVar (),rt)
                         | Arrow _ -> (genVar (),rt)
+			| MArrow _ -> (genVar (), rt) 
               };
 
 basety : i=ID {RefinementType.Base ((Var.fromString i), 
@@ -248,11 +259,14 @@ basety : i=ID {RefinementType.Base ((Var.fromString i),
        | LCURLY i=ID PIPE pr=pred RCURLY {RefinementType.Base ((Var.fromString i), 
                 TyD.makeTunknown (), pr)};
 
+mty : ef=effect LCURLY pre=pred RCURLY resty=ID LCURLY post=pred RCURLY  {RefTy.MArrow (ef, pre, resty, post)};
+
 pred :  pa=patom {pa}
      |  pa=patom IMPL pr=pred {Predicate.If (pa,pr)}
      |  pa=patom IFF pr=pred {Predicate.Iff (pa,pr)} 
      |  pa=patom CONJ pr=pred {Predicate.Conj (pa,pr)}
-     |  pa=patom DISJ pr=pred {Predicate.Disj (pa,pr)};
+     |  pa=patom DISJ pr=pred {Predicate.Disj (pa,pr)}
+     |  FORALL binds=tybindseq DOT pr=pred {Predicate.Forall.Forall (binds, pr) };
 
 patom : TRUE {Predicate.truee()}
       | NOT pa=patom {Predicate.Not pa}
@@ -266,12 +280,26 @@ bpatom : LBRACE i1=ID EQUALOP i2=ID RBRACE {Predicate.BasePredicate.varEq
        | LBRACE i1=ID EQUALOP TRUE RBRACE {Predicate.BasePredicate.varBoolEq 
                       (Var.fromString i1, true)}
        | LBRACE i1=ID EQUALOP FALSE RBRACE {Predicate.BasePredicate.varBoolEq 
-                      (Var.fromString i1, false)}; 
-    
+                      (Var.fromString i1, false)} 
+       |  LBRACE i1=ID GT i2=ID RBRACE {Predicate.BasePredicate.varGt 
+                      (Var.fromString i1, Var.fromString i2)} 
+       |  LBRACE i1=ID GT rhs=INT RBRACE {Predicate.BasePredicate.varIntGt 
+                      (Var.fromString i1, rhs)}; 
+
+
 rpatom : re1=rexpr EQUALOP re2=rexpr {Predicate.RelPredicate.Eq(re1,re2)}
        | re1=rexpr SUBSET re2=rexpr {Predicate.RelPredicate.Sub(re1,re2)}
-       | re1=rexpr SUBSETEQ re2=rexpr {Predicate.RelPredicate.SubEq(re1,re2)};
-       
+       | re1=rexpr SUBSETEQ re2=rexpr {Predicate.RelPredicate.SubEq(re1,re2)}
+       | re1=rexpr NUMEQ re2=rexpr {Predicat.RelPredicate.NEq(re1, re2) }
+       | re1=rexpr GT re2=rexpr {Predicat.RelPredicate.NEq(re1, re2)};
+
+ 
+tybindseq : vty=vartybind {[vt]}
+         | vt=vartybind COMMA vts=tybindseq {vt :: vts};
+
+vartybind : LPAREN  v=ID COMMA ty:ID RPAREN 
+			{ (v, ty)};
+
 
 
 

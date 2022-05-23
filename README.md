@@ -13,10 +13,13 @@ We are currently building  OCatalyst using "ocamlbuild" tool.
 
 Dependencies
 -------------
-1.The OCaml compiler, version 4.03.0
+1.The OCaml compiler, version 4.03.0  
+
 2. menhir, version 20180905 for Parsing and front-end design 
-3. Ocaml "core" pkg 
-4. Z3 libraries for ML
+
+3. Ocaml "core" version 0.9.1 pkg 
+
+4. Z3 version 4.7.1 libraries for ML
 
 
 Compiling with ocamlbuild 
@@ -26,6 +29,15 @@ cd OCatalyst_home
 OR 
 
 ocamlbuild -use-menhir -tag thread -use-ocamlfind -pkg core -pkg z3 -Is typing,parsing,utils,speclang,specparser,specelab,specverify,vcencode,driver main/ocatalyst.(native|byte)
+
+Runnig
+------
+./ocatalyst <file.ml> <file.spec>
+
+e.g.
+./ocatalyst test/append.ml test/append.spec
+
+
 
 
 

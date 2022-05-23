@@ -12,6 +12,6 @@
 (*   special exception on linking described in the file LICENSE.          *)
 (*                                                                        *)
 (**************************************************************************)
-
+open Compenv
 val init_path : ?dir:string -> bool -> unit
 val initial_env : unit -> Env.t

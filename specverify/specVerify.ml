@@ -1330,5 +1330,5 @@ let doIt_struct_items (ve_init, pre, tstr) =
   fst vcs_ve_pair 
 
 
-
+(* the main function*)
 let doIt (ve, pre, tstr) = doIt_struct_items (ve, pre, tstr)
